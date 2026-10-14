@@ -172,7 +172,7 @@ body,.app,.main,.content,.panel,.metric,.layout,.cards,.settingsgrid,.person-pag
   <button data-more-page="Payments" onclick="go('Payments')"><span>✓</span>Payments</button>
   <button data-more-page="Budget" onclick="go('Budget')"><span>◉</span>Budget</button>
   <button data-more-page="Reports" onclick="go('Reports')"><span>▥</span>Reports</button>
-  <button data-more-page="Settings" onclick="go('Settings')"><span>⚙</span>Settings</button>
+  <button data-more-page="BorrowerPortal" onclick="go(&quot;BorrowerPortal&quot;)"><span>♧</span>Borrower Portal</button><button data-more-page="Settings" onclick="go('Settings')"><span>⚙</span>Settings</button>
 </div>
 <div class="modalback" id="modalback" onclick="if(event.target===this)closeModal()"><div class="modal"><div class="modalhead"><h2 id="modalTitle">Add record</h2><button class="close" onclick="closeModal()">×</button></div><div id="modalBody"></div></div></div>
 <div class="toast" id="toast"></div>
@@ -489,7 +489,7 @@ async function createBorrowerShareFromSelection(){const id=document.getElementBy
 async function updateBorrowerShare(id){const sh=(window.fmBorrowerCloud?.shares||[]).find(x=>x.id===id);const l=state.loans.find(x=>x.id===sh?.accountId);if(!l)return toast('Loan account not found');try{await window.fmBorrowerCloud.updateShare(id,borrowerSnapshotForLoan(l));toast('Borrower snapshot updated');}catch(e){toast('Update failed: '+String(e?.message||e));}}
 async function revokeBorrowerShare(id){if(!confirm('Revoke this borrower link?'))return;try{await window.fmBorrowerCloud.revokeShare(id);toast('Share link revoked');}catch(e){toast('Revoke failed: '+String(e?.message||e));}}
 async function copyBorrowerLink(id){const sh=(window.fmBorrowerCloud?.shares||[]).find(x=>x.id===id);if(!sh)return;const url=new URL('borrower.html?token='+encodeURIComponent(id),window.location.href).href;try{await navigator.clipboard.writeText(url);toast('Private link copied');}catch(e){openModal('Copy borrower link','<p>Copy this private link and send it only to the borrower.</p><textarea readonly style="width:100%;min-height:90px;padding:10px">'+escapeHtml(url)+'</textarea>');}}
-async function approveBorrowerRequest(id){const req=(window.fmBorrowerCloud?.requests||[]).find(x=>x.id===id);if(!req||req.status!=='pending')return toast('Request is no longer pending');if(!window.fmApp?.applyBorrowerPaymentRequest(req))return;try{await window.fmBorrowerCloud.setRequestStatus(id,'approved');toast('Approved and added to Payment History');render();}catch(e){toast('Payment recorded locally; request status sync failed. Check Payment History before retrying.');}}
+async function approveBorrowerRequest(id){const req=(window.fmBorrowerCloud?.requests||[]).find(x=>x.id===id);if(!req||req.status!=='pending')return toast('Request is no longer pending');if(!window.fmApp?.applyBorrowerPaymentRequest(req))return;try{await window.fmBorrowerCloud.setRequestStatus(id,'approved');const l=state.loans.find(x=>x.id===req.accountId);if(l&&req.token)await window.fmBorrowerCloud.updateShare(req.token,borrowerSnapshotForLoan(l));toast('Approved and added to Payment History');render();}catch(e){toast('Payment was recorded. Share refresh or request status sync failed; check Payment History before retrying.');}}
 async function rejectBorrowerRequest(id){if(!confirm('Reject this request? Loan data will not change.'))return;try{await window.fmBorrowerCloud.setRequestStatus(id,'rejected');toast('Request rejected');}catch(e){toast('Could not reject request: '+String(e?.message||e));}}
 
 function render(){
