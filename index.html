@@ -727,11 +727,43 @@ const startCloudListener = user => {
     status('Live sync connection failed: '+errText(e)+'. Local data is still available.',true);
   });
 };
+
+const borrowerSharesRef=collection(db,'borrowerShares');
+const borrowerRequestsRef=collection(db,'borrowerPaymentRequests');
+let borrowerShares=[],borrowerRequests=[],stopBorrowerShares=null,stopBorrowerRequests=null;
+const borrowerTime=v=>{try{return v&&v.toDate?v.toDate().toLocaleString():v?new Date(v).toLocaleString():'recently'}catch(e){return 'recently'}};
+function publishBorrowerState(){window.fmBorrowerCloud={ready:!!currentUser,shares:borrowerShares,requests:borrowerRequests,refresh:()=>{if(currentUser)startBorrowerListeners(currentUser)}};}
+function startBorrowerListeners(user){
+ if(stopBorrowerShares){stopBorrowerShares();stopBorrowerShares=null;}if(stopBorrowerRequests){stopBorrowerRequests();stopBorrowerRequests=null;}
+ borrowerShares=[];borrowerRequests=[];publishBorrowerState();
+ if(!user)return;
+ stopBorrowerShares=onSnapshot(query(borrowerSharesRef,where('ownerUid','==',user.uid)),snap=>{borrowerShares=snap.docs.map(d=>({id:d.id,...d.data(),createdAtText:borrowerTime(d.data().createdAt)}));publishBorrowerState();if(document.getElementById('crumbPage')?.textContent==='Borrower Portal')render();},e=>status('Borrower links unavailable: '+e.message,true));
+ stopBorrowerRequests=onSnapshot(query(borrowerRequestsRef,where('ownerUid','==',user.uid)),snap=>{borrowerRequests=snap.docs.map(d=>({id:d.id,...d.data(),createdAtText:borrowerTime(d.data().createdAt)})).sort((a,b)=>(a.status==='pending'?-1:0)-(b.status==='pending'?-1:0)||String(b.date||'').localeCompare(String(a.date||'')));publishBorrowerState();if(document.getElementById('crumbPage')?.textContent==='Borrower Portal')render();},e=>status('Payment request notifications unavailable: '+e.message,true));
+}
+window.fmBorrowerCloud={
+ get ready(){return !!currentUser;},
+ get shares(){return borrowerShares;},
+ get requests(){return borrowerRequests;},
+ refresh(){if(currentUser)startBorrowerListeners(currentUser);},
+ async createShare(accountId,snapshot){
+  if(!currentUser)throw new Error('Sign in to Finance Master first.');
+  const token=Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,'0')).join('');
+  await setDoc(doc(db,'borrowerShares',token),{ownerUid:currentUser.uid,accountId,borrowerName:String(snapshot.person||'Borrower'),currency:snapshot.currency||'THB',snapshot,active:true,createdAt:serverTimestamp(),updatedAt:serverTimestamp(),schemaVersion:1});
+  const url=new URL('borrower.html?token='+encodeURIComponent(token),window.location.href).href;
+  try{await navigator.clipboard.writeText(url);status('Secure borrower link created and copied. Send it only to the intended borrower.');}catch(e){status('Secure borrower link created. Use Copy private link in Borrower Portal.');}
+  startBorrowerListeners(currentUser);return url;
+ },
+ async updateShare(token,snapshot){if(!currentUser)throw new Error('Sign in required.');await updateDoc(doc(db,'borrowerShares',token),{snapshot,borrowerName:String(snapshot.person||'Borrower'),currency:snapshot.currency||'THB',updatedAt:serverTimestamp()});},
+ async revokeShare(token){if(!currentUser)throw new Error('Sign in required.');await updateDoc(doc(db,'borrowerShares',token),{active:false,revokedAt:serverTimestamp()});},
+ async setRequestStatus(id,statusValue){if(!currentUser)throw new Error('Sign in required.');if(!['approved','rejected'].includes(statusValue))throw new Error('Invalid status');await updateDoc(doc(db,'borrowerPaymentRequests',id),{status:statusValue,reviewedAt:serverTimestamp(),reviewedBy:currentUser.uid});}
+};
+
 onAuthStateChanged(auth, user => {
   currentUser=user;
   if(syncTimer){clearTimeout(syncTimer);syncTimer=null;}
   localDirty=false;
   startCloudListener(user);
+  startBorrowerListeners(user);
   if(user) status('Signed in as '+user.email+'. Connecting live cloud sync…');
   else status('Not signed in. Create an account or sign in to enable cloud sync.');
 });
