@@ -534,7 +534,7 @@ async function shareAutoBorrowerLink(){
  else{await copyAutoBorrowerLink();}}
  catch(e){if(e?.name!=='AbortError')toast('Share မရပါ။ Copy Link ကိုသုံးပါ။')}
 }
-async function autoShareBorrowerLink(accountId){
+async async function autoShareBorrowerLink(accountId){
  const loan=(state.loans||[]).find(x=>x.id===accountId);if(!loan)return toast('Borrower account not found');
  if(!window.fmBorrowerCloud?.ready)return toast('Owner အကောင့်နဲ့ Sign In ဝင်ပြီးမှ Share Link ဖန်တီးနိုင်ပါတယ်။');
  if(!recordCurrency(loan))return toast('ဒီအကောင့်ရဲ့ Currency ကို အရင်သတ်မှတ်ပါ။');
@@ -806,7 +806,7 @@ const borrowerSharesRef=collection(db,'borrowerShares');
 const borrowerRequestsRef=collection(db,'borrowerPaymentRequests');
 let borrowerShares=[],borrowerRequests=[],stopBorrowerShares=null,stopBorrowerRequests=null;
 const borrowerTime=v=>{try{return v&&v.toDate?v.toDate().toLocaleString():v?new Date(v).toLocaleString():'recently'}catch(e){return 'recently'}};
-function publishBorrowerState(){window.fmBorrowerCloud={ready:!!currentUser,shares:borrowerShares,requests:borrowerRequests,refresh:()=>{if(currentUser)startBorrowerListeners(currentUser)}};}
+function publishBorrowerState(){const api=window.fmBorrowerCloud||{};window.fmBorrowerCloud={...api,ready:!!currentUser,shares:borrowerShares,requests:borrowerRequests,refresh:()=>{if(currentUser)startBorrowerListeners(currentUser)}};}
 function startBorrowerListeners(user){
  if(stopBorrowerShares){stopBorrowerShares();stopBorrowerShares=null;}if(stopBorrowerRequests){stopBorrowerRequests();stopBorrowerRequests=null;}
  borrowerShares=[];borrowerRequests=[];publishBorrowerState();
