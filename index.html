@@ -497,8 +497,8 @@ async function ensureBorrowerLinksForAll(){
   for(const loan of (state.loans||[])){
    if(existing.some(sh=>sh.accountId===loan.id))continue;
    if(borrowerAutoCreateAttempted.has(loan.id))continue;
-   borrowerAutoCreateAttempted.add(loan.id);
    if(!recordCurrency(loan)){skipped++;continue;}
+   borrowerAutoCreateAttempted.add(loan.id);
    try{await window.fmBorrowerCloud.createShare(loan.id,borrowerSnapshotForLoan(loan),{silent:true});created++;}
    catch(e){borrowerAutoCreateAttempted.delete(loan.id);console.error('Auto borrower link failed',loan.person,e);}
   }
