@@ -465,18 +465,37 @@ const normalizeState = payload => ({
   budgets:Array.isArray(payload?.budgets)?payload.budgets:[],
   payments:Array.isArray(payload?.payments)?payload.payments:[]
 });
+let syncWriteInFlight=false;
+const scheduleSyncRetry = (delay=900) => {
+  if(syncTimer) clearTimeout(syncTimer);
+  syncTimer=setTimeout(()=>{syncTimer=null;writeCurrentState();},delay);
+};
 const writeCurrentState = async () => {
-  if(!currentUser || !syncReady || applyingRemote || !localDirty) return;
+  if(!currentUser || !syncReady || applyingRemote || syncConflict || !localDirty || syncWriteInFlight) return;
+  const userAtStart=currentUser;
   const data=window.fmApp.getState();
   const signature=stateSignature(data);
   if(signature===lastCloudSignature){localDirty=false;return;}
+  syncWriteInFlight=true;
   try {
-    await setDoc(cloudRef(currentUser.uid),{data,schemaVersion:1,ownerUid:currentUser.uid,updatedAt:serverTimestamp()});
+    await setDoc(cloudRef(userAtStart.uid),{data,schemaVersion:1,ownerUid:userAtStart.uid,updatedAt:serverTimestamp()});
+    if(!currentUser || currentUser.uid!==userAtStart.uid) return;
     lastCloudSignature=signature;
-    localDirty=false;
-    status('Cloud sync is live. Changes are syncing automatically.');
+    const currentSignature=stateSignature(window.fmApp.getState());
+    localDirty=currentSignature!==signature;
+    status(localDirty
+      ? 'A newer change is waiting to sync…'
+      : 'Cloud sync is live. Changes are syncing automatically.');
   } catch(e) {
-    status('Auto-sync failed: '+errText(e)+'. Your data is still saved on this device.',true);
+    if(currentUser && currentUser.uid===userAtStart.uid){
+      localDirty=true;
+      status('Auto-sync failed: '+errText(e)+'. Your data is still saved on this device; retrying automatically.',true);
+    }
+  } finally {
+    syncWriteInFlight=false;
+    if(currentUser && syncReady && localDirty && !syncConflict && !applyingRemote){
+      scheduleSyncRetry(900);
+    }
   }
 };
 window.fmScheduleSync = () => {
