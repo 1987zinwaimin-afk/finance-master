@@ -58,6 +58,52 @@ img,svg,canvas,video{max-width:100%}
   .account-open{padding:10px}
 }
 
+
+/* Finance Master mobile fit pass: layout-only, no data or currency logic changes */
+html,body{width:100%;max-width:100%;overflow-x:clip}
+body,.app,.main,.content,.panel,.metric,.layout,.cards,.settingsgrid,.person-page,.person-metrics,.ledger-metrics{min-width:0}
+.content,.panel,.metric,.setting,.account-card,.person-page,.person-tab-content{overflow-wrap:anywhere}
+.metric strong,.metric .sub,.account-balance,.account-balance>b,.detail-item b,.person-metrics strong,.ledger-metrics strong{max-width:100%;overflow-wrap:anywhere;word-break:normal;font-variant-numeric:tabular-nums}
+.cards>.metric,.person-metrics>*,.ledger-metrics>*,.layout>*{min-width:0;max-width:100%}
+.metrichead,.panelhead,.pagehead,.welcome,.account-open,.account-actions,.person-quick-actions,.database-actions{min-width:0;max-width:100%;flex-wrap:wrap}
+.metrichead>*,.panelhead>*,.pagehead>*,.welcome>*,.account-open>*,.account-actions>*,.person-quick-actions>*,.database-actions>*{min-width:0;max-width:100%}
+.field,.field label,.field input,.field select,.field textarea,.formgrid,.formactions{min-width:0;max-width:100%}
+.field input,.field select,.field textarea{overflow-wrap:anywhere}
+.tablewrap,.ledger-table,.person-payments{width:100%;min-width:0;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain}
+.tablewrap table,.ledger-table table,.person-payments table{width:max-content;min-width:100%;max-width:none;white-space:nowrap}
+.tablewrap td,.tablewrap th,.ledger-table td,.ledger-table th,.person-payments td,.person-payments th{white-space:nowrap}
+.topbar,.crumb,.topactions{min-width:0}
+@media(max-width:700px){
+  .content{padding-left:12px;padding-right:12px}
+  .welcome{gap:12px}
+  .welcome>div,.welcome>.primary,.pagehead>div,.pagehead>button{min-width:0;max-width:100%}
+  .welcome>.primary,.pagehead>.primary,.formactions>button{white-space:normal}
+  .cards,.person-metrics,.ledger-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .metric{padding:12px 10px}
+  .metrichead{align-items:flex-start}
+  .metrichead>span:first-child{flex:1 1 70px}
+  .metric strong,.content .metric strong{font-size:clamp(11px,3.4vw,15px);line-height:1.25;letter-spacing:-.2px;overflow-wrap:anywhere}
+  .panel{padding:14px}
+  .panelhead{align-items:flex-start}
+  .panelhead>div{flex:1 1 140px}
+  .toolbar{display:flex;flex-wrap:wrap}
+  .toolbar input,.toolbar select,.toolbar button{flex:1 1 120px;min-width:0}
+  .modalback{padding:10px}
+  .modal{max-height:calc(100dvh - 20px);overflow:auto;padding:16px}
+  .mobile-nav{padding-left:2px;padding-right:2px}
+  .mobile-nav button{flex:1 1 0;min-width:0;padding-left:1px;padding-right:1px;font-size:clamp(8px,2.3vw,10px)}
+  .mobile-nav button span{max-width:100%}
+}
+@media(max-width:380px){
+  .content{padding-left:9px;padding-right:9px}
+  .cards,.person-metrics,.ledger-metrics{gap:8px}
+  .metric{padding:10px 8px}
+  .metrichead>span:first-child{font-size:10px}
+  .metric strong,.content .metric strong{font-size:clamp(10px,3.2vw,12px);letter-spacing:-.25px}
+  .panel{padding:11px}
+  .welcome h1,.pagehead h1,.person-title h1{font-size:clamp(19px,6vw,24px)}
+}
+
 </style></head>
 <body>
 <div class="app">
