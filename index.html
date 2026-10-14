@@ -534,7 +534,7 @@ async function shareAutoBorrowerLink(){
  else{await copyAutoBorrowerLink();}}
  catch(e){if(e?.name!=='AbortError')toast('Share မရပါ။ Copy Link ကိုသုံးပါ။')}
 }
-async async function autoShareBorrowerLink(accountId){
+async function autoShareBorrowerLink(accountId){
  const loan=(state.loans||[]).find(x=>x.id===accountId);if(!loan)return toast('Borrower account not found');
  if(!window.fmBorrowerCloud?.ready)return toast('Owner အကောင့်နဲ့ Sign In ဝင်ပြီးမှ Share Link ဖန်တီးနိုင်ပါတယ်။');
  if(!recordCurrency(loan))return toast('ဒီအကောင့်ရဲ့ Currency ကို အရင်သတ်မှတ်ပါ။');
