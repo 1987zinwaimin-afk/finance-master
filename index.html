@@ -42,7 +42,7 @@ const fmt=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:state.curr
 let state={currency:'THB',transactions:[],loans:[],debts:[],savings:[],budgets:[],payments:[]};
 try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s)state={...state,...s}}catch(e){}
 let current='Dashboard';
-function save(){localStorage.setItem(KEY,JSON.stringify(state));const el=document.getElementById('saveStatus');if(el)el.textContent='● Saved on this device'}
+function save(){localStorage.setItem(KEY,JSON.stringify(state));const el=document.getElementById('saveStatus');if(el)el.textContent='● Saved on this device';if(window.fmScheduleSync)window.fmScheduleSync(state)}
 function toast(s){const t=document.getElementById('toast');t.textContent=s;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
 function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function go(p){current=p;document.getElementById('crumbPage').textContent=p;document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===p));render();document.getElementById('mobileNav').style.display='';}
@@ -133,7 +133,7 @@ window.fmApp={getState:()=>state,replaceState:(next)=>{state=next;save();render(
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 const firebaseConfig = {
   apiKey: "AIzaSyDCNyu8OFTZ2gAxq5lCbpTDd_bUTyO8Rr0",
   authDomain: "finance-master-8d227.firebaseapp.com",
@@ -216,10 +216,116 @@ window.fmDownloadCloud = async () => {
     window.fmApp.toast('Cloud data downloaded');
   } catch(e) { status(errText(e),true); }
 };
+let stopCloudListener=null;
+let applyingRemote=false;
+let syncReady=false;
+let localDirty=false;
+let syncTimer=null;
+let lastCloudSignature='';
+let initialSnapshotHandled=false;
+const stateSignature = value => JSON.stringify({
+  currency:value?.currency || 'THB',
+  transactions:Array.isArray(value?.transactions)?value.transactions:[],
+  loans:Array.isArray(value?.loans)?value.loans:[],
+  debts:Array.isArray(value?.debts)?value.debts:[],
+  savings:Array.isArray(value?.savings)?value.savings:[],
+  budgets:Array.isArray(value?.budgets)?value.budgets:[],
+  payments:Array.isArray(value?.payments)?value.payments:[]
+});
+const normalizeState = payload => ({
+  currency:['THB','MMK','USD','SGD'].includes(payload?.currency)?payload.currency:'THB',
+  transactions:Array.isArray(payload?.transactions)?payload.transactions:[],
+  loans:Array.isArray(payload?.loans)?payload.loans:[],
+  debts:Array.isArray(payload?.debts)?payload.debts:[],
+  savings:Array.isArray(payload?.savings)?payload.savings:[],
+  budgets:Array.isArray(payload?.budgets)?payload.budgets:[],
+  payments:Array.isArray(payload?.payments)?payload.payments:[]
+});
+const writeCurrentState = async () => {
+  if(!currentUser || !syncReady || applyingRemote || !localDirty) return;
+  const data=window.fmApp.getState();
+  const signature=stateSignature(data);
+  if(signature===lastCloudSignature){localDirty=false;return;}
+  try {
+    await setDoc(cloudRef(currentUser.uid),{data,schemaVersion:1,ownerUid:currentUser.uid,updatedAt:serverTimestamp()});
+    lastCloudSignature=signature;
+    localDirty=false;
+    status('Cloud sync is live. Changes are syncing automatically.');
+  } catch(e) {
+    status('Auto-sync failed: '+errText(e)+'. Your data is still saved on this device.',true);
+  }
+};
+window.fmScheduleSync = () => {
+  if(!currentUser || !syncReady || applyingRemote) return;
+  localDirty=true;
+  if(syncTimer) clearTimeout(syncTimer);
+  syncTimer=setTimeout(writeCurrentState,900);
+};
+const startCloudListener = user => {
+  if(stopCloudListener){stopCloudListener();stopCloudListener=null;}
+  syncReady=false; initialSnapshotHandled=false; localDirty=false; lastCloudSignature='';
+  if(!user) return;
+  stopCloudListener=onSnapshot(cloudRef(user.uid), async snap => {
+    if(!currentUser || currentUser.uid!==user.uid) return;
+    if(!snap.exists()){
+      if(!initialSnapshotHandled){
+        initialSnapshotHandled=true;
+        status('Signed in. No cloud backup found yet. Export a JSON backup, then use Upload this device to cloud.');
+      }
+      return;
+    }
+    const payload=snap.data()?.data;
+    if(!payload || !Array.isArray(payload.transactions)){
+      status('Cloud data format is invalid. Local records were not changed.',true);return;
+    }
+    const remote=normalizeState(payload);
+    const remoteSignature=stateSignature(remote);
+    const local=window.fmApp.getState();
+    const localSignature=stateSignature(local);
+    if(!initialSnapshotHandled){
+      initialSnapshotHandled=true;
+      if(remoteSignature!==localSignature && window.fmApp.hasLocalRecords()){
+        const useCloud=confirm('Cloud data and this device data are different. OK = replace this device with cloud data. Cancel = keep this device and upload its data to cloud.');
+        if(useCloud){
+          applyingRemote=true;window.fmApp.replaceState(remote);applyingRemote=false;
+          lastCloudSignature=remoteSignature;localDirty=false;
+        } else {
+          syncReady=true;localDirty=true;await writeCurrentState();
+        }
+      } else if(remoteSignature!==localSignature){
+        applyingRemote=true;window.fmApp.replaceState(remote);applyingRemote=false;
+        lastCloudSignature=remoteSignature;localDirty=false;
+      } else {
+        lastCloudSignature=remoteSignature;
+      }
+      syncReady=true;
+      status('Cloud sync is live. Changes on signed-in devices update automatically.');
+      return;
+    }
+    if(snap.metadata?.hasPendingWrites) return;
+    if(remoteSignature===lastCloudSignature) return;
+    if(localDirty){
+      // Preserve unsent local edits instead of applying a remote snapshot over them.
+      await writeCurrentState();return;
+    }
+    if(remoteSignature!==localSignature){
+      applyingRemote=true;window.fmApp.replaceState(remote);applyingRemote=false;
+      lastCloudSignature=remoteSignature;
+      status('New cloud changes received. This device is up to date.');
+      window.fmApp.toast('Cloud changes received');
+    }
+  }, e => {
+    syncReady=false;
+    status('Live sync connection failed: '+errText(e)+'. Local data is still available.',true);
+  });
+};
 onAuthStateChanged(auth, user => {
   currentUser=user;
-  if (user) status('Signed in as '+user.email+'. Local data remains local until you choose Upload or Download.');
-  else status('Not signed in. Create an account or sign in to enable manual cloud backup.');
+  if(syncTimer){clearTimeout(syncTimer);syncTimer=null;}
+  localDirty=false;
+  startCloudListener(user);
+  if(user) status('Signed in as '+user.email+'. Connecting live cloud sync…');
+  else status('Not signed in. Create an account or sign in to enable cloud sync.');
 });
 </script>
 </body></html>
