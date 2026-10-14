@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101c33">
+<title>Borrower Account · Finance Master</title>
+<style>
+:root{--navy:#101c33;--gold:#d8b56d;--bg:#f4f6fa;--ink:#172033;--muted:#788398;--line:#e6eaf1;--green:#16866a;--red:#d94c4c}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}.wrap{max-width:960px;margin:auto;padding:22px 14px 48px}.brand{display:flex;align-items:center;gap:12px;margin-bottom:20px}.logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#f1d99b,var(--gold));display:grid;place-items:center;font-weight:900;font-size:22px;color:var(--navy)}.brand b{display:block;font-size:16px}.brand small{color:var(--muted);font-size:11px;letter-spacing:1px}.panel{background:white;border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:14px;min-width:0;box-shadow:0 5px 18px #192b4805}.head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}.head h1{font-size:clamp(22px,5vw,30px);margin:4px 0 8px;overflow-wrap:anywhere}.muted{font-size:12px;color:var(--muted);line-height:1.6}.tag{display:inline-block;background:#edf7f3;color:var(--green);padding:6px 9px;border-radius:8px;font-size:11px;font-weight:800}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.metric{border:1px solid var(--line);border-radius:13px;padding:13px;min-width:0}.metric small{display:block;color:var(--muted);font-size:11px;line-height:1.4}.metric b{display:block;margin-top:8px;font-size:clamp(14px,3.5vw,20px);overflow-wrap:anywhere;font-variant-numeric:tabular-nums}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.row>*{min-width:0}.field{display:flex;flex-direction:column;gap:6px;flex:1 1 150px}.field label{font-size:11px;font-weight:800}.field input,.field select,.field textarea{width:100%;max-width:100%;border:1px solid var(--line);border-radius:10px;padding:11px;background:white;font:inherit;font-size:13px}.btn{border:0;border-radius:11px;background:var(--navy);color:white;padding:12px 15px;font-weight:800;font-size:12px;cursor:pointer}.btn.secondary{background:white;color:var(--ink);border:1px solid var(--line)}.btn:disabled{opacity:.5;cursor:not-allowed}.tablewrap{width:100%;overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:470px}th,td{text-align:left;padding:11px 9px;border-bottom:1px solid #eef1f5;font-size:12px;white-space:nowrap}th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}td.num,th.num{text-align:right}.empty{padding:22px;text-align:center;color:var(--muted);font-size:12px}.notice{background:#fff8e8;border:1px solid #f0dfb9;border-radius:12px;padding:12px;font-size:12px;line-height:1.6;color:#795d26}.error{background:#fff0f0;border:1px solid #f3c8c8;color:#a62d2d;border-radius:12px;padding:13px;font-size:12px}.success{background:#edf7f3;border:1px solid #c8e7dc;color:#16664f;border-radius:12px;padding:13px;font-size:12px}.status{margin-bottom:12px}footer{text-align:center;color:var(--muted);font-size:11px;padding:12px}@media(max-width:420px){.wrap{padding:14px 10px 35px}.panel{padding:13px}.grid{gap:8px}.metric{padding:10px}}
+</style>
+</head>
+<body><main class="wrap">
+<div class="brand"><div class="logo">F</div><div><b>Finance Master</b><small>PRIVATE BORROWER PORTAL</small></div></div>
+<div id="status" class="status muted">Loading your private account…</div>
+<div id="app"></div>
+<footer>Read-only account access · Payment requests require owner approval</footer>
+</main>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import {getFirestore,doc,getDoc,addDoc,collection,serverTimestamp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+const firebaseConfig={apiKey:"AIzaSyDCNyu8OFTZ2gAxq5lCbpTDd_bUTyO8Rr0",authDomain:"finance-master-8d227.firebaseapp.com",projectId:"finance-master-8d227",storageBucket:"finance-master-8d227.firebasestorage.app",messagingSenderId:"881817485868",appId:"1:881817485868:web:2135de290e0a1150274789"};
+const db=getFirestore(initializeApp(firebaseConfig));
+const token=new URLSearchParams(location.search).get("token")||"";
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const money=(v,c)=>{try{return new Intl.NumberFormat("en-US",{style:"currency",currency:["THB","MMK","USD","SGD"].includes(c)?c:"THB",maximumFractionDigits:2}).format(Number(v)||0)}catch(e){return String(v??0)}};
+const today=()=>new Date().toISOString().slice(0,10);
+let share=null;
+function setStatus(text,type="muted"){ $("status").className="status "+type;$("status").textContent=text;}
+function selectedMonth(){return $("monthFilter")?.value||today().slice(0,7);}
+function render(){
+ const s=share.snapshot||{},c=share.currency||s.currency||"THB",month=selectedMonth();
+ const buckets=Array.isArray(s.interestBuckets)?s.interestBuckets:[];
+ const payments=Array.isArray(s.payments)?s.payments:[];
+ const monthBuckets=buckets.filter(b=>String(b.date||"").slice(0,7)===month);
+ const monthPayments=payments.filter(p=>String(p.date||"").slice(0,7)===month);
+ const dueDate=s.due?esc(s.due):"Not set";
+ $("app").innerHTML='<section class="panel"><div class="head"><div><span class="tag">Read only</span><h1>'+esc(share.borrowerName||s.person||"Borrower")+'</h1><p class="muted">Your personal loan account · '+esc(c)+'</p></div><div class="muted">Due date: <b>'+dueDate+'</b></div></div><div class="notice">You can view and check this account, filter records by month, and send a payment request to the owner. You cannot edit or delete loan records. Payments change the official balance only after the owner approves the request.</div></section>'+
+ '<section class="panel"><h2 style="font-size:15px;margin-top:0">Loan summary</h2><div class="grid">'+metric("Original principal",money(s.principal,c))+metric("Principal remaining",money(s.principalOutstanding,c))+metric("Interest remaining",money(s.interestOutstanding,c))+metric("Monthly interest",money(s.monthlyInterest,c))+metric("Interest rate",String(s.rate||0)+"% · "+(s.period==="yearly"?"yearly":s.period==="none"?"no interest":"monthly"))+metric("Unpaid months",String(s.unpaidMonths||0))+'</div></section>'+
+ '<section class="panel"><div class="head"><div><h2 style="font-size:15px;margin:0 0 5px">Monthly statement</h2><p class="muted">Choose a month to inspect interest and payments.</p></div><div class="field" style="flex:0 1 180px"><label for="monthFilter">Month</label><input id="monthFilter" type="month" value="'+esc(month)+'"></div></div><h3 style="font-size:13px;margin-top:20px">Interest ledger</h3><div class="tablewrap"><table><thead><tr><th>Month due</th><th class="num">Interest</th><th class="num">Remaining</th><th>Status</th></tr></thead><tbody>'+(monthBuckets.length?monthBuckets.map(b=>'<tr><td>'+esc(b.date||month)+'</td><td class="num">'+money(b.original,c)+'</td><td class="num">'+money(b.remaining,c)+'</td><td>'+(Number(b.remaining)>0.004?'<span style="color:#a62d2d">Unpaid</span>':'<span style="color:#16866a">Paid</span>')+'</td></tr>').join(""):'<tr><td colspan="4" class="empty">No interest ledger entries for this month.</td></tr>')+'</tbody></table></div><h3 style="font-size:13px;margin-top:22px">Payments this month</h3><div class="tablewrap"><table><thead><tr><th>Date</th><th>Details</th><th class="num">Amount</th></tr></thead><tbody>'+(monthPayments.length?monthPayments.map(p=>'<tr><td>'+esc(p.date||"—")+'</td><td>'+esc(p.apply||"Payment")+(p.note?" · "+esc(p.note):"")+'</td><td class="num">'+money(p.amount,p.currency||c)+'</td></tr>').join(""):'<tr><td colspan="3" class="empty">No recorded payments for this month.</td></tr>')+'</tbody></table></div></section>'+
+ '<section class="panel"><h2 style="font-size:15px;margin-top:0">Send payment request</h2><p class="muted">This sends a notification to the owner. It does not immediately change your loan balance or payment history.</p><form id="requestForm"><div class="row"><div class="field"><label for="amount">Amount ('+esc(c)+')</label><input id="amount" name="amount" type="number" min="0.01" step="0.01" required></div><div class="field"><label for="payDate">Expected payment date</label><input id="payDate" name="date" type="date" value="'+today()+'" required></div></div><div class="field" style="margin-top:12px"><label for="apply">Payment type requested</label><select id="apply" name="apply"><option value="auto">Automatic — interest first, then principal</option><option value="interest">Interest only</option><option value="principal">Principal only</option></select></div><div class="field" style="margin-top:12px"><label for="note">Note (optional)</label><textarea id="note" name="note" rows="3" maxlength="500" placeholder="Transfer reference or message"></textarea></div><div style="margin-top:14px"><button class="btn" id="sendRequest" type="submit">Send request to owner</button></div></form><div id="requestResult" style="margin-top:12px"></div></section>';
+ $("monthFilter").addEventListener("change",()=>{const m=selectedMonth();render();$("monthFilter").value=m;});
+ $("requestForm").addEventListener("submit",submitRequest);
+}
+function metric(label,value){return '<div class="metric"><small>'+esc(label)+'</small><b>'+esc(value)+'</b></div>';}
+async function submitRequest(e){
+ e.preventDefault();const button=$("sendRequest");button.disabled=true;$("requestResult").innerHTML="";
+ const amount=Number($("amount").value),date=$("payDate").value,apply=$("apply").value,note=$("note").value.trim(),s=share.snapshot||{};
+ if(!Number.isFinite(amount)||amount<=0||!date){$("requestResult").innerHTML='<div class="error">Enter a valid amount and date.</div>';button.disabled=false;return;}
+ try{
+  await addDoc(collection(db,"borrowerPaymentRequests"),{token,ownerUid:share.ownerUid,accountId:share.accountId,borrowerName:share.borrowerName||s.person||"Borrower",currency:share.currency||s.currency||"THB",amount,date,apply,note,status:"pending",createdAt:serverTimestamp(),schemaVersion:1});
+  $("requestResult").innerHTML='<div class="success">Request sent to the owner. Your official loan balance will change only after approval.</div>';$("requestForm").reset();$("payDate").value=today();
+ }catch(err){$("requestResult").innerHTML='<div class="error">Could not send the request. The link may have been revoked or database security rules may not be configured yet. '+esc(err.message||"")+'</div>';}
+ button.disabled=false;
+}
+async function boot(){
+ if(!token){setStatus("This borrower link is missing its access token.","error");return;}
+ try{
+  const snap=await getDoc(doc(db,"borrowerShares",token));
+  if(!snap.exists()){setStatus("This link is invalid, unavailable, or has been revoked.","error");return;}
+  share={id:snap.id,...snap.data()};
+  if(!share.active){setStatus("This borrower link has been revoked. Contact the owner.","error");return;}
+  if(!share.snapshot||!share.accountId||!share.ownerUid){setStatus("This account link is incomplete. Please contact the owner.","error");return;}
+  setStatus("Private account loaded. Read-only access is active.","success");render();
+ }catch(err){setStatus("Could not load this account. Firestore share-link rules may need to be configured. "+(err.message||""),"error");}
+}
+boot();
+</script></body></html>
