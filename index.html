@@ -104,6 +104,44 @@ body,.app,.main,.content,.panel,.metric,.layout,.cards,.settingsgrid,.person-pag
   .welcome h1,.pagehead h1,.person-title h1{font-size:clamp(19px,6vw,24px)}
 }
 
+
+/* Final mobile overflow audit override — presentation only */
+@media(max-width:700px){
+  html,body{max-width:100%;overflow-x:hidden}
+  .app,.main,.content,.panel,.setting,.settingsgrid,.layout,.cards,.metric,.formgrid,.field,.toolbar,.pagehead,.welcome,.topbar,.topactions,.person-page,.person-metrics,.ledger-metrics{min-width:0;max-width:100%}
+  .content{width:100%;padding-left:clamp(9px,3.2vw,14px);padding-right:clamp(9px,3.2vw,14px)}
+  .layout,.settingsgrid{grid-template-columns:minmax(0,1fr)}
+  .cards,.person-metrics,.ledger-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .metric,.panel,.setting{min-width:0}
+  .metric strong,.metric .sub,.setting,.setting p,.panel p,.pagehead p,.welcome p,.field label,.crumb,.nav button,.quick b,.quick small{max-width:100%;overflow-wrap:anywhere}
+  .metric strong{font-size:clamp(10px,3.15vw,14px);line-height:1.25;letter-spacing:-.2px;white-space:normal;word-break:normal}
+  .metrichead{min-width:0;align-items:flex-start;gap:5px}
+  .metrichead>span:first-child{flex:1 1 0;min-width:0}
+  .metrichead .ico{flex:0 0 25px}
+  .welcome,.pagehead,.panelhead,.modalhead,.formactions,.account-actions,.person-quick-actions,.database-actions{flex-wrap:wrap}
+  .welcome>*,.pagehead>*,.panelhead>*,.formactions>*{min-width:0;max-width:100%}
+  .welcome>.primary,.pagehead>.primary,.formactions>button,.toolbar button{white-space:normal;overflow-wrap:anywhere}
+  .formgrid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .field.full{grid-column:1/-1}
+  .field input,.field select,.field textarea{min-width:0;width:100%;max-width:100%}
+  .tablewrap{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain}
+  .tablewrap table{width:max-content;min-width:100%;max-width:none}
+  .modalback{padding:10px}
+  .modal{width:100%;max-width:540px;max-height:calc(100dvh - 20px);overflow:auto}
+  .mobile-more-panel{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .mobile-more-panel button{min-width:0;overflow-wrap:anywhere}
+}
+@media(max-width:360px){
+  .cards,.person-metrics,.ledger-metrics{gap:7px}
+  .metric{padding:9px 7px}
+  .metric strong{font-size:10px;letter-spacing:-.3px}
+  .metrichead>span:first-child{font-size:9px}
+  .formgrid{grid-template-columns:minmax(0,1fr)}
+  .field.full{grid-column:auto}
+  .quick{grid-template-columns:minmax(0,1fr)}
+  .mobile-more-panel{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
 </style></head>
 <body>
 <div class="app">
