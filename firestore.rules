@@ -1,0 +1,58 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Existing Finance Master cloud sync: a signed-in owner can access only their own finance document.
+    match /users/{userId}/finance/{documentId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Borrower share links are high-entropy bearer tokens. A borrower can GET one active link
+    // by its exact document ID, but cannot list links or change the shared account snapshot.
+    match /borrowerShares/{token} {
+      allow get: if resource.data.active == true
+        || (request.auth != null && request.auth.uid == resource.data.ownerUid);
+      allow list: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+      allow create: if request.auth != null
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.active == true
+        && request.resource.data.accountId is string
+        && request.resource.data.snapshot is map;
+      allow update: if request.auth != null
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == resource.data.ownerUid;
+      allow delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+    }
+
+    // Borrowers may submit a new payment request only for the account behind their active token.
+    // They cannot read, edit, or delete requests. Only the owner can read and review them.
+    match /borrowerPaymentRequests/{requestId} {
+      allow create: if request.resource.data.keys().hasOnly([
+          'token', 'ownerUid', 'accountId', 'borrowerName', 'currency',
+          'amount', 'date', 'apply', 'note', 'status', 'createdAt', 'schemaVersion'
+        ])
+        && request.resource.data.keys().hasAll([
+          'token', 'ownerUid', 'accountId', 'borrowerName', 'currency',
+          'amount', 'date', 'apply', 'note', 'status', 'createdAt', 'schemaVersion'
+        ])
+        && request.resource.data.token is string
+        && exists(/databases/$(database)/documents/borrowerShares/$(request.resource.data.token))
+        && get(/databases/$(database)/documents/borrowerShares/$(request.resource.data.token)).data.active == true
+        && get(/databases/$(database)/documents/borrowerShares/$(request.resource.data.token)).data.ownerUid == request.resource.data.ownerUid
+        && get(/databases/$(database)/documents/borrowerShares/$(request.resource.data.token)).data.accountId == request.resource.data.accountId
+        && request.resource.data.amount is number
+        && request.resource.data.amount > 0
+        && request.resource.data.date is string
+        && request.resource.data.apply in ['auto', 'interest', 'principal']
+        && request.resource.data.status == 'pending'
+        && request.resource.data.schemaVersion == 1;
+      allow read: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+      allow update: if request.auth != null
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'reviewedAt', 'reviewedBy'])
+        && request.resource.data.status in ['approved', 'rejected']
+        && request.resource.data.reviewedBy == request.auth.uid;
+      allow delete: if false;
+    }
+  }
+}
