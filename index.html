@@ -50,7 +50,1004 @@
 <script>
 const KEY='finance-master-personal-v1';
 const today=()=>new Date().toISOString().slice(0,10);
-const fmt=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:state.currency||'THB',maximumFractionDigits:2}).format(Number(n)||0);
+const fmt=(n,currency=state.currency||'THB')=>new Intl.NumberFormat('en-US',{style:'currency',currency:['THB','MMK','USD','SGD'].includes(currency)?currency:'THB',maximumFractionDigits:2}).format(Number(n)||0);
+const recordCurrency=x=>['THB','MMK','USD','SGD'].includes(x?.currency)?x.currency:null;
+const moneyFor=(n,x)=>fmt(n,recordCurrency(x)||state.currency||'THB');
+const currencyLabel=c=>({THB:'THB ฿',MMK:'MMK K',USD:'USD 
+let state={currency:'THB',transactions:[],loans:[],debts:[],savings:[],budgets:[],payments:[]};
+try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s)state={...state,...s}}catch(e){}
+let current='Dashboard';
+function save(){localStorage.setItem(KEY,JSON.stringify(state));const el=document.getElementById('saveStatus');if(el)el.textContent='● Saved on this device';if(window.fmScheduleSync)window.fmScheduleSync(state)}
+function toast(s){const t=document.getElementById('toast');t.textContent=s;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
+function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function go(p){current=p;const more=document.getElementById('mobileMorePanel');if(more)more.classList.remove('open');render();if(window.scrollTo)window.scrollTo({top:0,behavior:'auto'});}
+document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.page)));
+function toggleMobile(){const p=document.getElementById('mobileMorePanel');if(!p)return;p.classList.toggle('open')}
+function total(type,currency=state.currency||'THB'){return state.transactions.filter(t=>t.type===type&&recordCurrency(t)===currency).reduce((a,t)=>a+Number(t.amount||0),0)}
+function outstanding(list,currency=state.currency||'THB'){return list.filter(l=>recordCurrency(l)===currency).reduce((s,l)=>s+Math.max(0,Number(l.principal||0)-Number(l.principalPaid||0)),0)}
+function legacyCurrencyCount(){const lists=['transactions','loans','debts','savings','budgets','payments'];return lists.reduce((n,k)=>n+(state[k]||[]).filter(x=>!recordCurrency(x)).length,0)}
+function reviewLegacyCurrencies(){const groups=[['transactions','Transactions'],['loans','Loans given'],['debts','My debts'],['savings','Savings goals'],['budgets','Budgets']];let changed=0;for(const [key,label] of groups){for(const item of (state[key]||[])){if(recordCurrency(item))continue;const amount=key==='transactions'?item.amount:key==='loans'||key==='debts'?item.principal:key==='savings'?item.saved:item.limit;const name=key==='transactions'?item.title:key==='loans'||key==='debts'?item.person:key==='savings'?item.name:item.category;const answer=prompt(label+' — '+String(name||'Unnamed record')+' — amount '+String(amount??'')+'\\nEnter THB, MMK, USD or SGD. Leave blank to skip this record.');if(answer===null){save();render();toast('Review paused. Your labels were saved.');return}const c=String(answer).trim().toUpperCase();if(!c)continue;if(!['THB','MMK','USD','SGD'].includes(c)){alert('Invalid currency. This record was left unchanged.');continue}item.currency=c;changed++}}for(const p of (state.payments||[])){const account=(state[p.kind==='loan'?'loans':'debts']||[]).find(a=>a.id===p.account);if(account&&recordCurrency(account)&&p.currency!==account.currency){p.currency=account.currency;changed++}}save();render();toast(changed+' currency label(s) saved. No amounts were converted.');}
+
+function openModal(title,body){document.getElementById('modalTitle').textContent=title;document.getElementById('modalBody').innerHTML=body;document.getElementById('modalback').classList.add('show')}
+function closeModal(){document.getElementById('modalback').classList.remove('show')}
+function field(label,name,type='text',value='',opts=''){return `<div class="field"><label>${label}</label>${type==='select'?`<select name="${name}" required>${opts}</select>`:`<input name="${name}" type="${type}" value="${escapeHtml(value)}" ${type==='number'?'min="0" step="0.01"':''} required`+`>`}</div>`}
+
+function slipUploadMarkup(formId){
+ return '<div class="field full" style="border:1px dashed var(--line);border-radius:12px;padding:12px"><label>Bank QR slip / payment receipt (auto-read)</label><input type="file" accept="image/*" onchange="readBankSlip(this,\''+formId+'\')" style="max-width:100%"><small class="sub" style="display:block;margin-top:6px">Upload a bank transfer receipt image. Amount and remark will be read automatically; please verify them before saving.</small><div id="slipStatus_'+formId+'" class="sub" style="margin-top:8px"></div></div>';
+}
+let fmOcrPromise=null;
+async function getSlipOcr(){
+ if(window.Tesseract)return window.Tesseract;
+ if(!fmOcrPromise)fmOcrPromise=new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';s.onload=()=>resolve(window.Tesseract);s.onerror=()=>reject(new Error('Could not load OCR engine. Check internet connection and try again.'));document.head.appendChild(s)});
+ return fmOcrPromise;
+}
+async function getSlipOcrWorker(){
+ const T=await getSlipOcr();
+ // Download trained language data on demand; include Myanmar for Burmese-language memos.
+ return await T.createWorker(['eng','tha','mya'],1,{logger:m=>{}});
+}
+function parseSlipText(text){
+ const thaiDigits={'๐':'0','๑':'1','๒':'2','๓':'3','๔':'4','๕':'5','๖':'6','๗':'7','๘':'8','๙':'9'};
+ const normalized=String(text||'').replace(/[๐-๙]/g,ch=>thaiDigits[ch]||ch).replace(/[฿]/g,' THB ');
+ const lines=normalized.split(/\r?\n/).map(x=>x.replace(/[|]/g,' ').replace(/\s+/g,' ').trim()).filter(Boolean);
+ const full=lines.join('\n');
+ let amount=null;
+ const amountLabels=/(?:transfer\s*amount|transaction\s*amount|amount|ยอดเงินที่โอน|จำนวนเงิน|จำนวนที่โอน|ยอดโอน|โอนเงิน|เงินที่โอน|ยอดชำระ|ยอดเงิน|จำนวน|amount\s*\(thb\))/i;
+ const numberRe=/(?:THB\s*)?([0-9][0-9,]*(?:\.[0-9]{1,2})?)(?:\s*(?:THB|บาท))?/gi;
+ for(let i=0;i<lines.length;i++){
+   if(amountLabels.test(lines[i])){
+     const candidates=[lines[i],lines[i+1]||''].join(' ');
+     const matches=[...candidates.matchAll(numberRe)];
+     const vals=matches.map(x=>Number(x[1].replace(/,/g,''))).filter(n=>n>0&&n<1e10);
+     if(vals.length){amount=vals[vals.length-1];break}
+   }
+ }
+ if(amount===null){
+   const matches=[...full.matchAll(/(?:THB\s*|บาท\s*)([0-9][0-9,]*(?:\.[0-9]{1,2})?)/gi)];
+   const vals=matches.map(x=>Number(x[1].replace(/,/g,''))).filter(n=>n>0&&n<1e10);
+   if(vals.length)amount=vals[0];
+ }
+ if(amount===null){
+   const decimals=[...full.matchAll(/\b([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{2})|[0-9]+\.[0-9]{2})\b/g)]
+     .map(x=>Number(x[1].replace(/,/g,''))).filter(n=>n>0&&n<1e10);
+   if(decimals.length)amount=decimals.sort((a,b)=>b-a)[0];
+ }
+ let remark='';
+ const remarkLabels=/(?:remark|payment\s*note|note|memo|message|หมายเหตุ|บันทึกช่วยจำ|รายละเอียด|ข้อความถึงผู้รับ|วัตถุประสงค์|บันทึก|ข้อความ)/i;
+ for(let i=0;i<lines.length;i++){
+   const line=lines[i], at=line.search(remarkLabels);
+   if(at>=0){
+     let value=line.slice(at).replace(remarkLabels,'').replace(/^\s*[:：-]?\s*/,'').trim();
+     if(!value && lines[i+1])value=lines[i+1];
+     if(value && !/^(?:amount|ยอดเงิน|วันที่|date|time|reference|เลขที่|transaction|fee|ค่าธรรมเนียม|balance|ยอดคงเหลือ)/i.test(value)){remark=value;break}
+   }
+ }
+ if(remark.length>120)remark=remark.slice(0,120).trim();
+ return {amount,remark,text:full};
+}
+function inferExpenseCategory(text){
+ const t=(text||'').toLowerCase();
+ if(/food|meal|restaurant|coffee|อาหาร|ข้าว|ร้านอาหาร|กาแฟ/.test(t))return 'Food';
+ if(/rent|room|housing|electric|water|ค่าเช่า|ห้องพัก|ค่าไฟ|ค่าน้ำ/.test(t))return 'Housing';
+ if(/transport|taxi|grab|fuel|gas|รถ|น้ำมัน|เดินทาง|ค่าโดยสาร/.test(t))return 'Transport';
+ if(/shopping|purchase|สินค้า|ซื้อของ|ช้อป/.test(t))return 'Shopping';
+ if(/health|hospital|clinic|ยา|โรงพยาบาล|คลินิก/.test(t))return 'Health';
+ return 'Other';
+}
+async function readBankSlip(input,formId){
+ const file=input.files&&input.files[0], form=document.getElementById(formId), statusEl=document.getElementById('slipStatus_'+formId);
+ if(!file||!form||!statusEl)return;
+ if(!file.type.startsWith('image/')){statusEl.textContent='Please choose an image file.';return}
+ statusEl.textContent='Reading slip… This may take a little while on a phone.';
+ try{
+   const worker=await getSlipOcrWorker();
+   const result=await worker.recognize(file);
+   await worker.terminate();
+   const parsed=parseSlipText(result.data.text||'');
+   const set=(name,value)=>{const el=form.elements.namedItem(name);if(el&&value!==null&&value!==undefined&&String(value).trim()!=='')el.value=value};
+   if(parsed.amount!==null)set('amount',parsed.amount);
+   if(parsed.remark){
+     set('note',parsed.remark);
+     if(formId==='txForm')set('title',parsed.remark);
+   }
+   if(formId==='txForm'&&parsed.remark){const cat=form.elements.namedItem('category');if(cat)cat.value=inferExpenseCategory(parsed.remark)}
+   const found=[];
+   if(parsed.amount!==null)found.push('Amount: '+parsed.amount.toLocaleString()+' '+state.currency);else found.push('Amount not detected — enter it manually.');
+   if(parsed.remark)found.push('Remark: '+parsed.remark);else found.push('Remark not detected — enter it manually.');
+   const ocrPreview=(parsed.text||'').replace(/\s+/g,' ').trim().slice(0,260);
+   statusEl.textContent='Slip scanned. '+found.join(' · ')+' Please verify the fields before saving.'+(ocrPreview?' OCR text: '+ocrPreview:' No readable text found. Try a sharper, full slip image with all edges visible.');
+ }catch(e){statusEl.textContent='Could not read this image automatically: '+(e.message||e)+'. You can still enter the fields manually.'}
+}
+function addTransaction(type){openModal(type==='income'?'Add income':'Add expense',`<form id="txForm"><div class="formgrid">${field('Description','title')}${field('Amount ('+state.currency+')','amount','number')}${field('Date','date','date',today())}${field('Category','category','select','','<option>Salary</option><option>Food</option><option>Housing</option><option>Transport</option><option>Shopping</option><option>Health</option><option>Bonus</option><option>Other</option>')}<div class="field full"><label>Note (optional)</label><input name="note" placeholder="Add details..."></div>${type==='expense'?slipUploadMarkup('txForm'):''}</div><div class="formactions"><button type="button" class="pill" onclick="closeModal()">Cancel</button><button class="primary">Save record</button></div></form>`);document.getElementById('txForm').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);state.transactions.unshift({id:crypto.randomUUID(),type,title:f.get('title'),amount:Number(f.get('amount')),currency:state.currency||'THB',date:f.get('date'),category:f.get('category'),note:f.get('note')});save();closeModal();render();toast('Record saved')}}
+function addLoan(kind){const isLoan=kind==='loan';openModal(isLoan?'Add loan given':'Add debt I owe',`<form id="loanForm"><div class="formgrid">${field('Person / Institution','person')}${field('Principal ('+state.currency+')','principal','number')}${field('Interest rate (%)','rate','number','0')}${field('Interest period','period','select','','<option value="monthly">Monthly</option><option value="yearly">Yearly</option><option value="none">No interest</option>')}${field('Interest starts','start','date',today())}${field('Interest stops (optional)','stop','date','')}${field('Due date (optional)','due','date','')}<div class="field full"><label>Interest method</label><select name="method"><option value="simple">Simple interest (not compounded)</option><option value="compound">Compound interest</option></select></div><div class="field full"><label>Notes</label><input name="note" placeholder="Agreement, purpose, details"></div></div><div class="formactions"><button type="button" class="pill" onclick="closeModal()">Cancel</button><button class="primary">Save record</button></div></form>`);document.getElementById('loanForm').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);const l={id:crypto.randomUUID(),person:f.get('person'),principal:Number(f.get('principal')),currency:state.currency||'THB',principalPaid:0,rate:Number(f.get('rate')),period:f.get('period'),start:f.get('start'),stop:f.get('stop'),due:f.get('due'),method:f.get('method'),note:f.get('note'),created:today()};(isLoan?state.loans:state.debts).unshift(l);save();closeModal();render();toast('Financial record saved')}}
+function allocatePayment(kind,l,amount,date,apply){
+  if(!recordCurrency(l))return {error:'Please label this account currency in Settings before recording a payment.'};
+  const ledger=loanLedger(kind,l,date);
+  const principalLeft=Math.max(0,Number(ledger.principalOutstanding)||0);
+  const interestLeft=Math.max(0,Number(ledger.interestOutstanding)||0);
+  const eps=0.004;
+  if(apply==='auto'&&amount>principalLeft+interestLeft+eps)return {error:'Payment is larger than the outstanding principal plus interest ('+fmt(principalLeft+interestLeft)+'). Reduce the amount or choose “Other / mixed” to record it without changing the balance.'};
+  if(apply==='interest'&&amount>interestLeft+eps)return {error:'Interest outstanding on this date is '+fmt(interestLeft)+'. Enter no more than that amount, or choose “Other / mixed” to record a separate amount.'};
+  if(apply==='principal'&&amount>principalLeft+eps)return {error:'Principal outstanding on this date is '+fmt(principalLeft)+'. Enter no more than that amount, or choose “Other / mixed” to record a separate amount.'};
+  const interestApplied=apply==='auto'?Math.min(amount,interestLeft):apply==='interest'?amount:0;
+  const principalApplied=apply==='auto'?Math.min(principalLeft,Math.max(0,amount-interestApplied)):apply==='principal'?amount:0;
+  return {interestApplied,principalApplied};
+}
+function addPayment(){const all=[...state.loans.map(x=>({...x,kind:'loan'})),...state.debts.map(x=>({...x,kind:'debt'}))];if(!all.length){toast('Add a loan or debt first');return}openModal('Record a payment',`<form id="payForm"><div class="formgrid">${field('Related account','account','select','',''+all.map(l=>`<option value="${l.kind}:${l.id}">${escapeHtml(l.person)} — ${l.kind==='loan'?'Loan given':'My debt'}</option>`).join(''))}${field('Amount ('+state.currency+')','amount','number')}${field('Payment date','date','date',today())}${field('Apply to','apply','select','','<option value="auto" selected>Automatic — interest first, then principal</option><option value="interest">Interest only</option><option value="principal">Principal only</option><option value="other">Other / mixed (record only)</option>')}<div class="field full"><label>Note</label><input name="note" placeholder="Payment details"></div>${slipUploadMarkup('payForm')}</div><div class="notice">Payment is recorded in history. Principal payments reduce the outstanding principal; interest payments are tracked separately.</div><div class="formactions"><button type="button" class="pill" onclick="closeModal()">Cancel</button><button class="primary">Save payment</button></div></form>`);document.getElementById('payForm').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target),account=String(f.get('account')||''),parts=account.split(':'),kind=parts[0],id=parts[1],amount=Number(f.get('amount')),date=f.get('date')||today(),apply=String(f.get('apply')||'auto');if(!id||!['loan','debt'].includes(kind)){toast('Choose a loan or debt account');return}if(!Number.isFinite(amount)||amount<=0){toast('Enter a payment amount greater than zero');return}const l=(kind==='loan'?state.loans:state.debts).find(x=>x.id===id);if(!l){toast('Selected loan/debt account was not found');return}const allocation=allocatePayment(kind,l,amount,date,apply);if(allocation.error){toast(allocation.error);return}const {interestApplied,principalApplied}=allocation;const p={id:crypto.randomUUID(),account:id,kind,amount,currency:l.currency||state.currency||'THB',date,apply,note:String(f.get('note')||'').trim(),interestApplied,principalApplied};p.currency=l.currency||state.currency||'THB';state.payments.unshift(p);if(principalApplied>0)l.principalPaid=Math.min(Number(l.principal)||0,Number(l.principalPaid||0)+principalApplied);save();closeModal();render();toast('Payment saved: '+fmt(interestApplied)+' to interest, '+fmt(principalApplied)+' to principal')}}
+function loanAddMonths(start,n){const d=new Date(start+'T00:00:00Z');const day=d.getUTCDate();const target=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+n,1));const last=new Date(Date.UTC(target.getUTCFullYear(),target.getUTCMonth()+1,0)).getUTCDate();target.setUTCDate(Math.min(day,last));return target.toISOString().slice(0,10)}
+function loanMonthlyRate(l){if(!l||!Number(l.rate)||l.period==='none')return 0;return Number(l.rate)/100/(l.period==='yearly'?12:1)}
+function loanLedger(kind,l,throughDate=today(),excludePaymentId=''){
+ const through=String(throughDate||today()).slice(0,10),start=String(l.start||l.created||today()).slice(0,10);
+ const events=[];
+ const rate=loanMonthlyRate(l);
+ if(rate>0&&start<=through){for(let n=1;n<600;n++){const due=loanAddMonths(start,n);if(due>through||(l.stop&&due>String(l.stop).slice(0,10)))break;events.push({date:due,type:'due',n})}}
+ (state.payments||[]).filter(p=>p.kind===kind&&p.account===l.id&&p.id!==excludePaymentId&&String(p.date||'')>=start&&String(p.date||'').slice(0,10)<=through).forEach(p=>events.push({date:String(p.date||start).slice(0,10),type:'payment',p}));
+ events.sort((a,b)=>a.date.localeCompare(b.date)||(a.type===b.type?0:a.type==='due'?-1:1));
+ let principal=Math.max(0,Number(l.principal)||0);const buckets=[];
+ const applyInterest=amount=>{let left=Math.max(0,Number(amount)||0);for(const b of buckets){if(left<=0)break;const paid=Math.min(b.remaining,left);b.remaining=Math.max(0,b.remaining-paid);left-=paid}return left};
+ for(const ev of events){
+  if(ev.type==='due'){const compoundBase=principal+((l.method||'simple')==='compound'?buckets.reduce((sum,b)=>sum+Math.max(0,b.remaining),0):0);const amount=Math.max(0,compoundBase*rate);if(amount>0)buckets.push({date:ev.date,remaining:amount,original:amount});continue}
+  const p=ev.p,amount=Math.max(0,Number(p.amount)||0);
+  if(p.apply==='interest'){applyInterest(amount);continue}
+  if(p.apply==='principal'){principal=Math.max(0,principal-amount);continue}
+  if(p.interestApplied!==undefined||p.principalApplied!==undefined){applyInterest(Number(p.interestApplied)||0);principal=Math.max(0,principal-(Number(p.principalApplied)||0));continue}
+  if(p.apply==='auto'){const left=applyInterest(amount);principal=Math.max(0,principal-left)}
+ }
+ const unpaid=buckets.filter(b=>b.remaining>0.004);
+ return {monthlyInterest:Math.max(0,principal*rate),principalOutstanding:principal,interestOutstanding:unpaid.reduce((s,b)=>s+b.remaining,0),unpaidMonths:unpaid.length,unpaidMonthLabels:unpaid.map(b=>new Date(b.date+'T00:00:00Z').toLocaleDateString('en-GB',{month:'short',year:'numeric',timeZone:'UTC'})),monthsDue:buckets.length,interestBuckets:buckets};
+}
+function interest(l){const kind=state.loans.some(x=>x.id===l.id)?'loan':'debt';return loanLedger(kind,l).interestOutstanding}
+function pageHead(title,desc,button='',action=''){return `<div class="pagehead"><div><h1>${title}</h1><p>${desc}</p></div>${button?`<button class="primary" onclick="${action}">＋ ${button}</button>`:''}</div>`}
+function metric(label,value,ico,sub=''){return `<div class="metric"><div class="metrichead"><span>${label}</span><span class="ico">${ico}</span></div><strong>${value}</strong><div class="sub">${sub}</div></div>`}
+function txRows(arr){if(!arr.length)return `<tr><td colspan="5" class="empty">No records yet. Add your first transaction to get started.</td></tr>`;return arr.slice(0,8).map(t=>`<tr><td><div class="txname"><div class="txico">${t.type==='income'?'↗':'↘'}</div><div><b>${escapeHtml(t.title)}</b><small>${escapeHtml(t.category||'Other')}</small></div></div></td><td>${escapeHtml(t.date)}</td><td><span class="tag ${t.type==='expense'?'out':''}">${t.type}</span></td><td style="text-align:right" class="${t.type==='income'?'positive':'negative'}">${t.type==='income'?'+':'−'}${fmt(t.amount)}</td><td><button class="linkbtn" onclick="editTx('${t.id}')">Edit</button> <button class="linkbtn" onclick="deleteTx('${t.id}')">Delete</button></td></tr>`).join('')}
+function dashboard(){const cur=state.currency||'THB',net=total('income',cur)-total('expense',cur),loans=outstanding(state.loans,cur),debts=outstanding(state.debts,cur);const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];let bars='';for(let i=5;i>=0;i--){const d=new Date();d.setMonth(d.getMonth()-i);const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');const inc=state.transactions.filter(t=>t.type==='income'&&recordCurrency(t)===cur&&t.date?.startsWith(key)).reduce((s,t)=>s+t.amount,0);const exp=state.transactions.filter(t=>t.type==='expense'&&recordCurrency(t)===cur&&t.date?.startsWith(key)).reduce((s,t)=>s+t.amount,0);const max=Math.max(inc,exp,1);bars+=`<div class="barcol"><div class="bars"><div class="bar" style="height:${Math.max(4,inc/max*100)}%"></div><div class="bar exp" style="height:${Math.max(4,exp/max*100)}%"></div></div><small>${months[d.getMonth()]}</small></div>`}return `<div class="welcome"><div><div class="eyebrow">YOUR MONEY, IN FOCUS</div><h1>Financial overview</h1><p>A clearer view of your money starts with one small step.</p></div><button class="primary goldbtn" onclick="addTransaction('expense')">＋ Quick entry</button></div><div class="cards">${metric('Net cash flow',fmt(net),'◈',`<span class="${net>=0?'positive':'negative'}">${net>=0?'Positive':'Negative'} · all recorded time</span>`)}${metric('Total income',fmt(total('income')),'↗','All recorded income')}${metric('Total expenses',fmt(total('expense')),'↘','All recorded expenses')}${metric('Loans receivable',fmt(loans),'⇄',`${state.loans.length} loan account(s)`)}</div><div class="layout"><section class="panel"><div class="panelhead"><div><h2>Cash flow</h2><p>Income and expenses · last 6 months</p></div><button class="linkbtn" onclick="go('Reports')">View reports ↗</button></div><div class="chart">${bars}</div><div class="legend"><span><i class="dot"></i>Income</span><span><i class="dot grey"></i>Expenses</span></div></section><section class="panel"><div class="panelhead"><div><h2>Quick actions</h2><p>Record it while it's fresh</p></div></div><div class="quick"><button onclick="addTransaction('income')"><span class="qico">↗</span><span><b>Add income</b><small>Money received</small></span></button><button onclick="addTransaction('expense')"><span class="qico">↘</span><span><b>Add expense</b><small>Money spent</small></span></button><button onclick="addLoan('loan')"><span class="qico">⇄</span><span><b>Loan given</b><small>Track interest</small></span></button><button onclick="addPayment()"><span class="qico">✓</span><span><b>Record payment</b><small>Update a balance</small></span></button></div></section></div><section class="panel" style="margin-bottom:18px"><div class="panelhead"><div><h2>Recent transactions</h2><p>Your latest financial activity</p></div><button class="linkbtn" onclick="go('Income')">View all ↗</button></div><div class="tablewrap"><table><thead><tr><th>Description</th><th>Date</th><th>Type</th><th style="text-align:right">Amount</th><th></th></tr></thead><tbody>${txRows([...state.transactions].sort((a,b)=>b.date.localeCompare(a.date)))}</tbody></table></div></section><div class="layout"><section class="panel"><div class="panelhead"><div><h2>Money to repay</h2><p>Outstanding principal</p></div><button class="linkbtn" onclick="go('Debts')">Details ↗</button></div><strong style="font-size:25px">${fmt(debts)}</strong><p class="sub">Across ${state.debts.length} debt account(s)</p></section><section class="panel"><div class="panelhead"><div><h2>Interest accrued estimate</h2><p>Based on active loan settings</p></div></div><strong style="font-size:25px">${fmt(state.loans.reduce((s,l)=>s+interest(l),0))}</strong><p class="sub">Estimate only; confirm agreed calculation rules.</p></section></div>`}
+function transactionsPage(type){const arr=state.transactions.filter(t=>type==='all'||t.type===type).sort((a,b)=>b.date.localeCompare(a.date));return `${pageHead(type==='income'?'Income':type==='expense'?'Expenses':'Transactions','Every amount, categorized and easy to find.',type==='expense'?'Add expense':'Add income',`addTransaction('${type==='expense'?'expense':'income'}')`)}<div class="cards">${metric('Total income',fmt(total('income')),'↗','All records')}${metric('Total expenses',fmt(total('expense')),'↘','All records')}${metric('Transactions',arr.length,'▤','Matching records')}${metric('Net cash flow',fmt(total('income')-total('expense')),'◈','Income minus expenses')}</div><div class="panel"><div class="toolbar"><input id="txSearch" placeholder="Search description or category..." oninput="filterTx()"><select id="txType" onchange="filterTx()"><option value="all">All types</option><option value="income">Income</option><option value="expense">Expense</option></select><input id="txMonth" type="month" onchange="filterTx()"></div><div class="tablewrap"><table><thead><tr><th>Description</th><th>Date</th><th>Type</th><th style="text-align:right">Amount</th><th></th></tr></thead><tbody id="txBody">${txRows(arr)}</tbody></table></div></div>`}
+function filterTx(){const q=(document.getElementById('txSearch')?.value||'').toLowerCase(),typ=document.getElementById('txType')?.value||'all',month=document.getElementById('txMonth')?.value||'';const arr=state.transactions.filter(t=>(typ==='all'||t.type===typ)&&(!month||t.date.startsWith(month))&&(`${t.title} ${t.category} ${t.note}`.toLowerCase().includes(q))).sort((a,b)=>b.date.localeCompare(a.date));document.getElementById('txBody').innerHTML=txRows(arr)}
+function loanRows(list,kind){
+ if(!list.length)return '<div class="empty account-empty"><div class="empty-icon">⇄</div><b>No accounts yet</b><p>Add your first '+(kind==='loan'?'loan given':'debt')+' to see its details here.</p></div>';
+ return '<div class="account-list">'+list.map(l=>{
+  const ledger=loanLedger(kind,l),bal=ledger.principalOutstanding;
+  return '<article class="account-card"><button class="account-open" onclick="openPerson(\''+kind+'\',\''+l.id+'\')" aria-label="Open '+escapeHtml(l.person)+' details"><span class="account-avatar">'+escapeHtml(String(l.person||'?').trim().charAt(0).toUpperCase())+'</span><span class="account-main"><b>'+escapeHtml(l.person)+'</b><small>'+(kind==='loan'?'Loan receivable':'Debt payable')+' · '+(l.rate||0)+'% / '+(l.period==='yearly'?'year':l.period==='none'?'no interest':'month')+'</small><span class="account-openhint">View account details <span>›</span></span></span><span class="account-balance"><b>'+fmt(bal)+'</b><small>Principal left</small><em>'+fmt(ledger.interestOutstanding)+' interest due</em></span></button><div class="account-actions"><button class="linkbtn" onclick="payFor(\''+kind+'\',\''+l.id+'\')">＋ Payment</button><button class="linkbtn" onclick="editLoan(\''+kind+'\',\''+l.id+'\')">Edit details</button></div></article>';
+ }).join('')+'</div>';
+}
+
+function payFor(kind,id){addPaymentFor(kind,id)}
+function addPaymentFor(kind,id){const l=(kind==='loan'?state.loans:state.debts).find(x=>x.id===id);if(!l)return;openModal('Record payment · '+escapeHtml(l.person),`<form id="payOne"><div class="formgrid">${field('Amount ('+state.currency+')','amount','number')}${field('Date','date','date',today())}${field('Apply to','apply','select','','<option value="auto" selected>Automatic — interest first, then principal</option><option value="interest">Interest only</option><option value="principal">Principal only</option><option value="other">Other / mixed (record only)</option>')}<div class="field full"><label>Note</label><input name="note"></div>${slipUploadMarkup('payOne')}</div><div class="formactions"><button type="button" class="pill" onclick="closeModal()">Cancel</button><button class="primary">Save payment</button></div></form>`);document.getElementById('payOne').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target),amount=Number(f.get('amount')),date=f.get('date')||today(),apply=String(f.get('apply')||'auto');if(!Number.isFinite(amount)||amount<=0){toast('Enter a payment amount greater than zero');return}const allocation=allocatePayment(kind,l,amount,date,apply);if(allocation.error){toast(allocation.error);return}const {interestApplied,principalApplied}=allocation;const p={id:crypto.randomUUID(),account:id,kind,amount,date,apply,note:String(f.get('note')||'').trim(),interestApplied,principalApplied};state.payments.unshift(p);if(principalApplied>0)l.principalPaid=Math.min(Number(l.principal)||0,Number(l.principalPaid||0)+principalApplied);save();closeModal();render();toast('Payment saved: '+fmt(interestApplied)+' to interest, '+fmt(principalApplied)+' to principal')}}
+function loansPage(kind){
+ const list=kind==='loan'?state.loans:state.debts;
+ const cur=state.currency||'THB';
+ const totalBal=list.filter(l=>recordCurrency(l)===cur).reduce((sum,l)=>sum+loanLedger(kind,l).principalOutstanding,0);
+ const interestDue=list.filter(l=>recordCurrency(l)===cur).reduce((sum,l)=>sum+loanLedger(kind,l).interestOutstanding,0);
+ const unpaidMonths=list.reduce((sum,l)=>sum+loanLedger(kind,l).unpaidMonths,0);
+ return pageHead(kind==='loan'?'Loans given':'My debts',kind==='loan'?'Choose a person to open their complete loan account.':'Choose a person to open their complete debt account.',kind==='loan'?'Add loan':'Add debt',`addLoan('${kind}')`)+
+ '<div class="cards">'+metric(kind==='loan'?'Total principal lent':'Total debt principal',fmt(list.reduce((sum,l)=>sum+Number(l.principal||0),0)),'⇄',list.length+' accounts')+
+ metric('Principal remaining',fmt(totalBal),'◈','After principal payments')+
+ metric('Unpaid interest',fmt(interestDue),'％',unpaidMonths+' unpaid account-months')+
+ metric('Payments recorded',state.payments.filter(p=>p.kind===kind).length,'✓','Saved in payment history')+'</div>'+
+ '<div class="notice loan-tip"><b>Easy account access</b><span>Tap the borrower’s name or account card to open their personal page. Loan details, monthly interest ledger, payment history and account database are separated into clear sections.</span></div>'+
+ '<section class="panel account-panel"><div class="panelhead"><div><h2>'+(kind==='loan'?'People who borrowed':'My creditors')+'</h2><p>Select one account to view its complete details</p></div><span class="account-count">'+list.length+' '+(list.length===1?'account':'accounts')+'</span></div>'+loanRows(list,kind)+'</section>';
+}
+let personDetail={kind:'loan',id:'',tab:'overview'};
+function openPerson(kind,id,tab='overview'){personDetail={kind,id,tab};current='PersonDetail';render();if(window.scrollTo)window.scrollTo({top:0,behavior:'auto'});}
+function openPersonTab(tab){personDetail.tab=tab;render();if(window.scrollTo)window.scrollTo({top:0,behavior:'auto'});}
+function personDetailPage(){
+ const kind=personDetail.kind,l=(kind==='loan'?state.loans:state.debts).find(x=>x.id===personDetail.id);
+ if(!l){current=kind==='loan'?'Loans':'Debts';return loansPage(kind);}
+ const ledger=loanLedger(kind,l),payments=(state.payments||[]).filter(p=>p.kind===kind&&p.account===l.id).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+ const tabs=[['overview','Overview','⌂'],['ledger','Loan ledger','▤'],['payments','Payments','↔'],['database','Database','▦']];
+ const nav='<div class="person-tabs">'+tabs.map(t=>'<button class="'+(personDetail.tab===t[0]?'active':'')+'" onclick="openPersonTab(\''+t[0]+'\')"><span>'+t[2]+'</span>'+t[1]+'</button>').join('')+'</div>';
+ const header='<div class="person-head"><button class="back-account" onclick="go(\''+(kind==='loan'?'Loans':'Debts')+'\')">‹ Back to '+(kind==='loan'?'Loans':'Debts')+'</button><div class="person-title-row"><div class="person-avatar">'+escapeHtml(String(l.person||'?').trim().charAt(0).toUpperCase())+'</div><div class="person-title"><h1>'+escapeHtml(l.person)+'</h1><p>'+(kind==='loan'?'Borrower account':'Debt account')+' · Account details and payment records</p></div><button class="pill person-edit" onclick="editLoan(\''+kind+'\',\''+l.id+'\')">Edit</button></div><div class="person-quick-actions"><button class="primary" onclick="payFor(\''+kind+'\',\''+l.id+'\')">＋ Record payment</button><button class="pill" onclick="openPersonTab(\'ledger\')">View interest ledger</button></div></div>';
+ const overview='<div class="cards person-metrics">'+metric('Principal remaining',fmt(ledger.principalOutstanding),'◈','Current outstanding principal')+metric('Unpaid interest',fmt(ledger.interestOutstanding),'％',ledger.unpaidMonths+' unpaid months')+metric('Monthly interest',fmt(ledger.monthlyInterest),'↗','At current principal')+metric('Total payments',payments.length,'✓','Recorded for this person')+'</div><section class="panel detail-panel"><div class="panelhead"><div><h2>Account summary</h2><p>Key information for '+escapeHtml(l.person)+'</p></div></div><div class="detail-grid">'+detailItem('Original principal',fmt(l.principal))+detailItem('Interest rate',(l.rate||0)+'% '+(l.period==='yearly'?'per year':l.period==='none'?'(no interest)':'per month'))+detailItem('Interest method',(l.method||'simple')==='compound'?'Compound interest':'Simple interest')+detailItem('Interest starts',l.start||'Not set')+detailItem('Interest stops',l.stop||'No end date')+detailItem('Due date',l.due||'Not set')+detailItem('Principal repaid',fmt(l.principalPaid||0))+detailItem('Account notes',l.note||'No notes saved')+'</div></section><section class="panel detail-panel"><div class="panelhead"><div><h2>Recent payments</h2><p>Latest repayments for this account only</p></div><button class="pill" onclick="openPersonTab(\'payments\')">View all</button></div>'+personPaymentTable(payments.slice(0,5),kind,l)+'</section>';
+ const ledgerView='<section class="panel detail-panel"><div class="panelhead"><div><h2>Monthly interest ledger</h2><p>Oldest unpaid interest is settled first. Check the agreement and dates.</p></div></div><div class="cards ledger-metrics">'+metric('Monthly interest',fmt(ledger.monthlyInterest),'％','Based on current principal')+metric('Interest due',fmt(ledger.interestOutstanding),'◈','Still unpaid')+metric('Unpaid months',ledger.unpaidMonths,'▦','Months with a remaining balance')+'</div><div class="tablewrap ledger-table"><table><thead><tr><th>Month due</th><th>Original interest</th><th>Remaining</th><th>Status</th></tr></thead><tbody>'+(ledger.interestBuckets.length?ledger.interestBuckets.slice().reverse().map(b=>'<tr><td>'+new Date(b.date+'T00:00:00Z').toLocaleDateString('en-GB',{month:'long',year:'numeric',timeZone:'UTC'})+'</td><td>'+fmt(b.original)+'</td><td>'+fmt(b.remaining)+'</td><td><span class="status-pill '+(b.remaining>0.004?'status-due':'status-paid')+'">'+(b.remaining>0.004?'Unpaid':'Paid')+'</span></td></tr>').join(''):'<tr><td colspan="4" class="empty">No monthly interest has accrued yet.</td></tr>')+'</tbody></table></div></section>';
+ const paymentView='<section class="panel detail-panel"><div class="panelhead"><div><h2>Payment history</h2><p>Only payments linked to '+escapeHtml(l.person)+'</p></div><button class="primary" onclick="payFor(\''+kind+'\',\''+l.id+'\')">＋ Add payment</button></div>'+personPaymentTable(payments,kind,l)+'</section>';
+ const database='<section class="panel detail-panel"><div class="panelhead"><div><h2>Account database</h2><p>Stored record for this person. Edit to update account details.</p></div><button class="pill" onclick="editLoan(\''+kind+'\',\''+l.id+'\')">Edit record</button></div><div class="detail-grid">'+detailItem('Account ID',l.id)+detailItem('Record created',l.created||'Not recorded')+detailItem('Person / institution',l.person)+detailItem('Original principal',fmt(l.principal))+detailItem('Principal already repaid',fmt(l.principalPaid||0))+detailItem('Current principal balance',fmt(ledger.principalOutstanding))+detailItem('Interest period',l.period==='yearly'?'Yearly':l.period==='none'?'No interest':'Monthly')+detailItem('Interest calculation',(l.method||'simple')==='compound'?'Compound':'Simple')+detailItem('Start date',l.start||'—')+detailItem('Stop date',l.stop||'—')+detailItem('Due date',l.due||'—')+detailItem('Notes',l.note||'—')+'</div><div class="database-actions"><button class="primary" onclick="payFor(\''+kind+'\',\''+l.id+'\')">Record a payment</button><button class="pill" onclick="editLoan(\''+kind+'\',\''+l.id+'\')">Edit account</button><button class="pill danger-action" onclick="deleteLoan(\''+kind+'\',\''+l.id+'\')">Delete account</button></div></section>';
+ const body=personDetail.tab==='ledger'?ledgerView:personDetail.tab==='payments'?paymentView:personDetail.tab==='database'?database:overview;
+ return '<div class="person-page">'+header+nav+'<div class="person-tab-content">'+body+'</div></div>';
+}
+function detailItem(label,value){return '<div class="detail-item"><small>'+escapeHtml(label)+'</small><b>'+escapeHtml(value)+'</b></div>'}
+function personPaymentTable(rows,kind,l){
+ if(!rows.length)return '<div class="empty">No payments for this person yet. Use “Record payment” to add the first payment.</div>';
+ return '<div class="tablewrap person-payments"><table><thead><tr><th>Date</th><th>Applied to</th><th>Note / slip remark</th><th>Amount</th></tr></thead><tbody>'+rows.map(p=>'<tr><td>'+escapeHtml(p.date||'—')+'</td><td>'+escapeHtml(p.apply==='auto'?'Interest '+fmt(p.interestApplied||0)+' + Principal '+fmt(p.principalApplied||0):p.apply||'—')+'</td><td>'+escapeHtml(p.note||'—')+'</td><td>'+fmt(p.amount)+'</td></tr>').join('')+'</tbody></table></div>';
+}
+
+function savingsPage(){const totalS=state.savings.reduce((s,x)=>s+Number(x.saved||0),0);return `${pageHead('Savings & goals','Build your future, one goal at a time.','Add savings goal','addSaving()')}<div class="cards">${metric('Total savings',fmt(totalS),'◈','Across all goals')}${metric('Active goals',state.savings.length,'◎','Your targets')}${metric('Income recorded',fmt(total('income')),'↗','All time')}${metric('Available after expenses',fmt(total('income')-total('expense')),'✦','Recorded net cash flow')}</div><div class="layout"><section class="panel"><div class="panelhead"><div><h2>Your goals</h2><p>Track progress toward what matters</p></div></div>${state.savings.length?state.savings.map(s=>`<div style="padding:15px 0;border-bottom:1px solid var(--line)"><div style="display:flex;justify-content:space-between;gap:10px"><b>${escapeHtml(s.name)}</b><small>${fmt(s.saved)} / ${fmt(s.target)}</small></div><div style="height:7px;background:#eef1f5;border-radius:9px;margin:12px 0;overflow:hidden"><div style="height:100%;width:${Math.min(100,s.target?s.saved/s.target*100:0)}%;background:var(--gold);border-radius:9px"></div></div><small class="sub">${s.target?Math.round(s.saved/s.target*100):0}% complete · ${escapeHtml(s.date||'No target date')}</small> <button class="linkbtn" onclick="addToSaving('${s.id}')">＋ Add money</button></div>`).join(''):'<div class="empty">Create your first savings goal.</div>'}</section><section class="panel"><h2 style="font-size:15px;margin-top:0">Savings tip</h2><p style="font-size:12px;line-height:1.8;color:var(--muted)">Give every goal a name, target amount, and date. A small automatic habit can make progress easier to see. Keep emergency savings separate from money intended for planned purchases.</p></section></div>`}
+function addSaving(){openModal('Create savings goal',`<form id="savingForm"><div class="formgrid">${field('Goal name','name')}${field('Target amount ('+state.currency+')','target','number')}${field('Already saved','saved','number','0')}${field('Target date (optional)','date','date','')}</div><div class="formactions"><button type="button" class="pill" onclick="closeModal()">Cancel</button><button class="primary">Create goal</button></div></form>`);document.getElementById('savingForm').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);state.savings.push({id:crypto.randomUUID(),name:f.get('name'),target:Number(f.get('target')),saved:Number(f.get('saved')||0),currency:state.currency||'THB',date:f.get('date')});save();closeModal();render();toast('Goal created')}}
+function addToSaving(id){const s=state.savings.find(x=>x.id===id);openModal('Add to savings',`<form id="savingAdd">${field('Amount','amount','number')}<div class="formactions"><button type="button" class="pill" onclick="closeModal()">Cancel</button><button class="primary">Add</button></div></form>`);document.getElementById('savingAdd').onsubmit=e=>{e.preventDefault();s.saved+=Number(new FormData(e.target).get('amount'));save();closeModal();render();toast('Savings updated')}}
+function paymentsPage(){return `${pageHead('Payment history','Every repayment in one auditable timeline.','Record payment','addPayment()')}<div class="panel"><div class="tablewrap"><table><thead><tr><th>Date</th><th>Account</th><th>Type</th><th>Applied to</th><th>Note</th><th style="text-align:right">Amount</th></tr></thead><tbody>${state.payments.length?state.payments.map(p=>{const l=(p.kind==='loan'?state.loans:state.debts).find(x=>x.id===p.account);return `<tr><td>${escapeHtml(p.date)}</td><td>${escapeHtml(l?.person||'Account removed')}</td><td>${p.kind==='loan'?'Loan given':'My debt'}</td><td>${escapeHtml(p.apply==='auto'?'Interest '+fmt(p.interestApplied||0)+' + Principal '+fmt(p.principalApplied||0):p.apply)}</td><td>${escapeHtml(p.note||'—')}</td><td style="text-align:right">${fmt(p.amount)}</td></tr>`}).join(''):'<tr><td colspan="6" class="empty">No payments recorded yet.</td></tr>'}</tbody></table></div></div>`}
+function budgetPage(){return `${pageHead('Budget planner','Set spending limits and compare them with recorded expenses.','Add budget','addBudget()')}<div class="layout"><section class="panel"><div class="panelhead"><div><h2>Category budgets</h2><p>Monthly spending limits</p></div></div>${state.budgets.length?state.budgets.map(b=>{const spent=state.transactions.filter(t=>t.type==='expense'&&recordCurrency(t)===recordCurrency(b)&&t.category===b.category&&t.date?.startsWith(today().slice(0,7))).reduce((s,t)=>s+t.amount,0);return `<div style="padding:14px 0;border-bottom:1px solid var(--line)"><div style="display:flex;justify-content:space-between"><b style="font-size:12px">${escapeHtml(b.category)}</b><span style="font-size:11px">${fmt(spent)} / ${fmt(b.limit)}</span></div><div style="height:7px;background:#eef1f5;border-radius:9px;margin-top:10px;overflow:hidden"><div style="height:100%;width:${Math.min(100,spent/b.limit*100)}%;background:${spent>b.limit?'var(--red)':'var(--gold)'}"></div></div><small class="sub">${spent>b.limit?'Over budget by '+fmt(spent-b.limit):fmt(b.limit-spent)+' remaining'}</small></div>`}).join(''):'<div class="empty">No budgets yet. Set a category limit to get started.</div>'}</section><section class="panel"><h2 style="font-size:15px;margin-top:0">This month</h2><p class="sub">Total expenses recorded</p><strong style="font-size:27px">${fmt(state.transactions.filter(t=>t.type==='expense'&&t.date?.startsWith(today().slice(0,7))).reduce((s,t)=>s+t.amount,0))}</strong><p class="sub">Only transactions dated in the current month are included.</p></section></div>`}
+function addBudget(){openModal('Add category budget',`<form id="budgetForm"><div class="formgrid">${field('Category','category','select','','<option>Food</option><option>Housing</option><option>Transport</option><option>Shopping</option><option>Health</option><option>Other</option>')}${field('Monthly limit ('+state.currency+')','limit','number')}</div><div class="formactions"><button type="button" class="pill" onclick="closeModal()">Cancel</button><button class="primary">Save budget</button></div></form>`);document.getElementById('budgetForm').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);state.budgets.push({id:crypto.randomUUID(),category:f.get('category'),limit:Number(f.get('limit')),currency:state.currency||'THB'});save();closeModal();render();toast('Budget saved')}}
+function reportsPage(){const cur=state.currency||'THB',income=total('income',cur),expense=total('expense',cur);const cats={};state.transactions.filter(t=>t.type==='expense'&&recordCurrency(t)===cur).forEach(t=>cats[t.category]=(cats[t.category]||0)+t.amount);return `${pageHead('Reports & insights','A simple snapshot of your recorded financial activity.','Export CSV','exportCSV()')}<div class="cards">${metric('Income',fmt(income),'↗','Recorded total')}${metric('Expenses',fmt(expense),'↘','Recorded total')}${metric('Net cash flow',fmt(income-expense),'◈','Income minus expenses')}${metric('Savings rate',income?Math.round((income-expense)/income*100)+'%':'—','％','Based on recorded income')}</div><div class="layout"><section class="panel"><div class="panelhead"><div><h2>Expense breakdown</h2><p>By category · all recorded time</p></div></div>${Object.entries(cats).length?Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([cat,n])=>`<div style="padding:11px 0;border-bottom:1px solid var(--line)"><div style="display:flex;justify-content:space-between;font-size:12px"><b>${escapeHtml(cat)}</b><span>${fmt(n)}</span></div><div style="height:6px;background:#edf0f5;border-radius:9px;margin-top:8px"><div style="height:100%;width:${expense?n/expense*100:0}%;background:var(--gold);border-radius:9px"></div></div></div>`).join(''):'<div class="empty">Add expense records to see a breakdown.</div>'}</section><section class="panel"><h2 style="font-size:15px;margin-top:0">Export & review</h2><p style="font-size:12px;line-height:1.7;color:var(--muted)">Download your transaction records as CSV for spreadsheets, or export all records as a JSON backup. Keep backups somewhere secure.</p><button class="primary" onclick="exportCSV()">⇩ Download transaction CSV</button><p><button class="pill" onclick="exportData()">Download full JSON backup</button></p></section></div>`}
+function settingsPage(){return `${pageHead('Settings & backup','Manage your preferences and protect your records.')}<div class="notice"><b>Data & cloud sync:</b> When you are signed out, records stay in this browser on this device. Sign in to your Finance Master account, export a JSON backup first, then use <b>Upload this device to cloud</b> for the first upload. After the cloud copy is connected, signed-in devices sync changes automatically. If a sync conflict occurs, syncing pauses to protect both copies.</div><div class="settingsgrid"><section class="panel"><h2 style="font-size:15px;margin-top:0">Preferences</h2><div class="field" style="margin:16px 0"><label>Currency</label><select id="currency" onchange="state.currency=this.value;save();render()"><option value="THB" ${state.currency==='THB'?'selected':''}>Thai Baht (THB ฿)</option><option value="MMK" ${state.currency==='MMK'?'selected':''}>Myanmar Kyat (MMK)</option><option value="USD" ${state.currency==='USD'?'selected':''}>US Dollar (USD $)</option><option value="SGD" ${state.currency==='SGD'?'selected':''}>Singapore Dollar (SGD)</option></select></div><p class="sub">Default currency for new records. Existing records must be classified individually because THB and MMK are mixed; changing this setting never converts amounts.</p><div class="notice" style="margin-top:12px"><b>Mixed-currency safety:</b> Records without a currency are legacy records. Review and label them before relying on cross-currency totals.</div><button class="pill" onclick="reviewLegacyCurrencies()">Review unclassified records</button><p class="sub" id="currencyReviewStatus" style="margin-top:9px">${legacyCurrencyCount()} legacy record(s) need a currency label.</p></section><section class="panel"><h2 style="font-size:15px;margin-top:0">Backup & restore</h2><p class="sub">Export a complete copy of all records or restore from a previous Finance Master JSON backup.</p><p><button class="primary" onclick="exportData()">⇩ Export full backup</button></p><p><label class="pill" style="display:inline-block">⇧ Restore JSON backup <input type="file" accept=".json,application/json" onchange="restoreData(event)" style="display:none"></label></p><button class="pill" onclick="exportCSV()">Export transactions CSV</button></section><section class="panel" style="grid-column:1/-1"><h2 style="font-size:15px;margin-top:0">Firebase Cloud Sync</h2><p class="sub">Sign in with your own Finance Master account. Your existing device data stays local until you explicitly upload it.</p><div id="fmAuthStatus" class="notice">Checking Firebase connection…</div><div class="formgrid"><div class="field"><label>Email</label><input id="fmEmail" type="email" autocomplete="username" placeholder="you@example.com"></div><div class="field"><label>Password</label><input id="fmPassword" type="password" autocomplete="current-password" placeholder="At least 6 characters"></div></div><div class="formactions" style="justify-content:flex-start;flex-wrap:wrap"><button class="primary" onclick="window.fmSignIn()">Sign in</button><button class="pill" onclick="window.fmSignUp()">Create account</button><button class="pill" onclick="window.fmSignOut()">Sign out</button></div><div style="height:1px;background:var(--line);margin:16px 0"></div><div class="notice"><b>Protect your data:</b> Export a full JSON backup before the first upload or before replacing local data. First upload/download requires your action; after the cloud copy is connected, new changes sync automatically. If two devices change data at the same time, sync pauses rather than silently overwriting either copy. Keep your password private.</div><div class="formactions" style="justify-content:flex-start;flex-wrap:wrap"><button class="primary goldbtn" onclick="window.fmUploadLocal()">Upload this device to cloud</button><button class="pill" onclick="window.fmDownloadCloud()">Download cloud data to this device</button></div><p class="sub">If sign-in is blocked after deployment, add <b>finance-master-starter.vercel.app</b> under Firebase Authentication → Settings → Authorized domains.</p></section><section class="panel"><h2 style="font-size:15px;margin-top:0">Data controls</h2><p class="sub">Reset permanently deletes the records stored in this browser. Export a backup first.</p><button class="pill" style="color:var(--red)" onclick="resetData()">Reset local data</button></section></div>`}
+function editTx(id){
+ const t=state.transactions.find(x=>x.id===id);
+ if(!t){toast('Transaction not found');return}
+ const categories=['Salary','Food','Housing','Transport','Shopping','Health','Bonus','Other'];
+ const options=categories.map(x=>'<option '+((t.category||'Other')===x?'selected':'')+'>'+x+'</option>').join('');
+ openModal(t.type==='income'?'Edit income':'Edit expense',
+ '<form id="editTxForm"><div class="formgrid">'+
+ '<div class="field full"><label>Description</label><input name="title" required value="'+escapeHtml(t.title||'')+'"></div>'+
+ '<div class="field"><label>Amount ('+state.currency+')</label><input name="amount" type="number" min="0.01" step="0.01" required value="'+Number(t.amount||0)+'"></div>'+
+ '<div class="field"><label>Date</label><input name="date" type="date" required value="'+escapeHtml(t.date||today())+'"></div>'+
+ '<div class="field full"><label>Category</label><select name="category">'+options+'</select></div>'+
+ '<div class="field full"><label>Note</label><input name="note" value="'+escapeHtml(t.note||'')+'"></div></div>'+
+ '<div class="formactions"><button type="button" class="pill" onclick="closeModal()">Cancel</button><button class="primary" type="submit">Save changes</button></div></form>');
+ const form=document.getElementById('editTxForm');
+ form.onsubmit=function(e){e.preventDefault();const d=new FormData(form),amount=Number(d.get('amount')),title=String(d.get('title')||'').trim();if(!title||!Number.isFinite(amount)||amount<=0){toast('Enter a valid description and amount');return}Object.assign(t,{title,amount,date:d.get('date'),category:d.get('category'),note:d.get('note')});save();closeModal();render();toast('Transaction updated')};
+}
+function deleteTx(id){if(confirm('Delete this transaction? This cannot be undone. Export a backup first if needed.')){state.transactions=state.transactions.filter(t=>t.id!==id);save();render();toast('Transaction deleted')}}
+function editLoan(kind,id){
+ const list=kind==='loan'?state.loans:state.debts;
+ const l=list.find(x=>x.id===id);
+ if(!l){toast('Account not found');return}
+ const periodOptions=['monthly','yearly','none'].map(p=>'<option value="'+p+'" '+(l.period===p?'selected':'')+'>'+(p==='none'?'No interest':p==='yearly'?'Yearly':'Monthly')+'</option>').join('');
+ const methodOptions=['simple','compound'].map(p=>'<option value="'+p+'" '+((l.method||'simple')===p?'selected':'')+'>'+(p==='simple'?'Simple interest':'Compound interest')+'</option>').join('');
+ openModal(kind==='loan'?'Edit loan account':'Edit debt account',
+ '<form id="editLoanForm"><div class="formgrid">'+
+ '<div class="field full"><label>Person / Institution</label><input name="person" required value="'+escapeHtml(l.person||'')+'"></div>'+
+ '<div class="field"><label>Principal ('+state.currency+')</label><input name="principal" type="number" min="0" step="0.01" required value="'+Number(l.principal||0)+'"></div>'+
+ '<div class="field"><label>Interest rate (%)</label><input name="rate" type="number" min="0" step="0.01" required value="'+Number(l.rate||0)+'"></div>'+
+ '<div class="field"><label>Interest period</label><select name="period">'+periodOptions+'</select></div>'+
+ '<div class="field"><label>Interest method</label><select name="method">'+methodOptions+'</select></div>'+
+ '<div class="field"><label>Interest starts</label><input name="start" type="date" value="'+escapeHtml(l.start||'')+'"></div>'+
+ '<div class="field"><label>Interest stops</label><input name="stop" type="date" value="'+escapeHtml(l.stop||'')+'"></div>'+
+ '<div class="field"><label>Due date</label><input name="due" type="date" value="'+escapeHtml(l.due||'')+'"></div>'+
+ '<div class="field full"><label>Notes</label><input name="note" value="'+escapeHtml(l.note||'')+'"></div></div>'+
+ '<div class="formactions"><button type="button" class="pill" onclick="closeModal()">Cancel</button><button class="primary" type="submit">Save changes</button></div></form>');
+ const form=document.getElementById('editLoanForm');
+ form.onsubmit=function(e){
+  e.preventDefault();
+  const d=new FormData(form),principal=Number(d.get('principal')),rate=Number(d.get('rate')),person=String(d.get('person')||'').trim();
+  if(!person||!Number.isFinite(principal)||principal<0||!Number.isFinite(rate)||rate<0){toast('Please enter valid account details');return}
+  Object.assign(l,{person,principal,rate,period:d.get('period'),method:d.get('method'),start:d.get('start'),stop:d.get('stop'),due:d.get('due'),note:d.get('note')});
+  l.principalPaid=Math.min(principal,Number(l.principalPaid||0));
+  save();closeModal();render();toast('Account updated');
+ };
+}
+function deleteLoan(kind,id){if(!confirm('Delete this account? Related payment history will remain but may show Account removed.'))return;state[kind==='loan'?'loans':'debts']=state[kind==='loan'?'loans':'debts'].filter(x=>x.id!==id);if(current==='PersonDetail'&&personDetail.id===id)current=kind==='loan'?'Loans':'Debts';save();render();toast('Account deleted')}
+function exportData(){const blob=new Blob([JSON.stringify({...state,exportedAt:new Date().toISOString(),formatVersion:1},null,2)],{type:'application/json'});download(blob,'finance-master-backup-'+today()+'.json')}
+function exportCSV(){const rows=[['Date','Type','Description','Category','Amount','Note'],...state.transactions.map(t=>[t.date,t.type,t.title,t.category,t.amount,t.note||''])];const csv=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');download(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),'finance-master-transactions-'+today()+'.csv')}
+function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();URL.revokeObjectURL(a.href)}
+function restoreData(e){const file=e.target.files&&e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const incoming=JSON.parse(reader.result);const collections=['transactions','loans','debts','savings','budgets','payments'];if(!incoming||typeof incoming!=='object'||!Array.isArray(incoming.transactions)||collections.some(k=>incoming[k]!==undefined&&!Array.isArray(incoming[k])))throw Error('Invalid backup');if(!confirm('Restore this backup and replace the records currently stored on this device? If current records exist, Finance Master will first download a safety backup.'))return;const hasCurrent=collections.some(k=>Array.isArray(state[k])&&state[k].length>0);if(hasCurrent)exportData();state={currency:['THB','MMK','USD','SGD'].includes(incoming.currency)?incoming.currency:'THB',transactions:incoming.transactions,loans:incoming.loans||[],debts:incoming.debts||[],savings:incoming.savings||[],budgets:incoming.budgets||[],payments:incoming.payments||[]};save();render();toast('Backup restored. A safety backup was downloaded if this device had records.')}catch(err){alert('Could not restore: this file is not a valid Finance Master backup. Your existing records were not replaced.')}};reader.readAsText(file);e.target.value='';}
+function resetData(){if(!confirm('Permanently delete ALL local Finance Master records on this device? If records exist, Finance Master will first download a safety backup.'))return;const hasCurrent=['transactions','loans','debts','savings','budgets','payments'].some(k=>Array.isArray(state[k])&&state[k].length>0);if(hasCurrent)exportData();state={currency:state.currency,transactions:[],loans:[],debts:[],savings:[],budgets:[],payments:[]};save();render();toast('Local records reset. A safety backup was downloaded if records existed.')}
+function syncMobileNav(){
+  const sidePage=current==='PersonDetail'?(personDetail.kind==='loan'?'Loans':'Debts'):current;
+  document.querySelectorAll('#sideNav [data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===sidePage));
+  const nav=document.getElementById('mobileNav'),more=document.getElementById('mobileMorePanel');
+  if(current==='PersonDetail'){
+   if(more)more.classList.remove('open');
+   const tabs=[['overview','Overview','⌂'],['ledger','Ledger','▤'],['payments','Payments','↔'],['database','Database','▦']];
+   nav.innerHTML=tabs.map(t=>'<button class="'+(personDetail.tab===t[0]?'active':'')+'" onclick="openPersonTab(\''+t[0]+'\')"><span>'+t[2]+'</span>'+t[1]+'</button>').join('');
+   nav.style.display='flex';nav.classList.add('person-mobile-nav');
+  }else{
+   nav.classList.remove('person-mobile-nav');
+   const items=[['Dashboard','◫','Home'],['Income','↗','Income'],['Expenses','↘','Expenses'],['Loans','⇄','Loans']];
+   nav.innerHTML=items.map(t=>'<button class="'+(current===t[0]?'active':'')+'" data-page="'+t[0]+'" onclick="go(\''+t[0]+'\')"><span>'+t[1]+'</span>'+t[2]+'</button>').join('')+'<button class="'+(['Savings','Debts','Payments','Budget','Reports','Settings'].includes(current)?'active':'')+'" onclick="toggleMobile()"><span>☰</span>More</button>';
+   nav.style.display='';
+   if(more)more.querySelectorAll('[data-more-page]').forEach(b=>b.classList.toggle('active',b.dataset.morePage===current));
+  }
+}
+function render(){
+ const el=document.getElementById('content');
+ const labels={Dashboard:'Dashboard',Income:'Income',Expenses:'Expenses',Savings:'Savings & Goals',Loans:'Loans Given',Debts:'My Debts',Payments:'Payment History',Budget:'Budget Planner',Reports:'Reports',Settings:'Settings & Backup'};
+ if(current==='PersonDetail'){
+  const list=personDetail.kind==='loan'?state.loans:state.debts;
+  const person=list.find(x=>x.id===personDetail.id);
+  document.getElementById('crumbPage').textContent=person?person.person:'Account details';
+  el.innerHTML=personDetailPage();
+  if(current!=='PersonDetail')document.getElementById('crumbPage').textContent=labels[current]||current;
+ }else{
+  document.getElementById('crumbPage').textContent=labels[current]||current;
+  switch(current){case'Dashboard':el.innerHTML=dashboard();break;case'Income':el.innerHTML=transactionsPage('income');break;case'Expenses':el.innerHTML=transactionsPage('expense');break;case'Savings':el.innerHTML=savingsPage();break;case'Loans':el.innerHTML=loansPage('loan');break;case'Debts':el.innerHTML=loansPage('debt');break;case'Payments':el.innerHTML=paymentsPage();break;case'Budget':el.innerHTML=budgetPage();break;case'Reports':el.innerHTML=reportsPage();break;case'Settings':el.innerHTML=settingsPage();break;default:el.innerHTML=dashboard()}
+ }
+ syncMobileNav();
+}
+render();
+window.fmApp={getState:()=>state,replaceState:(next)=>{state=next;save();render()},hasLocalRecords:()=>Boolean((state.transactions||[]).length||(state.loans||[]).length||(state.debts||[]).length||(state.savings||[]).length||(state.budgets||[]).length||(state.payments||[]).length),toast};
+</script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+const firebaseConfig = {
+  apiKey: "AIzaSyDCNyu8OFTZ2gAxq5lCbpTDd_bUTyO8Rr0",
+  authDomain: "finance-master-8d227.firebaseapp.com",
+  projectId: "finance-master-8d227",
+  storageBucket: "finance-master-8d227.firebasestorage.app",
+  messagingSenderId: "881817485868",
+  appId: "1:881817485868:web:2135de290e0a1150274789"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+let currentUser = null;
+const status = (message, bad=false) => {
+  const el = document.getElementById('fmAuthStatus');
+  if (el) { el.textContent = message; el.style.background = bad ? '#fff0f0' : '#fff8e8'; el.style.color = bad ? '#a62d2d' : '#795d26'; }
+};
+const emailValue = () => (document.getElementById('fmEmail')?.value || '').trim();
+const passwordValue = () => document.getElementById('fmPassword')?.value || '';
+const cloudRef = uid => doc(db, 'users', uid, 'finance', 'data');
+const errText = e => {
+  const map = {
+    'auth/email-already-in-use':'This email already has an account. Sign in instead.',
+    'auth/invalid-email':'Please enter a valid email address.',
+    'auth/weak-password':'Password must be at least 6 characters.',
+    'auth/invalid-credential':'Email or password is incorrect.',
+    'auth/operation-not-allowed':'Email/Password sign-in is not enabled in Firebase Authentication.',
+    'auth/unauthorized-domain':'This website domain is not authorized in Firebase Authentication settings.',
+    'permission-denied':'Firestore denied access. Check the user-only Security Rules.',
+    'unavailable':'Firebase is temporarily unavailable. Check your connection and try again.'
+  };
+  return map[e?.code] || (e?.message || 'An unexpected Firebase error occurred.');
+};
+window.fmSignUp = async () => {
+  const email=emailValue(), password=passwordValue();
+  if (!email || password.length < 6) return status('Enter a valid email and a password with at least 6 characters.', true);
+  try { await createUserWithEmailAndPassword(auth,email,password); status('Account created and signed in. Export a backup, then you can upload your local records.'); }
+  catch(e) { status(errText(e),true); }
+};
+window.fmSignIn = async () => {
+  const email=emailValue(), password=passwordValue();
+  if (!email || !password) return status('Enter your email and password.',true);
+  try { await signInWithEmailAndPassword(auth,email,password); status('Signed in. Your local records have not been changed.'); }
+  catch(e) { status(errText(e),true); }
+};
+window.fmSignOut = async () => {
+  try { await signOut(auth); status('Signed out. Local data remains on this device.'); }
+  catch(e) { status(errText(e),true); }
+};
+window.fmUploadLocal = async () => {
+  if (!currentUser) return status('Sign in first to upload data.',true);
+  if (!confirm('Before uploading, export a full JSON backup from Settings. Continue with uploading the records currently on this device to your private cloud account?')) return;
+  try {
+    const ref=cloudRef(currentUser.uid), snap=await getDoc(ref);
+    if (snap.exists() && !confirm('Cloud data already exists. Replace the cloud copy with this device’s data? This cannot be undone from this screen. Cancel to keep the cloud copy.')) return;
+    const data=window.fmApp.getState();
+    await setDoc(ref,{data, schemaVersion:1, ownerUid:currentUser.uid, updatedAt:serverTimestamp()});
+    syncConflict=false; syncReady=true; localDirty=false; lastCloudSignature=stateSignature(data);
+    status('Upload complete. Your device data was copied to your cloud account. Live sync is active.');
+    window.fmApp.toast('Cloud backup uploaded');
+  } catch(e) { status(errText(e),true); }
+};
+window.fmDownloadCloud = async () => {
+  if (!currentUser) return status('Sign in first to download cloud data.',true);
+  try {
+    const snap=await getDoc(cloudRef(currentUser.uid));
+    if (!snap.exists()) return status('No cloud backup found for this account. Your local data was not changed. Upload this device’s data if this is your first sync.',true);
+    const payload=snap.data()?.data;
+    if (!payload || !Array.isArray(payload.transactions)) return status('Cloud backup format is invalid. Local data was not changed.',true);
+    if (window.fmApp.hasLocalRecords() && !confirm('This will replace the records on this device with the cloud copy. Export a JSON backup first if you need to keep the current local records. Continue?')) return;
+    const safeState={
+      currency: ['THB','MMK','USD','SGD'].includes(payload.currency) ? payload.currency : 'THB',
+      transactions:Array.isArray(payload.transactions)?payload.transactions:[],
+      loans:Array.isArray(payload.loans)?payload.loans:[],
+      debts:Array.isArray(payload.debts)?payload.debts:[],
+      savings:Array.isArray(payload.savings)?payload.savings:[],
+      budgets:Array.isArray(payload.budgets)?payload.budgets:[],
+      payments:Array.isArray(payload.payments)?payload.payments:[]
+    };
+    applyingRemote=true;
+    window.fmApp.replaceState(safeState);
+    applyingRemote=false;
+    syncConflict=false; syncReady=true; localDirty=false; lastCloudSignature=stateSignature(safeState);
+    status('Cloud data downloaded to this device. Live sync is active. Review your records and export a backup.');
+    window.fmApp.toast('Cloud data downloaded');
+  } catch(e) { status(errText(e),true); }
+};
+let stopCloudListener=null;
+let applyingRemote=false;
+let syncReady=false;
+let localDirty=false;
+let syncConflict=false;
+let syncTimer=null;
+let lastCloudSignature='';
+let initialSnapshotHandled=false;
+const stateSignature = value => JSON.stringify({
+  currency:value?.currency || 'THB',
+  transactions:Array.isArray(value?.transactions)?value.transactions:[],
+  loans:Array.isArray(value?.loans)?value.loans:[],
+  debts:Array.isArray(value?.debts)?value.debts:[],
+  savings:Array.isArray(value?.savings)?value.savings:[],
+  budgets:Array.isArray(value?.budgets)?value.budgets:[],
+  payments:Array.isArray(value?.payments)?value.payments:[]
+});
+const normalizeState = payload => ({
+  currency:['THB','MMK','USD','SGD'].includes(payload?.currency)?payload.currency:'THB',
+  transactions:Array.isArray(payload?.transactions)?payload.transactions:[],
+  loans:Array.isArray(payload?.loans)?payload.loans:[],
+  debts:Array.isArray(payload?.debts)?payload.debts:[],
+  savings:Array.isArray(payload?.savings)?payload.savings:[],
+  budgets:Array.isArray(payload?.budgets)?payload.budgets:[],
+  payments:Array.isArray(payload?.payments)?payload.payments:[]
+});
+const writeCurrentState = async () => {
+  if(!currentUser || !syncReady || applyingRemote || !localDirty) return;
+  const data=window.fmApp.getState();
+  const signature=stateSignature(data);
+  if(signature===lastCloudSignature){localDirty=false;return;}
+  try {
+    await setDoc(cloudRef(currentUser.uid),{data,schemaVersion:1,ownerUid:currentUser.uid,updatedAt:serverTimestamp()});
+    lastCloudSignature=signature;
+    localDirty=false;
+    status('Cloud sync is live. Changes are syncing automatically.');
+  } catch(e) {
+    status('Auto-sync failed: '+errText(e)+'. Your data is still saved on this device.',true);
+  }
+};
+window.fmScheduleSync = () => {
+  if(!currentUser || !syncReady || applyingRemote || syncConflict) return;
+  localDirty=true;
+  if(syncTimer) clearTimeout(syncTimer);
+  syncTimer=setTimeout(writeCurrentState,900);
+};
+const startCloudListener = user => {
+  if(stopCloudListener){stopCloudListener();stopCloudListener=null;}
+  syncReady=false; syncConflict=false; initialSnapshotHandled=false; localDirty=false; lastCloudSignature='';
+  if(!user) return;
+  stopCloudListener=onSnapshot(cloudRef(user.uid), async snap => {
+    if(!currentUser || currentUser.uid!==user.uid) return;
+    if(!snap.exists()){
+      if(!initialSnapshotHandled){
+        initialSnapshotHandled=true;
+        status('Signed in. No cloud backup found yet. Export a JSON backup, then use Upload this device to cloud.');
+      }
+      return;
+    }
+    const payload=snap.data()?.data;
+    if(!payload || !Array.isArray(payload.transactions)){
+      status('Cloud data format is invalid. Local records were not changed.',true);return;
+    }
+    const remote=normalizeState(payload);
+    const remoteSignature=stateSignature(remote);
+    const local=window.fmApp.getState();
+    const localSignature=stateSignature(local);
+    if(!initialSnapshotHandled){
+      initialSnapshotHandled=true;
+      if(remoteSignature!==localSignature && window.fmApp.hasLocalRecords()){
+        const useCloud=confirm('Cloud data and this device data are different. OK = replace this device with cloud data. Cancel = keep this device and upload its data to cloud.');
+        if(useCloud){
+          applyingRemote=true;window.fmApp.replaceState(remote);applyingRemote=false;
+          lastCloudSignature=remoteSignature;localDirty=false;
+        } else {
+          syncReady=true;localDirty=true;await writeCurrentState();
+        }
+      } else if(remoteSignature!==localSignature){
+        applyingRemote=true;window.fmApp.replaceState(remote);applyingRemote=false;
+        lastCloudSignature=remoteSignature;localDirty=false;
+      } else {
+        lastCloudSignature=remoteSignature;
+      }
+      syncReady=true;
+      status('Cloud sync is live. Changes on signed-in devices update automatically.');
+      return;
+    }
+    if(snap.metadata?.hasPendingWrites) return;
+    if(syncConflict) return;
+    if(remoteSignature===lastCloudSignature) return;
+    if(localDirty){
+      // Do not overwrite either side when both devices changed the shared document.
+      if(syncTimer){clearTimeout(syncTimer);syncTimer=null;}
+      syncReady=false; syncConflict=true; localDirty=false;
+      status('Sync paused to protect data: this device and cloud changed at the same time. Export a JSON backup, then choose Upload or Download only after reviewing which copy to keep.',true);
+      return;
+    }
+    if(remoteSignature!==localSignature){
+      applyingRemote=true;window.fmApp.replaceState(remote);applyingRemote=false;
+      lastCloudSignature=remoteSignature;
+      status('New cloud changes received. This device is up to date.');
+      window.fmApp.toast('Cloud changes received');
+    }
+  }, e => {
+    syncReady=false;
+    status('Live sync connection failed: '+errText(e)+'. Local data is still available.',true);
+  });
+};
+onAuthStateChanged(auth, user => {
+  currentUser=user;
+  if(syncTimer){clearTimeout(syncTimer);syncTimer=null;}
+  localDirty=false;
+  startCloudListener(user);
+  if(user) status('Signed in as '+user.email+'. Connecting live cloud sync…');
+  else status('Not signed in. Create an account or sign in to enable cloud sync.');
+});
+</script>
+</body></html>,SGD:'SGD 
+let state={currency:'THB',transactions:[],loans:[],debts:[],savings:[],budgets:[],payments:[]};
+try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s)state={...state,...s}}catch(e){}
+let current='Dashboard';
+function save(){localStorage.setItem(KEY,JSON.stringify(state));const el=document.getElementById('saveStatus');if(el)el.textContent='● Saved on this device';if(window.fmScheduleSync)window.fmScheduleSync(state)}
+function toast(s){const t=document.getElementById('toast');t.textContent=s;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
+function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function go(p){current=p;const more=document.getElementById('mobileMorePanel');if(more)more.classList.remove('open');render();if(window.scrollTo)window.scrollTo({top:0,behavior:'auto'});}
+document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.page)));
+function toggleMobile(){const p=document.getElementById('mobileMorePanel');if(!p)return;p.classList.toggle('open')}
+function total(type){return state.transactions.filter(t=>t.type===type).reduce((a,t)=>a+Number(t.amount||0),0)}
+function outstanding(list){return list.reduce((s,l)=>s+Math.max(0,Number(l.principal||0)-Number(l.principalPaid||0)),0)}
+function legacyCurrencyCount(){const lists=['transactions','loans','debts','savings','budgets','payments'];return lists.reduce((n,k)=>n+(state[k]||[]).filter(x=>!['THB','MMK','USD','SGD'].includes(x.currency)).length,0)}
+function reviewLegacyCurrencies(){const groups=[['transactions','Transactions'],['loans','Loans given'],['debts','My debts'],['savings','Savings goals'],['budgets','Budgets'],['payments','Payment history']];let changed=0;for(const [key,label] of groups){for(const item of (state[key]||[])){if(['THB','MMK','USD','SGD'].includes(item.currency))continue;const amount=key==='transactions'?item.amount:key==='loans'||key==='debts'?item.principal:key==='savings'?item.saved:key==='budgets'?item.limit:item.amount;const name=key==='transactions'?item.title:key==='loans'||key==='debts'?item.person:key==='savings'?item.name:key==='budgets'?item.category:((key==='payments'?(state[item.kind==='loan'?'loans':'debts']||[]).find(a=>a.id===item.account)?.person:'')||'Payment');const answer=prompt(label+' — '+String(name||'Unnamed record')+' — amount '+String(amount??'')+'\nEnter THB, MMK, USD or SGD. Leave blank to skip this record.');if(answer===null){save();render();toast('Review paused. Your labels were saved.');return}const c=String(answer).trim().toUpperCase();if(!c)continue;if(!['THB','MMK','USD','SGD'].includes(c)){alert('Invalid currency. This record was left unchanged.');continue}item.currency=c;changed++}}save();render();toast(changed+' record(s) labelled. No amounts were converted.');}
+
+function openModal(title,body){document.getElementById('modalTitle').textContent=title;document.getElementById('modalBody').innerHTML=body;document.getElementById('modalback').classList.add('show')}
+function closeModal(){document.getElementById('modalback').classList.remove('show')}
+function field(label,name,type='text',value='',opts=''){return `<div class="field"><label>${label}</label>${type==='select'?`<select name="${name}" required>${opts}</select>`:`<input name="${name}" type="${type}" value="${escapeHtml(value)}" ${type==='number'?'min="0" step="0.01"':''} required`+`>`}</div>`}
+
+function slipUploadMarkup(formId){
+ return '<div class="field full" style="border:1px dashed var(--line);border-radius:12px;padding:12px"><label>Bank QR slip / payment receipt (auto-read)</label><input type="file" accept="image/*" onchange="readBankSlip(this,\''+formId+'\')" style="max-width:100%"><small class="sub" style="display:block;margin-top:6px">Upload a bank transfer receipt image. Amount and remark will be read automatically; please verify them before saving.</small><div id="slipStatus_'+formId+'" class="sub" style="margin-top:8px"></div></div>';
+}
+let fmOcrPromise=null;
+async function getSlipOcr(){
+ if(window.Tesseract)return window.Tesseract;
+ if(!fmOcrPromise)fmOcrPromise=new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';s.onload=()=>resolve(window.Tesseract);s.onerror=()=>reject(new Error('Could not load OCR engine. Check internet connection and try again.'));document.head.appendChild(s)});
+ return fmOcrPromise;
+}
+async function getSlipOcrWorker(){
+ const T=await getSlipOcr();
+ // Download trained language data on demand; include Myanmar for Burmese-language memos.
+ return await T.createWorker(['eng','tha','mya'],1,{logger:m=>{}});
+}
+function parseSlipText(text){
+ const thaiDigits={'๐':'0','๑':'1','๒':'2','๓':'3','๔':'4','๕':'5','๖':'6','๗':'7','๘':'8','๙':'9'};
+ const normalized=String(text||'').replace(/[๐-๙]/g,ch=>thaiDigits[ch]||ch).replace(/[฿]/g,' THB ');
+ const lines=normalized.split(/\r?\n/).map(x=>x.replace(/[|]/g,' ').replace(/\s+/g,' ').trim()).filter(Boolean);
+ const full=lines.join('\n');
+ let amount=null;
+ const amountLabels=/(?:transfer\s*amount|transaction\s*amount|amount|ยอดเงินที่โอน|จำนวนเงิน|จำนวนที่โอน|ยอดโอน|โอนเงิน|เงินที่โอน|ยอดชำระ|ยอดเงิน|จำนวน|amount\s*\(thb\))/i;
+ const numberRe=/(?:THB\s*)?([0-9][0-9,]*(?:\.[0-9]{1,2})?)(?:\s*(?:THB|บาท))?/gi;
+ for(let i=0;i<lines.length;i++){
+   if(amountLabels.test(lines[i])){
+     const candidates=[lines[i],lines[i+1]||''].join(' ');
+     const matches=[...candidates.matchAll(numberRe)];
+     const vals=matches.map(x=>Number(x[1].replace(/,/g,''))).filter(n=>n>0&&n<1e10);
+     if(vals.length){amount=vals[vals.length-1];break}
+   }
+ }
+ if(amount===null){
+   const matches=[...full.matchAll(/(?:THB\s*|บาท\s*)([0-9][0-9,]*(?:\.[0-9]{1,2})?)/gi)];
+   const vals=matches.map(x=>Number(x[1].replace(/,/g,''))).filter(n=>n>0&&n<1e10);
+   if(vals.length)amount=vals[0];
+ }
+ if(amount===null){
+   const decimals=[...full.matchAll(/\b([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{2})|[0-9]+\.[0-9]{2})\b/g)]
+     .map(x=>Number(x[1].replace(/,/g,''))).filter(n=>n>0&&n<1e10);
+   if(decimals.length)amount=decimals.sort((a,b)=>b-a)[0];
+ }
+ let remark='';
+ const remarkLabels=/(?:remark|payment\s*note|note|memo|message|หมายเหตุ|บันทึกช่วยจำ|รายละเอียด|ข้อความถึงผู้รับ|วัตถุประสงค์|บันทึก|ข้อความ)/i;
+ for(let i=0;i<lines.length;i++){
+   const line=lines[i], at=line.search(remarkLabels);
+   if(at>=0){
+     let value=line.slice(at).replace(remarkLabels,'').replace(/^\s*[:：-]?\s*/,'').trim();
+     if(!value && lines[i+1])value=lines[i+1];
+     if(value && !/^(?:amount|ยอดเงิน|วันที่|date|time|reference|เลขที่|transaction|fee|ค่าธรรมเนียม|balance|ยอดคงเหลือ)/i.test(value)){remark=value;break}
+   }
+ }
+ if(remark.length>120)remark=remark.slice(0,120).trim();
+ return {amount,remark,text:full};
+}
+function inferExpenseCategory(text){
+ const t=(text||'').toLowerCase();
+ if(/food|meal|restaurant|coffee|อาหาร|ข้าว|ร้านอาหาร|กาแฟ/.test(t))return 'Food';
+ if(/rent|room|housing|electric|water|ค่าเช่า|ห้องพัก|ค่าไฟ|ค่าน้ำ/.test(t))return 'Housing';
+ if(/transport|taxi|grab|fuel|gas|รถ|น้ำมัน|เดินทาง|ค่าโดยสาร/.test(t))return 'Transport';
+ if(/shopping|purchase|สินค้า|ซื้อของ|ช้อป/.test(t))return 'Shopping';
+ if(/health|hospital|clinic|ยา|โรงพยาบาล|คลินิก/.test(t))return 'Health';
+ return 'Other';
+}
+async function readBankSlip(input,formId){
+ const file=input.files&&input.files[0], form=document.getElementById(formId), statusEl=document.getElementById('slipStatus_'+formId);
+ if(!file||!form||!statusEl)return;
+ if(!file.type.startsWith('image/')){statusEl.textContent='Please choose an image file.';return}
+ statusEl.textContent='Reading slip… This may take a little while on a phone.';
+ try{
+   const worker=await getSlipOcrWorker();
+   const result=await worker.recognize(file);
+   await worker.terminate();
+   const parsed=parseSlipText(result.data.text||'');
+   const set=(name,value)=>{const el=form.elements.namedItem(name);if(el&&value!==null&&value!==undefined&&String(value).trim()!=='')el.value=value};
+   if(parsed.amount!==null)set('amount',parsed.amount);
+   if(parsed.remark){
+     set('note',parsed.remark);
+     if(formId==='txForm')set('title',parsed.remark);
+   }
+   if(formId==='txForm'&&parsed.remark){const cat=form.elements.namedItem('category');if(cat)cat.value=inferExpenseCategory(parsed.remark)}
+   const found=[];
+   if(parsed.amount!==null)found.push('Amount: '+parsed.amount.toLocaleString()+' '+state.currency);else found.push('Amount not detected — enter it manually.');
+   if(parsed.remark)found.push('Remark: '+parsed.remark);else found.push('Remark not detected — enter it manually.');
+   const ocrPreview=(parsed.text||'').replace(/\s+/g,' ').trim().slice(0,260);
+   statusEl.textContent='Slip scanned. '+found.join(' · ')+' Please verify the fields before saving.'+(ocrPreview?' OCR text: '+ocrPreview:' No readable text found. Try a sharper, full slip image with all edges visible.');
+ }catch(e){statusEl.textContent='Could not read this image automatically: '+(e.message||e)+'. You can still enter the fields manually.'}
+}
+function addTransaction(type){openModal(type==='income'?'Add income':'Add expense',`<form id="txForm"><div class="formgrid">${field('Description','title')}${field('Amount ('+state.currency+')','amount','number')}${field('Date','date','date',today())}${field('Category','category','select','','<option>Salary</option><option>Food</option><option>Housing</option><option>Transport</option><option>Shopping</option><option>Health</option><option>Bonus</option><option>Other</option>')}<div class="field full"><label>Note (optional)</label><input name="note" placeholder="Add details..."></div>${type==='expense'?slipUploadMarkup('txForm'):''}</div><div class="formactions"><button type="button" class="pill" onclick="closeModal()">Cancel</button><button class="primary">Save record</button></div></form>`);document.getElementById('txForm').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);state.transactions.unshift({id:crypto.randomUUID(),type,title:f.get('title'),amount:Number(f.get('amount')),currency:state.currency||'THB',date:f.get('date'),category:f.get('category'),note:f.get('note')});save();closeModal();render();toast('Record saved')}}
+function addLoan(kind){const isLoan=kind==='loan';openModal(isLoan?'Add loan given':'Add debt I owe',`<form id="loanForm"><div class="formgrid">${field('Person / Institution','person')}${field('Principal ('+state.currency+')','principal','number')}${field('Interest rate (%)','rate','number','0')}${field('Interest period','period','select','','<option value="monthly">Monthly</option><option value="yearly">Yearly</option><option value="none">No interest</option>')}${field('Interest starts','start','date',today())}${field('Interest stops (optional)','stop','date','')}${field('Due date (optional)','due','date','')}<div class="field full"><label>Interest method</label><select name="method"><option value="simple">Simple interest (not compounded)</option><option value="compound">Compound interest</option></select></div><div class="field full"><label>Notes</label><input name="note" placeholder="Agreement, purpose, details"></div></div><div class="formactions"><button type="button" class="pill" onclick="closeModal()">Cancel</button><button class="primary">Save record</button></div></form>`);document.getElementById('loanForm').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);const l={id:crypto.randomUUID(),person:f.get('person'),principal:Number(f.get('principal')),currency:state.currency||'THB',principalPaid:0,rate:Number(f.get('rate')),period:f.get('period'),start:f.get('start'),stop:f.get('stop'),due:f.get('due'),method:f.get('method'),note:f.get('note'),created:today()};(isLoan?state.loans:state.debts).unshift(l);save();closeModal();render();toast('Financial record saved')}}
+function allocatePayment(kind,l,amount,date,apply){
+  const ledger=loanLedger(kind,l,date);
+  const principalLeft=Math.max(0,Number(ledger.principalOutstanding)||0);
+  const interestLeft=Math.max(0,Number(ledger.interestOutstanding)||0);
+  const eps=0.004;
+  if(apply==='auto'&&amount>principalLeft+interestLeft+eps)return {error:'Payment is larger than the outstanding principal plus interest ('+fmt(principalLeft+interestLeft)+'). Reduce the amount or choose “Other / mixed” to record it without changing the balance.'};
+  if(apply==='interest'&&amount>interestLeft+eps)return {error:'Interest outstanding on this date is '+fmt(interestLeft)+'. Enter no more than that amount, or choose “Other / mixed” to record a separate amount.'};
+  if(apply==='principal'&&amount>principalLeft+eps)return {error:'Principal outstanding on this date is '+fmt(principalLeft)+'. Enter no more than that amount, or choose “Other / mixed” to record a separate amount.'};
+  const interestApplied=apply==='auto'?Math.min(amount,interestLeft):apply==='interest'?amount:0;
+  const principalApplied=apply==='auto'?Math.min(principalLeft,Math.max(0,amount-interestApplied)):apply==='principal'?amount:0;
+  return {interestApplied,principalApplied};
+}
+function addPayment(){const all=[...state.loans.map(x=>({...x,kind:'loan'})),...state.debts.map(x=>({...x,kind:'debt'}))];if(!all.length){toast('Add a loan or debt first');return}openModal('Record a payment',`<form id="payForm"><div class="formgrid">${field('Related account','account','select','',''+all.map(l=>`<option value="${l.kind}:${l.id}">${escapeHtml(l.person)} — ${l.kind==='loan'?'Loan given':'My debt'}</option>`).join(''))}${field('Amount ('+state.currency+')','amount','number')}${field('Payment date','date','date',today())}${field('Apply to','apply','select','','<option value="auto" selected>Automatic — interest first, then principal</option><option value="interest">Interest only</option><option value="principal">Principal only</option><option value="other">Other / mixed (record only)</option>')}<div class="field full"><label>Note</label><input name="note" placeholder="Payment details"></div>${slipUploadMarkup('payForm')}</div><div class="notice">Payment is recorded in history. Principal payments reduce the outstanding principal; interest payments are tracked separately.</div><div class="formactions"><button type="button" class="pill" onclick="closeModal()">Cancel</button><button class="primary">Save payment</button></div></form>`);document.getElementById('payForm').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target),account=String(f.get('account')||''),parts=account.split(':'),kind=parts[0],id=parts[1],amount=Number(f.get('amount')),date=f.get('date')||today(),apply=String(f.get('apply')||'auto');if(!id||!['loan','debt'].includes(kind)){toast('Choose a loan or debt account');return}if(!Number.isFinite(amount)||amount<=0){toast('Enter a payment amount greater than zero');return}const l=(kind==='loan'?state.loans:state.debts).find(x=>x.id===id);if(!l){toast('Selected loan/debt account was not found');return}const allocation=allocatePayment(kind,l,amount,date,apply);if(allocation.error){toast(allocation.error);return}const {interestApplied,principalApplied}=allocation;const p={id:crypto.randomUUID(),account:id,kind,amount,currency:l.currency||state.currency||'THB',date,apply,note:String(f.get('note')||'').trim(),interestApplied,principalApplied};p.currency=l.currency||state.currency||'THB';state.payments.unshift(p);if(principalApplied>0)l.principalPaid=Math.min(Number(l.principal)||0,Number(l.principalPaid||0)+principalApplied);save();closeModal();render();toast('Payment saved: '+fmt(interestApplied)+' to interest, '+fmt(principalApplied)+' to principal')}}
+function loanAddMonths(start,n){const d=new Date(start+'T00:00:00Z');const day=d.getUTCDate();const target=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+n,1));const last=new Date(Date.UTC(target.getUTCFullYear(),target.getUTCMonth()+1,0)).getUTCDate();target.setUTCDate(Math.min(day,last));return target.toISOString().slice(0,10)}
+function loanMonthlyRate(l){if(!l||!Number(l.rate)||l.period==='none')return 0;return Number(l.rate)/100/(l.period==='yearly'?12:1)}
+function loanLedger(kind,l,throughDate=today(),excludePaymentId=''){
+ const through=String(throughDate||today()).slice(0,10),start=String(l.start||l.created||today()).slice(0,10);
+ const events=[];
+ const rate=loanMonthlyRate(l);
+ if(rate>0&&start<=through){for(let n=1;n<600;n++){const due=loanAddMonths(start,n);if(due>through||(l.stop&&due>String(l.stop).slice(0,10)))break;events.push({date:due,type:'due',n})}}
+ (state.payments||[]).filter(p=>p.kind===kind&&p.account===l.id&&p.id!==excludePaymentId&&String(p.date||'')>=start&&String(p.date||'').slice(0,10)<=through).forEach(p=>events.push({date:String(p.date||start).slice(0,10),type:'payment',p}));
+ events.sort((a,b)=>a.date.localeCompare(b.date)||(a.type===b.type?0:a.type==='due'?-1:1));
+ let principal=Math.max(0,Number(l.principal)||0);const buckets=[];
+ const applyInterest=amount=>{let left=Math.max(0,Number(amount)||0);for(const b of buckets){if(left<=0)break;const paid=Math.min(b.remaining,left);b.remaining=Math.max(0,b.remaining-paid);left-=paid}return left};
+ for(const ev of events){
+  if(ev.type==='due'){const compoundBase=principal+((l.method||'simple')==='compound'?buckets.reduce((sum,b)=>sum+Math.max(0,b.remaining),0):0);const amount=Math.max(0,compoundBase*rate);if(amount>0)buckets.push({date:ev.date,remaining:amount,original:amount});continue}
+  const p=ev.p,amount=Math.max(0,Number(p.amount)||0);
+  if(p.apply==='interest'){applyInterest(amount);continue}
+  if(p.apply==='principal'){principal=Math.max(0,principal-amount);continue}
+  if(p.interestApplied!==undefined||p.principalApplied!==undefined){applyInterest(Number(p.interestApplied)||0);principal=Math.max(0,principal-(Number(p.principalApplied)||0));continue}
+  if(p.apply==='auto'){const left=applyInterest(amount);principal=Math.max(0,principal-left)}
+ }
+ const unpaid=buckets.filter(b=>b.remaining>0.004);
+ return {monthlyInterest:Math.max(0,principal*rate),principalOutstanding:principal,interestOutstanding:unpaid.reduce((s,b)=>s+b.remaining,0),unpaidMonths:unpaid.length,unpaidMonthLabels:unpaid.map(b=>new Date(b.date+'T00:00:00Z').toLocaleDateString('en-GB',{month:'short',year:'numeric',timeZone:'UTC'})),monthsDue:buckets.length,interestBuckets:buckets};
+}
+function interest(l){const kind=state.loans.some(x=>x.id===l.id)?'loan':'debt';return loanLedger(kind,l).interestOutstanding}
+function pageHead(title,desc,button='',action=''){return `<div class="pagehead"><div><h1>${title}</h1><p>${desc}</p></div>${button?`<button class="primary" onclick="${action}">＋ ${button}</button>`:''}</div>`}
+function metric(label,value,ico,sub=''){return `<div class="metric"><div class="metrichead"><span>${label}</span><span class="ico">${ico}</span></div><strong>${value}</strong><div class="sub">${sub}</div></div>`}
+function txRows(arr){if(!arr.length)return `<tr><td colspan="5" class="empty">No records yet. Add your first transaction to get started.</td></tr>`;return arr.slice(0,8).map(t=>`<tr><td><div class="txname"><div class="txico">${t.type==='income'?'↗':'↘'}</div><div><b>${escapeHtml(t.title)}</b><small>${escapeHtml(t.category||'Other')}</small></div></div></td><td>${escapeHtml(t.date)}</td><td><span class="tag ${t.type==='expense'?'out':''}">${t.type}</span></td><td style="text-align:right" class="${t.type==='income'?'positive':'negative'}">${t.type==='income'?'+':'−'}${fmt(t.amount)}</td><td><button class="linkbtn" onclick="editTx('${t.id}')">Edit</button> <button class="linkbtn" onclick="deleteTx('${t.id}')">Delete</button></td></tr>`).join('')}
+function dashboard(){const net=total('income')-total('expense'),loans=outstanding(state.loans),debts=outstanding(state.debts);const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];let bars='';for(let i=5;i>=0;i--){const d=new Date();d.setMonth(d.getMonth()-i);const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');const inc=state.transactions.filter(t=>t.type==='income'&&t.date?.startsWith(key)).reduce((s,t)=>s+t.amount,0);const exp=state.transactions.filter(t=>t.type==='expense'&&t.date?.startsWith(key)).reduce((s,t)=>s+t.amount,0);const max=Math.max(inc,exp,1);bars+=`<div class="barcol"><div class="bars"><div class="bar" style="height:${Math.max(4,inc/max*100)}%"></div><div class="bar exp" style="height:${Math.max(4,exp/max*100)}%"></div></div><small>${months[d.getMonth()]}</small></div>`}return `<div class="welcome"><div><div class="eyebrow">YOUR MONEY, IN FOCUS</div><h1>Financial overview</h1><p>A clearer view of your money starts with one small step.</p></div><button class="primary goldbtn" onclick="addTransaction('expense')">＋ Quick entry</button></div><div class="cards">${metric('Net cash flow',fmt(net),'◈',`<span class="${net>=0?'positive':'negative'}">${net>=0?'Positive':'Negative'} · all recorded time</span>`)}${metric('Total income',fmt(total('income')),'↗','All recorded income')}${metric('Total expenses',fmt(total('expense')),'↘','All recorded expenses')}${metric('Loans receivable',fmt(loans),'⇄',`${state.loans.length} loan account(s)`)}</div><div class="layout"><section class="panel"><div class="panelhead"><div><h2>Cash flow</h2><p>Income and expenses · last 6 months</p></div><button class="linkbtn" onclick="go('Reports')">View reports ↗</button></div><div class="chart">${bars}</div><div class="legend"><span><i class="dot"></i>Income</span><span><i class="dot grey"></i>Expenses</span></div></section><section class="panel"><div class="panelhead"><div><h2>Quick actions</h2><p>Record it while it's fresh</p></div></div><div class="quick"><button onclick="addTransaction('income')"><span class="qico">↗</span><span><b>Add income</b><small>Money received</small></span></button><button onclick="addTransaction('expense')"><span class="qico">↘</span><span><b>Add expense</b><small>Money spent</small></span></button><button onclick="addLoan('loan')"><span class="qico">⇄</span><span><b>Loan given</b><small>Track interest</small></span></button><button onclick="addPayment()"><span class="qico">✓</span><span><b>Record payment</b><small>Update a balance</small></span></button></div></section></div><section class="panel" style="margin-bottom:18px"><div class="panelhead"><div><h2>Recent transactions</h2><p>Your latest financial activity</p></div><button class="linkbtn" onclick="go('Income')">View all ↗</button></div><div class="tablewrap"><table><thead><tr><th>Description</th><th>Date</th><th>Type</th><th style="text-align:right">Amount</th><th></th></tr></thead><tbody>${txRows([...state.transactions].sort((a,b)=>b.date.localeCompare(a.date)))}</tbody></table></div></section><div class="layout"><section class="panel"><div class="panelhead"><div><h2>Money to repay</h2><p>Outstanding principal</p></div><button class="linkbtn" onclick="go('Debts')">Details ↗</button></div><strong style="font-size:25px">${fmt(debts)}</strong><p class="sub">Across ${state.debts.length} debt account(s)</p></section><section class="panel"><div class="panelhead"><div><h2>Interest accrued estimate</h2><p>Based on active loan settings</p></div></div><strong style="font-size:25px">${fmt(state.loans.reduce((s,l)=>s+interest(l),0))}</strong><p class="sub">Estimate only; confirm agreed calculation rules.</p></section></div>`}
+function transactionsPage(type){const arr=state.transactions.filter(t=>type==='all'||t.type===type).sort((a,b)=>b.date.localeCompare(a.date));return `${pageHead(type==='income'?'Income':type==='expense'?'Expenses':'Transactions','Every amount, categorized and easy to find.',type==='expense'?'Add expense':'Add income',`addTransaction('${type==='expense'?'expense':'income'}')`)}<div class="cards">${metric('Total income',fmt(total('income')),'↗','All records')}${metric('Total expenses',fmt(total('expense')),'↘','All records')}${metric('Transactions',arr.length,'▤','Matching records')}${metric('Net cash flow',fmt(total('income')-total('expense')),'◈','Income minus expenses')}</div><div class="panel"><div class="toolbar"><input id="txSearch" placeholder="Search description or category..." oninput="filterTx()"><select id="txType" onchange="filterTx()"><option value="all">All types</option><option value="income">Income</option><option value="expense">Expense</option></select><input id="txMonth" type="month" onchange="filterTx()"></div><div class="tablewrap"><table><thead><tr><th>Description</th><th>Date</th><th>Type</th><th style="text-align:right">Amount</th><th></th></tr></thead><tbody id="txBody">${txRows(arr)}</tbody></table></div></div>`}
+function filterTx(){const q=(document.getElementById('txSearch')?.value||'').toLowerCase(),typ=document.getElementById('txType')?.value||'all',month=document.getElementById('txMonth')?.value||'';const arr=state.transactions.filter(t=>(typ==='all'||t.type===typ)&&(!month||t.date.startsWith(month))&&(`${t.title} ${t.category} ${t.note}`.toLowerCase().includes(q))).sort((a,b)=>b.date.localeCompare(a.date));document.getElementById('txBody').innerHTML=txRows(arr)}
+function loanRows(list,kind){
+ if(!list.length)return '<div class="empty account-empty"><div class="empty-icon">⇄</div><b>No accounts yet</b><p>Add your first '+(kind==='loan'?'loan given':'debt')+' to see its details here.</p></div>';
+ return '<div class="account-list">'+list.map(l=>{
+  const ledger=loanLedger(kind,l),bal=ledger.principalOutstanding;
+  return '<article class="account-card"><button class="account-open" onclick="openPerson(\''+kind+'\',\''+l.id+'\')" aria-label="Open '+escapeHtml(l.person)+' details"><span class="account-avatar">'+escapeHtml(String(l.person||'?').trim().charAt(0).toUpperCase())+'</span><span class="account-main"><b>'+escapeHtml(l.person)+'</b><small>'+(kind==='loan'?'Loan receivable':'Debt payable')+' · '+(l.rate||0)+'% / '+(l.period==='yearly'?'year':l.period==='none'?'no interest':'month')+'</small><span class="account-openhint">View account details <span>›</span></span></span><span class="account-balance"><b>'+fmt(bal)+'</b><small>Principal left</small><em>'+fmt(ledger.interestOutstanding)+' interest due</em></span></button><div class="account-actions"><button class="linkbtn" onclick="payFor(\''+kind+'\',\''+l.id+'\')">＋ Payment</button><button class="linkbtn" onclick="editLoan(\''+kind+'\',\''+l.id+'\')">Edit details</button></div></article>';
+ }).join('')+'</div>';
+}
+
+function payFor(kind,id){addPaymentFor(kind,id)}
+function addPaymentFor(kind,id){const l=(kind==='loan'?state.loans:state.debts).find(x=>x.id===id);if(!l)return;openModal('Record payment · '+escapeHtml(l.person),`<form id="payOne"><div class="formgrid">${field('Amount ('+state.currency+')','amount','number')}${field('Date','date','date',today())}${field('Apply to','apply','select','','<option value="auto" selected>Automatic — interest first, then principal</option><option value="interest">Interest only</option><option value="principal">Principal only</option><option value="other">Other / mixed (record only)</option>')}<div class="field full"><label>Note</label><input name="note"></div>${slipUploadMarkup('payOne')}</div><div class="formactions"><button type="button" class="pill" onclick="closeModal()">Cancel</button><button class="primary">Save payment</button></div></form>`);document.getElementById('payOne').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target),amount=Number(f.get('amount')),date=f.get('date')||today(),apply=String(f.get('apply')||'auto');if(!Number.isFinite(amount)||amount<=0){toast('Enter a payment amount greater than zero');return}const allocation=allocatePayment(kind,l,amount,date,apply);if(allocation.error){toast(allocation.error);return}const {interestApplied,principalApplied}=allocation;const p={id:crypto.randomUUID(),account:id,kind,amount,date,apply,note:String(f.get('note')||'').trim(),interestApplied,principalApplied};state.payments.unshift(p);if(principalApplied>0)l.principalPaid=Math.min(Number(l.principal)||0,Number(l.principalPaid||0)+principalApplied);save();closeModal();render();toast('Payment saved: '+fmt(interestApplied)+' to interest, '+fmt(principalApplied)+' to principal')}}
+function loansPage(kind){
+ const list=kind==='loan'?state.loans:state.debts;
+ const totalBal=list.reduce((sum,l)=>sum+loanLedger(kind,l).principalOutstanding,0);
+ const interestDue=list.reduce((sum,l)=>sum+loanLedger(kind,l).interestOutstanding,0);
+ const unpaidMonths=list.reduce((sum,l)=>sum+loanLedger(kind,l).unpaidMonths,0);
+ return pageHead(kind==='loan'?'Loans given':'My debts',kind==='loan'?'Choose a person to open their complete loan account.':'Choose a person to open their complete debt account.',kind==='loan'?'Add loan':'Add debt',`addLoan('${kind}')`)+
+ '<div class="cards">'+metric(kind==='loan'?'Total principal lent':'Total debt principal',fmt(list.reduce((sum,l)=>sum+Number(l.principal||0),0)),'⇄',list.length+' accounts')+
+ metric('Principal remaining',fmt(totalBal),'◈','After principal payments')+
+ metric('Unpaid interest',fmt(interestDue),'％',unpaidMonths+' unpaid account-months')+
+ metric('Payments recorded',state.payments.filter(p=>p.kind===kind).length,'✓','Saved in payment history')+'</div>'+
+ '<div class="notice loan-tip"><b>Easy account access</b><span>Tap the borrower’s name or account card to open their personal page. Loan details, monthly interest ledger, payment history and account database are separated into clear sections.</span></div>'+
+ '<section class="panel account-panel"><div class="panelhead"><div><h2>'+(kind==='loan'?'People who borrowed':'My creditors')+'</h2><p>Select one account to view its complete details</p></div><span class="account-count">'+list.length+' '+(list.length===1?'account':'accounts')+'</span></div>'+loanRows(list,kind)+'</section>';
+}
+let personDetail={kind:'loan',id:'',tab:'overview'};
+function openPerson(kind,id,tab='overview'){personDetail={kind,id,tab};current='PersonDetail';render();if(window.scrollTo)window.scrollTo({top:0,behavior:'auto'});}
+function openPersonTab(tab){personDetail.tab=tab;render();if(window.scrollTo)window.scrollTo({top:0,behavior:'auto'});}
+function personDetailPage(){
+ const kind=personDetail.kind,l=(kind==='loan'?state.loans:state.debts).find(x=>x.id===personDetail.id);
+ if(!l){current=kind==='loan'?'Loans':'Debts';return loansPage(kind);}
+ const ledger=loanLedger(kind,l),payments=(state.payments||[]).filter(p=>p.kind===kind&&p.account===l.id).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+ const tabs=[['overview','Overview','⌂'],['ledger','Loan ledger','▤'],['payments','Payments','↔'],['database','Database','▦']];
+ const nav='<div class="person-tabs">'+tabs.map(t=>'<button class="'+(personDetail.tab===t[0]?'active':'')+'" onclick="openPersonTab(\''+t[0]+'\')"><span>'+t[2]+'</span>'+t[1]+'</button>').join('')+'</div>';
+ const header='<div class="person-head"><button class="back-account" onclick="go(\''+(kind==='loan'?'Loans':'Debts')+'\')">‹ Back to '+(kind==='loan'?'Loans':'Debts')+'</button><div class="person-title-row"><div class="person-avatar">'+escapeHtml(String(l.person||'?').trim().charAt(0).toUpperCase())+'</div><div class="person-title"><h1>'+escapeHtml(l.person)+'</h1><p>'+(kind==='loan'?'Borrower account':'Debt account')+' · Account details and payment records</p></div><button class="pill person-edit" onclick="editLoan(\''+kind+'\',\''+l.id+'\')">Edit</button></div><div class="person-quick-actions"><button class="primary" onclick="payFor(\''+kind+'\',\''+l.id+'\')">＋ Record payment</button><button class="pill" onclick="openPersonTab(\'ledger\')">View interest ledger</button></div></div>';
+ const overview='<div class="cards person-metrics">'+metric('Principal remaining',fmt(ledger.principalOutstanding),'◈','Current outstanding principal')+metric('Unpaid interest',fmt(ledger.interestOutstanding),'％',ledger.unpaidMonths+' unpaid months')+metric('Monthly interest',fmt(ledger.monthlyInterest),'↗','At current principal')+metric('Total payments',payments.length,'✓','Recorded for this person')+'</div><section class="panel detail-panel"><div class="panelhead"><div><h2>Account summary</h2><p>Key information for '+escapeHtml(l.person)+'</p></div></div><div class="detail-grid">'+detailItem('Original principal',fmt(l.principal))+detailItem('Interest rate',(l.rate||0)+'% '+(l.period==='yearly'?'per year':l.period==='none'?'(no interest)':'per month'))+detailItem('Interest method',(l.method||'simple')==='compound'?'Compound interest':'Simple interest')+detailItem('Interest starts',l.start||'Not set')+detailItem('Interest stops',l.stop||'No end date')+detailItem('Due date',l.due||'Not set')+detailItem('Principal repaid',fmt(l.principalPaid||0))+detailItem('Account notes',l.note||'No notes saved')+'</div></section><section class="panel detail-panel"><div class="panelhead"><div><h2>Recent payments</h2><p>Latest repayments for this account only</p></div><button class="pill" onclick="openPersonTab(\'payments\')">View all</button></div>'+personPaymentTable(payments.slice(0,5),kind,l)+'</section>';
+ const ledgerView='<section class="panel detail-panel"><div class="panelhead"><div><h2>Monthly interest ledger</h2><p>Oldest unpaid interest is settled first. Check the agreement and dates.</p></div></div><div class="cards ledger-metrics">'+metric('Monthly interest',fmt(ledger.monthlyInterest),'％','Based on current principal')+metric('Interest due',fmt(ledger.interestOutstanding),'◈','Still unpaid')+metric('Unpaid months',ledger.unpaidMonths,'▦','Months with a remaining balance')+'</div><div class="tablewrap ledger-table"><table><thead><tr><th>Month due</th><th>Original interest</th><th>Remaining</th><th>Status</th></tr></thead><tbody>'+(ledger.interestBuckets.length?ledger.interestBuckets.slice().reverse().map(b=>'<tr><td>'+new Date(b.date+'T00:00:00Z').toLocaleDateString('en-GB',{month:'long',year:'numeric',timeZone:'UTC'})+'</td><td>'+fmt(b.original)+'</td><td>'+fmt(b.remaining)+'</td><td><span class="status-pill '+(b.remaining>0.004?'status-due':'status-paid')+'">'+(b.remaining>0.004?'Unpaid':'Paid')+'</span></td></tr>').join(''):'<tr><td colspan="4" class="empty">No monthly interest has accrued yet.</td></tr>')+'</tbody></table></div></section>';
+ const paymentView='<section class="panel detail-panel"><div class="panelhead"><div><h2>Payment history</h2><p>Only payments linked to '+escapeHtml(l.person)+'</p></div><button class="primary" onclick="payFor(\''+kind+'\',\''+l.id+'\')">＋ Add payment</button></div>'+personPaymentTable(payments,kind,l)+'</section>';
+ const database='<section class="panel detail-panel"><div class="panelhead"><div><h2>Account database</h2><p>Stored record for this person. Edit to update account details.</p></div><button class="pill" onclick="editLoan(\''+kind+'\',\''+l.id+'\')">Edit record</button></div><div class="detail-grid">'+detailItem('Account ID',l.id)+detailItem('Record created',l.created||'Not recorded')+detailItem('Person / institution',l.person)+detailItem('Original principal',fmt(l.principal))+detailItem('Principal already repaid',fmt(l.principalPaid||0))+detailItem('Current principal balance',fmt(ledger.principalOutstanding))+detailItem('Interest period',l.period==='yearly'?'Yearly':l.period==='none'?'No interest':'Monthly')+detailItem('Interest calculation',(l.method||'simple')==='compound'?'Compound':'Simple')+detailItem('Start date',l.start||'—')+detailItem('Stop date',l.stop||'—')+detailItem('Due date',l.due||'—')+detailItem('Notes',l.note||'—')+'</div><div class="database-actions"><button class="primary" onclick="payFor(\''+kind+'\',\''+l.id+'\')">Record a payment</button><button class="pill" onclick="editLoan(\''+kind+'\',\''+l.id+'\')">Edit account</button><button class="pill danger-action" onclick="deleteLoan(\''+kind+'\',\''+l.id+'\')">Delete account</button></div></section>';
+ const body=personDetail.tab==='ledger'?ledgerView:personDetail.tab==='payments'?paymentView:personDetail.tab==='database'?database:overview;
+ return '<div class="person-page">'+header+nav+'<div class="person-tab-content">'+body+'</div></div>';
+}
+function detailItem(label,value){return '<div class="detail-item"><small>'+escapeHtml(label)+'</small><b>'+escapeHtml(value)+'</b></div>'}
+function personPaymentTable(rows,kind,l){
+ if(!rows.length)return '<div class="empty">No payments for this person yet. Use “Record payment” to add the first payment.</div>';
+ return '<div class="tablewrap person-payments"><table><thead><tr><th>Date</th><th>Applied to</th><th>Note / slip remark</th><th>Amount</th></tr></thead><tbody>'+rows.map(p=>'<tr><td>'+escapeHtml(p.date||'—')+'</td><td>'+escapeHtml(p.apply==='auto'?'Interest '+fmt(p.interestApplied||0)+' + Principal '+fmt(p.principalApplied||0):p.apply||'—')+'</td><td>'+escapeHtml(p.note||'—')+'</td><td>'+fmt(p.amount)+'</td></tr>').join('')+'</tbody></table></div>';
+}
+
+function savingsPage(){const totalS=state.savings.reduce((s,x)=>s+Number(x.saved||0),0);return `${pageHead('Savings & goals','Build your future, one goal at a time.','Add savings goal','addSaving()')}<div class="cards">${metric('Total savings',fmt(totalS),'◈','Across all goals')}${metric('Active goals',state.savings.length,'◎','Your targets')}${metric('Income recorded',fmt(total('income')),'↗','All time')}${metric('Available after expenses',fmt(total('income')-total('expense')),'✦','Recorded net cash flow')}</div><div class="layout"><section class="panel"><div class="panelhead"><div><h2>Your goals</h2><p>Track progress toward what matters</p></div></div>${state.savings.length?state.savings.map(s=>`<div style="padding:15px 0;border-bottom:1px solid var(--line)"><div style="display:flex;justify-content:space-between;gap:10px"><b>${escapeHtml(s.name)}</b><small>${fmt(s.saved)} / ${fmt(s.target)}</small></div><div style="height:7px;background:#eef1f5;border-radius:9px;margin:12px 0;overflow:hidden"><div style="height:100%;width:${Math.min(100,s.target?s.saved/s.target*100:0)}%;background:var(--gold);border-radius:9px"></div></div><small class="sub">${s.target?Math.round(s.saved/s.target*100):0}% complete · ${escapeHtml(s.date||'No target date')}</small> <button class="linkbtn" onclick="addToSaving('${s.id}')">＋ Add money</button></div>`).join(''):'<div class="empty">Create your first savings goal.</div>'}</section><section class="panel"><h2 style="font-size:15px;margin-top:0">Savings tip</h2><p style="font-size:12px;line-height:1.8;color:var(--muted)">Give every goal a name, target amount, and date. A small automatic habit can make progress easier to see. Keep emergency savings separate from money intended for planned purchases.</p></section></div>`}
+function addSaving(){openModal('Create savings goal',`<form id="savingForm"><div class="formgrid">${field('Goal name','name')}${field('Target amount ('+state.currency+')','target','number')}${field('Already saved','saved','number','0')}${field('Target date (optional)','date','date','')}</div><div class="formactions"><button type="button" class="pill" onclick="closeModal()">Cancel</button><button class="primary">Create goal</button></div></form>`);document.getElementById('savingForm').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);state.savings.push({id:crypto.randomUUID(),name:f.get('name'),target:Number(f.get('target')),saved:Number(f.get('saved')||0),currency:state.currency||'THB',date:f.get('date')});save();closeModal();render();toast('Goal created')}}
+function addToSaving(id){const s=state.savings.find(x=>x.id===id);openModal('Add to savings',`<form id="savingAdd">${field('Amount','amount','number')}<div class="formactions"><button type="button" class="pill" onclick="closeModal()">Cancel</button><button class="primary">Add</button></div></form>`);document.getElementById('savingAdd').onsubmit=e=>{e.preventDefault();s.saved+=Number(new FormData(e.target).get('amount'));save();closeModal();render();toast('Savings updated')}}
+function paymentsPage(){return `${pageHead('Payment history','Every repayment in one auditable timeline.','Record payment','addPayment()')}<div class="panel"><div class="tablewrap"><table><thead><tr><th>Date</th><th>Account</th><th>Type</th><th>Applied to</th><th>Note</th><th style="text-align:right">Amount</th></tr></thead><tbody>${state.payments.length?state.payments.map(p=>{const l=(p.kind==='loan'?state.loans:state.debts).find(x=>x.id===p.account);return `<tr><td>${escapeHtml(p.date)}</td><td>${escapeHtml(l?.person||'Account removed')}</td><td>${p.kind==='loan'?'Loan given':'My debt'}</td><td>${escapeHtml(p.apply==='auto'?'Interest '+fmt(p.interestApplied||0)+' + Principal '+fmt(p.principalApplied||0):p.apply)}</td><td>${escapeHtml(p.note||'—')}</td><td style="text-align:right">${fmt(p.amount)}</td></tr>`}).join(''):'<tr><td colspan="6" class="empty">No payments recorded yet.</td></tr>'}</tbody></table></div></div>`}
+function budgetPage(){return `${pageHead('Budget planner','Set spending limits and compare them with recorded expenses.','Add budget','addBudget()')}<div class="layout"><section class="panel"><div class="panelhead"><div><h2>Category budgets</h2><p>Monthly spending limits</p></div></div>${state.budgets.length?state.budgets.map(b=>{const spent=state.transactions.filter(t=>t.type==='expense'&&t.category===b.category&&t.date?.startsWith(today().slice(0,7))).reduce((s,t)=>s+t.amount,0);return `<div style="padding:14px 0;border-bottom:1px solid var(--line)"><div style="display:flex;justify-content:space-between"><b style="font-size:12px">${escapeHtml(b.category)}</b><span style="font-size:11px">${fmt(spent)} / ${fmt(b.limit)}</span></div><div style="height:7px;background:#eef1f5;border-radius:9px;margin-top:10px;overflow:hidden"><div style="height:100%;width:${Math.min(100,spent/b.limit*100)}%;background:${spent>b.limit?'var(--red)':'var(--gold)'}"></div></div><small class="sub">${spent>b.limit?'Over budget by '+fmt(spent-b.limit):fmt(b.limit-spent)+' remaining'}</small></div>`}).join(''):'<div class="empty">No budgets yet. Set a category limit to get started.</div>'}</section><section class="panel"><h2 style="font-size:15px;margin-top:0">This month</h2><p class="sub">Total expenses recorded</p><strong style="font-size:27px">${fmt(state.transactions.filter(t=>t.type==='expense'&&t.date?.startsWith(today().slice(0,7))).reduce((s,t)=>s+t.amount,0))}</strong><p class="sub">Only transactions dated in the current month are included.</p></section></div>`}
+function addBudget(){openModal('Add category budget',`<form id="budgetForm"><div class="formgrid">${field('Category','category','select','','<option>Food</option><option>Housing</option><option>Transport</option><option>Shopping</option><option>Health</option><option>Other</option>')}${field('Monthly limit ('+state.currency+')','limit','number')}</div><div class="formactions"><button type="button" class="pill" onclick="closeModal()">Cancel</button><button class="primary">Save budget</button></div></form>`);document.getElementById('budgetForm').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);state.budgets.push({id:crypto.randomUUID(),category:f.get('category'),limit:Number(f.get('limit')),currency:state.currency||'THB'});save();closeModal();render();toast('Budget saved')}}
+function reportsPage(){const income=total('income'),expense=total('expense');const cats={};state.transactions.filter(t=>t.type==='expense').forEach(t=>cats[t.category]=(cats[t.category]||0)+t.amount);return `${pageHead('Reports & insights','A simple snapshot of your recorded financial activity.','Export CSV','exportCSV()')}<div class="cards">${metric('Income',fmt(income),'↗','Recorded total')}${metric('Expenses',fmt(expense),'↘','Recorded total')}${metric('Net cash flow',fmt(income-expense),'◈','Income minus expenses')}${metric('Savings rate',income?Math.round((income-expense)/income*100)+'%':'—','％','Based on recorded income')}</div><div class="layout"><section class="panel"><div class="panelhead"><div><h2>Expense breakdown</h2><p>By category · all recorded time</p></div></div>${Object.entries(cats).length?Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([cat,n])=>`<div style="padding:11px 0;border-bottom:1px solid var(--line)"><div style="display:flex;justify-content:space-between;font-size:12px"><b>${escapeHtml(cat)}</b><span>${fmt(n)}</span></div><div style="height:6px;background:#edf0f5;border-radius:9px;margin-top:8px"><div style="height:100%;width:${expense?n/expense*100:0}%;background:var(--gold);border-radius:9px"></div></div></div>`).join(''):'<div class="empty">Add expense records to see a breakdown.</div>'}</section><section class="panel"><h2 style="font-size:15px;margin-top:0">Export & review</h2><p style="font-size:12px;line-height:1.7;color:var(--muted)">Download your transaction records as CSV for spreadsheets, or export all records as a JSON backup. Keep backups somewhere secure.</p><button class="primary" onclick="exportCSV()">⇩ Download transaction CSV</button><p><button class="pill" onclick="exportData()">Download full JSON backup</button></p></section></div>`}
+function settingsPage(){return `${pageHead('Settings & backup','Manage your preferences and protect your records.')}<div class="notice"><b>Data & cloud sync:</b> When you are signed out, records stay in this browser on this device. Sign in to your Finance Master account, export a JSON backup first, then use <b>Upload this device to cloud</b> for the first upload. After the cloud copy is connected, signed-in devices sync changes automatically. If a sync conflict occurs, syncing pauses to protect both copies.</div><div class="settingsgrid"><section class="panel"><h2 style="font-size:15px;margin-top:0">Preferences</h2><div class="field" style="margin:16px 0"><label>Currency</label><select id="currency" onchange="state.currency=this.value;save();render()"><option value="THB" ${state.currency==='THB'?'selected':''}>Thai Baht (THB ฿)</option><option value="MMK" ${state.currency==='MMK'?'selected':''}>Myanmar Kyat (MMK)</option><option value="USD" ${state.currency==='USD'?'selected':''}>US Dollar (USD $)</option><option value="SGD" ${state.currency==='SGD'?'selected':''}>Singapore Dollar (SGD)</option></select></div><p class="sub">Default currency for new records. Existing records must be classified individually because THB and MMK are mixed; changing this setting never converts amounts.</p><div class="notice" style="margin-top:12px"><b>Mixed-currency safety:</b> Records without a currency are legacy records. Review and label them before relying on cross-currency totals.</div><button class="pill" onclick="reviewLegacyCurrencies()">Review unclassified records</button><p class="sub" id="currencyReviewStatus" style="margin-top:9px">${legacyCurrencyCount()} legacy record(s) need a currency label.</p></section><section class="panel"><h2 style="font-size:15px;margin-top:0">Backup & restore</h2><p class="sub">Export a complete copy of all records or restore from a previous Finance Master JSON backup.</p><p><button class="primary" onclick="exportData()">⇩ Export full backup</button></p><p><label class="pill" style="display:inline-block">⇧ Restore JSON backup <input type="file" accept=".json,application/json" onchange="restoreData(event)" style="display:none"></label></p><button class="pill" onclick="exportCSV()">Export transactions CSV</button></section><section class="panel" style="grid-column:1/-1"><h2 style="font-size:15px;margin-top:0">Firebase Cloud Sync</h2><p class="sub">Sign in with your own Finance Master account. Your existing device data stays local until you explicitly upload it.</p><div id="fmAuthStatus" class="notice">Checking Firebase connection…</div><div class="formgrid"><div class="field"><label>Email</label><input id="fmEmail" type="email" autocomplete="username" placeholder="you@example.com"></div><div class="field"><label>Password</label><input id="fmPassword" type="password" autocomplete="current-password" placeholder="At least 6 characters"></div></div><div class="formactions" style="justify-content:flex-start;flex-wrap:wrap"><button class="primary" onclick="window.fmSignIn()">Sign in</button><button class="pill" onclick="window.fmSignUp()">Create account</button><button class="pill" onclick="window.fmSignOut()">Sign out</button></div><div style="height:1px;background:var(--line);margin:16px 0"></div><div class="notice"><b>Protect your data:</b> Export a full JSON backup before the first upload or before replacing local data. First upload/download requires your action; after the cloud copy is connected, new changes sync automatically. If two devices change data at the same time, sync pauses rather than silently overwriting either copy. Keep your password private.</div><div class="formactions" style="justify-content:flex-start;flex-wrap:wrap"><button class="primary goldbtn" onclick="window.fmUploadLocal()">Upload this device to cloud</button><button class="pill" onclick="window.fmDownloadCloud()">Download cloud data to this device</button></div><p class="sub">If sign-in is blocked after deployment, add <b>finance-master-starter.vercel.app</b> under Firebase Authentication → Settings → Authorized domains.</p></section><section class="panel"><h2 style="font-size:15px;margin-top:0">Data controls</h2><p class="sub">Reset permanently deletes the records stored in this browser. Export a backup first.</p><button class="pill" style="color:var(--red)" onclick="resetData()">Reset local data</button></section></div>`}
+function editTx(id){
+ const t=state.transactions.find(x=>x.id===id);
+ if(!t){toast('Transaction not found');return}
+ const categories=['Salary','Food','Housing','Transport','Shopping','Health','Bonus','Other'];
+ const options=categories.map(x=>'<option '+((t.category||'Other')===x?'selected':'')+'>'+x+'</option>').join('');
+ openModal(t.type==='income'?'Edit income':'Edit expense',
+ '<form id="editTxForm"><div class="formgrid">'+
+ '<div class="field full"><label>Description</label><input name="title" required value="'+escapeHtml(t.title||'')+'"></div>'+
+ '<div class="field"><label>Amount ('+state.currency+')</label><input name="amount" type="number" min="0.01" step="0.01" required value="'+Number(t.amount||0)+'"></div>'+
+ '<div class="field"><label>Date</label><input name="date" type="date" required value="'+escapeHtml(t.date||today())+'"></div>'+
+ '<div class="field full"><label>Category</label><select name="category">'+options+'</select></div>'+
+ '<div class="field full"><label>Note</label><input name="note" value="'+escapeHtml(t.note||'')+'"></div></div>'+
+ '<div class="formactions"><button type="button" class="pill" onclick="closeModal()">Cancel</button><button class="primary" type="submit">Save changes</button></div></form>');
+ const form=document.getElementById('editTxForm');
+ form.onsubmit=function(e){e.preventDefault();const d=new FormData(form),amount=Number(d.get('amount')),title=String(d.get('title')||'').trim();if(!title||!Number.isFinite(amount)||amount<=0){toast('Enter a valid description and amount');return}Object.assign(t,{title,amount,date:d.get('date'),category:d.get('category'),note:d.get('note')});save();closeModal();render();toast('Transaction updated')};
+}
+function deleteTx(id){if(confirm('Delete this transaction? This cannot be undone. Export a backup first if needed.')){state.transactions=state.transactions.filter(t=>t.id!==id);save();render();toast('Transaction deleted')}}
+function editLoan(kind,id){
+ const list=kind==='loan'?state.loans:state.debts;
+ const l=list.find(x=>x.id===id);
+ if(!l){toast('Account not found');return}
+ const periodOptions=['monthly','yearly','none'].map(p=>'<option value="'+p+'" '+(l.period===p?'selected':'')+'>'+(p==='none'?'No interest':p==='yearly'?'Yearly':'Monthly')+'</option>').join('');
+ const methodOptions=['simple','compound'].map(p=>'<option value="'+p+'" '+((l.method||'simple')===p?'selected':'')+'>'+(p==='simple'?'Simple interest':'Compound interest')+'</option>').join('');
+ openModal(kind==='loan'?'Edit loan account':'Edit debt account',
+ '<form id="editLoanForm"><div class="formgrid">'+
+ '<div class="field full"><label>Person / Institution</label><input name="person" required value="'+escapeHtml(l.person||'')+'"></div>'+
+ '<div class="field"><label>Principal ('+state.currency+')</label><input name="principal" type="number" min="0" step="0.01" required value="'+Number(l.principal||0)+'"></div>'+
+ '<div class="field"><label>Interest rate (%)</label><input name="rate" type="number" min="0" step="0.01" required value="'+Number(l.rate||0)+'"></div>'+
+ '<div class="field"><label>Interest period</label><select name="period">'+periodOptions+'</select></div>'+
+ '<div class="field"><label>Interest method</label><select name="method">'+methodOptions+'</select></div>'+
+ '<div class="field"><label>Interest starts</label><input name="start" type="date" value="'+escapeHtml(l.start||'')+'"></div>'+
+ '<div class="field"><label>Interest stops</label><input name="stop" type="date" value="'+escapeHtml(l.stop||'')+'"></div>'+
+ '<div class="field"><label>Due date</label><input name="due" type="date" value="'+escapeHtml(l.due||'')+'"></div>'+
+ '<div class="field full"><label>Notes</label><input name="note" value="'+escapeHtml(l.note||'')+'"></div></div>'+
+ '<div class="formactions"><button type="button" class="pill" onclick="closeModal()">Cancel</button><button class="primary" type="submit">Save changes</button></div></form>');
+ const form=document.getElementById('editLoanForm');
+ form.onsubmit=function(e){
+  e.preventDefault();
+  const d=new FormData(form),principal=Number(d.get('principal')),rate=Number(d.get('rate')),person=String(d.get('person')||'').trim();
+  if(!person||!Number.isFinite(principal)||principal<0||!Number.isFinite(rate)||rate<0){toast('Please enter valid account details');return}
+  Object.assign(l,{person,principal,rate,period:d.get('period'),method:d.get('method'),start:d.get('start'),stop:d.get('stop'),due:d.get('due'),note:d.get('note')});
+  l.principalPaid=Math.min(principal,Number(l.principalPaid||0));
+  save();closeModal();render();toast('Account updated');
+ };
+}
+function deleteLoan(kind,id){if(!confirm('Delete this account? Related payment history will remain but may show Account removed.'))return;state[kind==='loan'?'loans':'debts']=state[kind==='loan'?'loans':'debts'].filter(x=>x.id!==id);if(current==='PersonDetail'&&personDetail.id===id)current=kind==='loan'?'Loans':'Debts';save();render();toast('Account deleted')}
+function exportData(){const blob=new Blob([JSON.stringify({...state,exportedAt:new Date().toISOString(),formatVersion:1},null,2)],{type:'application/json'});download(blob,'finance-master-backup-'+today()+'.json')}
+function exportCSV(){const rows=[['Date','Type','Description','Category','Amount','Note'],...state.transactions.map(t=>[t.date,t.type,t.title,t.category,t.amount,t.note||''])];const csv=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');download(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),'finance-master-transactions-'+today()+'.csv')}
+function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();URL.revokeObjectURL(a.href)}
+function restoreData(e){const file=e.target.files&&e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const incoming=JSON.parse(reader.result);const collections=['transactions','loans','debts','savings','budgets','payments'];if(!incoming||typeof incoming!=='object'||!Array.isArray(incoming.transactions)||collections.some(k=>incoming[k]!==undefined&&!Array.isArray(incoming[k])))throw Error('Invalid backup');if(!confirm('Restore this backup and replace the records currently stored on this device? If current records exist, Finance Master will first download a safety backup.'))return;const hasCurrent=collections.some(k=>Array.isArray(state[k])&&state[k].length>0);if(hasCurrent)exportData();state={currency:['THB','MMK','USD','SGD'].includes(incoming.currency)?incoming.currency:'THB',transactions:incoming.transactions,loans:incoming.loans||[],debts:incoming.debts||[],savings:incoming.savings||[],budgets:incoming.budgets||[],payments:incoming.payments||[]};save();render();toast('Backup restored. A safety backup was downloaded if this device had records.')}catch(err){alert('Could not restore: this file is not a valid Finance Master backup. Your existing records were not replaced.')}};reader.readAsText(file);e.target.value='';}
+function resetData(){if(!confirm('Permanently delete ALL local Finance Master records on this device? If records exist, Finance Master will first download a safety backup.'))return;const hasCurrent=['transactions','loans','debts','savings','budgets','payments'].some(k=>Array.isArray(state[k])&&state[k].length>0);if(hasCurrent)exportData();state={currency:state.currency,transactions:[],loans:[],debts:[],savings:[],budgets:[],payments:[]};save();render();toast('Local records reset. A safety backup was downloaded if records existed.')}
+function syncMobileNav(){
+  const sidePage=current==='PersonDetail'?(personDetail.kind==='loan'?'Loans':'Debts'):current;
+  document.querySelectorAll('#sideNav [data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===sidePage));
+  const nav=document.getElementById('mobileNav'),more=document.getElementById('mobileMorePanel');
+  if(current==='PersonDetail'){
+   if(more)more.classList.remove('open');
+   const tabs=[['overview','Overview','⌂'],['ledger','Ledger','▤'],['payments','Payments','↔'],['database','Database','▦']];
+   nav.innerHTML=tabs.map(t=>'<button class="'+(personDetail.tab===t[0]?'active':'')+'" onclick="openPersonTab(\''+t[0]+'\')"><span>'+t[2]+'</span>'+t[1]+'</button>').join('');
+   nav.style.display='flex';nav.classList.add('person-mobile-nav');
+  }else{
+   nav.classList.remove('person-mobile-nav');
+   const items=[['Dashboard','◫','Home'],['Income','↗','Income'],['Expenses','↘','Expenses'],['Loans','⇄','Loans']];
+   nav.innerHTML=items.map(t=>'<button class="'+(current===t[0]?'active':'')+'" data-page="'+t[0]+'" onclick="go(\''+t[0]+'\')"><span>'+t[1]+'</span>'+t[2]+'</button>').join('')+'<button class="'+(['Savings','Debts','Payments','Budget','Reports','Settings'].includes(current)?'active':'')+'" onclick="toggleMobile()"><span>☰</span>More</button>';
+   nav.style.display='';
+   if(more)more.querySelectorAll('[data-more-page]').forEach(b=>b.classList.toggle('active',b.dataset.morePage===current));
+  }
+}
+function render(){
+ const el=document.getElementById('content');
+ const labels={Dashboard:'Dashboard',Income:'Income',Expenses:'Expenses',Savings:'Savings & Goals',Loans:'Loans Given',Debts:'My Debts',Payments:'Payment History',Budget:'Budget Planner',Reports:'Reports',Settings:'Settings & Backup'};
+ if(current==='PersonDetail'){
+  const list=personDetail.kind==='loan'?state.loans:state.debts;
+  const person=list.find(x=>x.id===personDetail.id);
+  document.getElementById('crumbPage').textContent=person?person.person:'Account details';
+  el.innerHTML=personDetailPage();
+  if(current!=='PersonDetail')document.getElementById('crumbPage').textContent=labels[current]||current;
+ }else{
+  document.getElementById('crumbPage').textContent=labels[current]||current;
+  switch(current){case'Dashboard':el.innerHTML=dashboard();break;case'Income':el.innerHTML=transactionsPage('income');break;case'Expenses':el.innerHTML=transactionsPage('expense');break;case'Savings':el.innerHTML=savingsPage();break;case'Loans':el.innerHTML=loansPage('loan');break;case'Debts':el.innerHTML=loansPage('debt');break;case'Payments':el.innerHTML=paymentsPage();break;case'Budget':el.innerHTML=budgetPage();break;case'Reports':el.innerHTML=reportsPage();break;case'Settings':el.innerHTML=settingsPage();break;default:el.innerHTML=dashboard()}
+ }
+ syncMobileNav();
+}
+render();
+window.fmApp={getState:()=>state,replaceState:(next)=>{state=next;save();render()},hasLocalRecords:()=>Boolean((state.transactions||[]).length||(state.loans||[]).length||(state.debts||[]).length||(state.savings||[]).length||(state.budgets||[]).length||(state.payments||[]).length),toast};
+</script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+const firebaseConfig = {
+  apiKey: "AIzaSyDCNyu8OFTZ2gAxq5lCbpTDd_bUTyO8Rr0",
+  authDomain: "finance-master-8d227.firebaseapp.com",
+  projectId: "finance-master-8d227",
+  storageBucket: "finance-master-8d227.firebasestorage.app",
+  messagingSenderId: "881817485868",
+  appId: "1:881817485868:web:2135de290e0a1150274789"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+let currentUser = null;
+const status = (message, bad=false) => {
+  const el = document.getElementById('fmAuthStatus');
+  if (el) { el.textContent = message; el.style.background = bad ? '#fff0f0' : '#fff8e8'; el.style.color = bad ? '#a62d2d' : '#795d26'; }
+};
+const emailValue = () => (document.getElementById('fmEmail')?.value || '').trim();
+const passwordValue = () => document.getElementById('fmPassword')?.value || '';
+const cloudRef = uid => doc(db, 'users', uid, 'finance', 'data');
+const errText = e => {
+  const map = {
+    'auth/email-already-in-use':'This email already has an account. Sign in instead.',
+    'auth/invalid-email':'Please enter a valid email address.',
+    'auth/weak-password':'Password must be at least 6 characters.',
+    'auth/invalid-credential':'Email or password is incorrect.',
+    'auth/operation-not-allowed':'Email/Password sign-in is not enabled in Firebase Authentication.',
+    'auth/unauthorized-domain':'This website domain is not authorized in Firebase Authentication settings.',
+    'permission-denied':'Firestore denied access. Check the user-only Security Rules.',
+    'unavailable':'Firebase is temporarily unavailable. Check your connection and try again.'
+  };
+  return map[e?.code] || (e?.message || 'An unexpected Firebase error occurred.');
+};
+window.fmSignUp = async () => {
+  const email=emailValue(), password=passwordValue();
+  if (!email || password.length < 6) return status('Enter a valid email and a password with at least 6 characters.', true);
+  try { await createUserWithEmailAndPassword(auth,email,password); status('Account created and signed in. Export a backup, then you can upload your local records.'); }
+  catch(e) { status(errText(e),true); }
+};
+window.fmSignIn = async () => {
+  const email=emailValue(), password=passwordValue();
+  if (!email || !password) return status('Enter your email and password.',true);
+  try { await signInWithEmailAndPassword(auth,email,password); status('Signed in. Your local records have not been changed.'); }
+  catch(e) { status(errText(e),true); }
+};
+window.fmSignOut = async () => {
+  try { await signOut(auth); status('Signed out. Local data remains on this device.'); }
+  catch(e) { status(errText(e),true); }
+};
+window.fmUploadLocal = async () => {
+  if (!currentUser) return status('Sign in first to upload data.',true);
+  if (!confirm('Before uploading, export a full JSON backup from Settings. Continue with uploading the records currently on this device to your private cloud account?')) return;
+  try {
+    const ref=cloudRef(currentUser.uid), snap=await getDoc(ref);
+    if (snap.exists() && !confirm('Cloud data already exists. Replace the cloud copy with this device’s data? This cannot be undone from this screen. Cancel to keep the cloud copy.')) return;
+    const data=window.fmApp.getState();
+    await setDoc(ref,{data, schemaVersion:1, ownerUid:currentUser.uid, updatedAt:serverTimestamp()});
+    syncConflict=false; syncReady=true; localDirty=false; lastCloudSignature=stateSignature(data);
+    status('Upload complete. Your device data was copied to your cloud account. Live sync is active.');
+    window.fmApp.toast('Cloud backup uploaded');
+  } catch(e) { status(errText(e),true); }
+};
+window.fmDownloadCloud = async () => {
+  if (!currentUser) return status('Sign in first to download cloud data.',true);
+  try {
+    const snap=await getDoc(cloudRef(currentUser.uid));
+    if (!snap.exists()) return status('No cloud backup found for this account. Your local data was not changed. Upload this device’s data if this is your first sync.',true);
+    const payload=snap.data()?.data;
+    if (!payload || !Array.isArray(payload.transactions)) return status('Cloud backup format is invalid. Local data was not changed.',true);
+    if (window.fmApp.hasLocalRecords() && !confirm('This will replace the records on this device with the cloud copy. Export a JSON backup first if you need to keep the current local records. Continue?')) return;
+    const safeState={
+      currency: ['THB','MMK','USD','SGD'].includes(payload.currency) ? payload.currency : 'THB',
+      transactions:Array.isArray(payload.transactions)?payload.transactions:[],
+      loans:Array.isArray(payload.loans)?payload.loans:[],
+      debts:Array.isArray(payload.debts)?payload.debts:[],
+      savings:Array.isArray(payload.savings)?payload.savings:[],
+      budgets:Array.isArray(payload.budgets)?payload.budgets:[],
+      payments:Array.isArray(payload.payments)?payload.payments:[]
+    };
+    applyingRemote=true;
+    window.fmApp.replaceState(safeState);
+    applyingRemote=false;
+    syncConflict=false; syncReady=true; localDirty=false; lastCloudSignature=stateSignature(safeState);
+    status('Cloud data downloaded to this device. Live sync is active. Review your records and export a backup.');
+    window.fmApp.toast('Cloud data downloaded');
+  } catch(e) { status(errText(e),true); }
+};
+let stopCloudListener=null;
+let applyingRemote=false;
+let syncReady=false;
+let localDirty=false;
+let syncConflict=false;
+let syncTimer=null;
+let lastCloudSignature='';
+let initialSnapshotHandled=false;
+const stateSignature = value => JSON.stringify({
+  currency:value?.currency || 'THB',
+  transactions:Array.isArray(value?.transactions)?value.transactions:[],
+  loans:Array.isArray(value?.loans)?value.loans:[],
+  debts:Array.isArray(value?.debts)?value.debts:[],
+  savings:Array.isArray(value?.savings)?value.savings:[],
+  budgets:Array.isArray(value?.budgets)?value.budgets:[],
+  payments:Array.isArray(value?.payments)?value.payments:[]
+});
+const normalizeState = payload => ({
+  currency:['THB','MMK','USD','SGD'].includes(payload?.currency)?payload.currency:'THB',
+  transactions:Array.isArray(payload?.transactions)?payload.transactions:[],
+  loans:Array.isArray(payload?.loans)?payload.loans:[],
+  debts:Array.isArray(payload?.debts)?payload.debts:[],
+  savings:Array.isArray(payload?.savings)?payload.savings:[],
+  budgets:Array.isArray(payload?.budgets)?payload.budgets:[],
+  payments:Array.isArray(payload?.payments)?payload.payments:[]
+});
+const writeCurrentState = async () => {
+  if(!currentUser || !syncReady || applyingRemote || !localDirty) return;
+  const data=window.fmApp.getState();
+  const signature=stateSignature(data);
+  if(signature===lastCloudSignature){localDirty=false;return;}
+  try {
+    await setDoc(cloudRef(currentUser.uid),{data,schemaVersion:1,ownerUid:currentUser.uid,updatedAt:serverTimestamp()});
+    lastCloudSignature=signature;
+    localDirty=false;
+    status('Cloud sync is live. Changes are syncing automatically.');
+  } catch(e) {
+    status('Auto-sync failed: '+errText(e)+'. Your data is still saved on this device.',true);
+  }
+};
+window.fmScheduleSync = () => {
+  if(!currentUser || !syncReady || applyingRemote || syncConflict) return;
+  localDirty=true;
+  if(syncTimer) clearTimeout(syncTimer);
+  syncTimer=setTimeout(writeCurrentState,900);
+};
+const startCloudListener = user => {
+  if(stopCloudListener){stopCloudListener();stopCloudListener=null;}
+  syncReady=false; syncConflict=false; initialSnapshotHandled=false; localDirty=false; lastCloudSignature='';
+  if(!user) return;
+  stopCloudListener=onSnapshot(cloudRef(user.uid), async snap => {
+    if(!currentUser || currentUser.uid!==user.uid) return;
+    if(!snap.exists()){
+      if(!initialSnapshotHandled){
+        initialSnapshotHandled=true;
+        status('Signed in. No cloud backup found yet. Export a JSON backup, then use Upload this device to cloud.');
+      }
+      return;
+    }
+    const payload=snap.data()?.data;
+    if(!payload || !Array.isArray(payload.transactions)){
+      status('Cloud data format is invalid. Local records were not changed.',true);return;
+    }
+    const remote=normalizeState(payload);
+    const remoteSignature=stateSignature(remote);
+    const local=window.fmApp.getState();
+    const localSignature=stateSignature(local);
+    if(!initialSnapshotHandled){
+      initialSnapshotHandled=true;
+      if(remoteSignature!==localSignature && window.fmApp.hasLocalRecords()){
+        const useCloud=confirm('Cloud data and this device data are different. OK = replace this device with cloud data. Cancel = keep this device and upload its data to cloud.');
+        if(useCloud){
+          applyingRemote=true;window.fmApp.replaceState(remote);applyingRemote=false;
+          lastCloudSignature=remoteSignature;localDirty=false;
+        } else {
+          syncReady=true;localDirty=true;await writeCurrentState();
+        }
+      } else if(remoteSignature!==localSignature){
+        applyingRemote=true;window.fmApp.replaceState(remote);applyingRemote=false;
+        lastCloudSignature=remoteSignature;localDirty=false;
+      } else {
+        lastCloudSignature=remoteSignature;
+      }
+      syncReady=true;
+      status('Cloud sync is live. Changes on signed-in devices update automatically.');
+      return;
+    }
+    if(snap.metadata?.hasPendingWrites) return;
+    if(syncConflict) return;
+    if(remoteSignature===lastCloudSignature) return;
+    if(localDirty){
+      // Do not overwrite either side when both devices changed the shared document.
+      if(syncTimer){clearTimeout(syncTimer);syncTimer=null;}
+      syncReady=false; syncConflict=true; localDirty=false;
+      status('Sync paused to protect data: this device and cloud changed at the same time. Export a JSON backup, then choose Upload or Download only after reviewing which copy to keep.',true);
+      return;
+    }
+    if(remoteSignature!==localSignature){
+      applyingRemote=true;window.fmApp.replaceState(remote);applyingRemote=false;
+      lastCloudSignature=remoteSignature;
+      status('New cloud changes received. This device is up to date.');
+      window.fmApp.toast('Cloud changes received');
+    }
+  }, e => {
+    syncReady=false;
+    status('Live sync connection failed: '+errText(e)+'. Local data is still available.',true);
+  });
+};
+onAuthStateChanged(auth, user => {
+  currentUser=user;
+  if(syncTimer){clearTimeout(syncTimer);syncTimer=null;}
+  localDirty=false;
+  startCloudListener(user);
+  if(user) status('Signed in as '+user.email+'. Connecting live cloud sync…');
+  else status('Not signed in. Create an account or sign in to enable cloud sync.');
+});
+</script>
+</body></html>}[c]||c||'Unclassified');
 let state={currency:'THB',transactions:[],loans:[],debts:[],savings:[],budgets:[],payments:[]};
 try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s)state={...state,...s}}catch(e){}
 let current='Dashboard';
