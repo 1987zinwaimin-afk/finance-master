@@ -523,7 +523,7 @@ function render(){
   if(current!=='PersonDetail')document.getElementById('crumbPage').textContent=labels[current]||current;
  }else{
   document.getElementById('crumbPage').textContent=labels[current]||current;
-  switch(current){case'Dashboard':el.innerHTML=dashboard();break;case'Income':el.innerHTML=transactionsPage('income');break;case'Expenses':el.innerHTML=transactionsPage('expense');break;case'Savings':el.innerHTML=savingsPage();break;case'Loans':el.innerHTML=loansPage('loan');break;case'Debts':el.innerHTML=loansPage('debt');break;case'Payments':el.innerHTML=paymentsPage();break;case'Budget':el.innerHTML=budgetPage();break;case'Reports':el.innerHTML=reportsPage();break;case'Settings':el.innerHTML=settingsPage();break;case'BorrowerPortal':el.innerHTML=borrowerPortalPage();break;default:el.innerHTML=dashboard()}
+  switch(current){case'Dashboard':el.innerHTML=dashboard();break;case'Income':el.innerHTML=transactionsPage('income');break;case'Expenses':el.innerHTML=transactionsPage('expense');break;case'Savings':el.innerHTML=savingsPage();break;case'Loans':el.innerHTML=loansPage('loan');break;case'Debts':el.innerHTML=loansPage('debt');break;case'Payments':el.innerHTML=paymentsPage();break;case'Budget':el.innerHTML=budgetPage();break;case'Reports':el.innerHTML=reportsPage();break;case'Settings':el.innerHTML=settingsPage();break;case'BorrowerPortal':el.innerHTML=borrowerPortalPage();if(window.fmBorrowerCloud?.ready)setTimeout(()=>ensureBorrowerLinksForAll(),900);break;default:el.innerHTML=dashboard()}
  }
  syncMobileNav();
 }
