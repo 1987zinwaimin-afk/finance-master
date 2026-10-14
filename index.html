@@ -64,31 +64,39 @@ async function getSlipOcr(){
  return fmOcrPromise;
 }
 function parseSlipText(text){
- const lines=text.split(/\r?\n/).map(x=>x.replace(/[|]/g,' ').replace(/\s+/g,' ').trim()).filter(Boolean);
+ const thaiDigits={'๐':'0','๑':'1','๒':'2','๓':'3','๔':'4','๕':'5','๖':'6','๗':'7','๘':'8','๙':'9'};
+ const normalized=String(text||'').replace(/[๐-๙]/g,ch=>thaiDigits[ch]||ch).replace(/[฿]/g,' THB ');
+ const lines=normalized.split(/\r?\n/).map(x=>x.replace(/[|]/g,' ').replace(/\s+/g,' ').trim()).filter(Boolean);
  const full=lines.join('\n');
  let amount=null;
- const amountLabels=/(?:transfer\s*amount|transaction\s*amount|amount|ยอดเงินที่โอน|จำนวนเงิน|จำนวนที่โอน|ยอดโอน|โอนเงิน|เงินที่โอน|ยอดชำระ|amount\s*\(thb\))/i;
+ const amountLabels=/(?:transfer\s*amount|transaction\s*amount|amount|ยอดเงินที่โอน|จำนวนเงิน|จำนวนที่โอน|ยอดโอน|โอนเงิน|เงินที่โอน|ยอดชำระ|ยอดเงิน|จำนวน|amount\s*\(thb\))/i;
+ const numberRe=/(?:THB\s*)?([0-9][0-9,]*(?:\.[0-9]{1,2})?)(?:\s*(?:THB|บาท))?/gi;
  for(let i=0;i<lines.length;i++){
    if(amountLabels.test(lines[i])){
      const candidates=[lines[i],lines[i+1]||''].join(' ');
-     const matches=[...candidates.matchAll(/(?:฿|THB|บาท)?\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)(?:\s*(?:THB|บาท))?/gi)];
-     const m=matches.find(x=>Number(x[1].replace(/,/g,''))>0);
-     if(m){amount=Number(m[1].replace(/,/g,''));break}
+     const matches=[...candidates.matchAll(numberRe)];
+     const vals=matches.map(x=>Number(x[1].replace(/,/g,''))).filter(n=>n>0&&n<1e10);
+     if(vals.length){amount=vals[vals.length-1];break}
    }
  }
  if(amount===null){
-   const matches=[...full.matchAll(/(?:฿|THB|บาท)\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)(?![0-9])/gi)];
-   if(matches.length){const vals=matches.map(x=>Number(x[1].replace(/,/g,''))).filter(n=>n>0&&n<1e10);if(vals.length)amount=vals[0]}
+   const matches=[...full.matchAll(/(?:THB\s*|บาท\s*)([0-9][0-9,]*(?:\.[0-9]{1,2})?)/gi)];
+   const vals=matches.map(x=>Number(x[1].replace(/,/g,''))).filter(n=>n>0&&n<1e10);
+   if(vals.length)amount=vals[0];
+ }
+ if(amount===null){
+   const decimals=[...full.matchAll(/\b([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{2})|[0-9]+\.[0-9]{2})\b/g)]
+     .map(x=>Number(x[1].replace(/,/g,''))).filter(n=>n>0&&n<1e10);
+   if(decimals.length)amount=decimals.sort((a,b)=>b-a)[0];
  }
  let remark='';
- const remarkLabels=/(?:remark|payment\s*note|note|memo|message|หมายเหตุ|บันทึกช่วยจำ|รายละเอียด|ข้อความถึงผู้รับ|วัตถุประสงค์)/i;
+ const remarkLabels=/(?:remark|payment\s*note|note|memo|message|หมายเหตุ|บันทึกช่วยจำ|รายละเอียด|ข้อความถึงผู้รับ|วัตถุประสงค์|บันทึก|ข้อความ)/i;
  for(let i=0;i<lines.length;i++){
    const line=lines[i], at=line.search(remarkLabels);
    if(at>=0){
-     remark=line.slice(at).replace(remarkLabels,'').replace(/^\s*[:：-]?\s*/,'').trim();
-     if(!remark && lines[i+1])remark=lines[i+1];
-     if(remark && !/^(?:amount|ยอดเงิน|วันที่|date|time|reference|เลขที่|transaction|fee|ค่าธรรมเนียม|balance|ยอดคงเหลือ)/i.test(remark))break;
-     remark='';
+     let value=line.slice(at).replace(remarkLabels,'').replace(/^\s*[:：-]?\s*/,'').trim();
+     if(!value && lines[i+1])value=lines[i+1];
+     if(value && !/^(?:amount|ยอดเงิน|วันที่|date|time|reference|เลขที่|transaction|fee|ค่าธรรมเนียม|balance|ยอดคงเหลือ)/i.test(value)){remark=value;break}
    }
  }
  if(remark.length>120)remark=remark.slice(0,120).trim();
@@ -124,7 +132,8 @@ async function readBankSlip(input,formId){
    const found=[];
    if(parsed.amount!==null)found.push('Amount: '+parsed.amount.toLocaleString()+' '+state.currency);else found.push('Amount not detected — enter it manually.');
    if(parsed.remark)found.push('Remark: '+parsed.remark);else found.push('Remark not detected — enter it manually.');
-   statusEl.textContent='Slip scanned. '+found.join(' · ')+' Please verify the fields before saving.';
+   const ocrPreview=(parsed.text||'').replace(/\s+/g,' ').trim().slice(0,260);
+   statusEl.textContent='Slip scanned. '+found.join(' · ')+' Please verify the fields before saving.'+(ocrPreview?' OCR text: '+ocrPreview:' No readable text found. Try a sharper, full slip image with all edges visible.');
  }catch(e){statusEl.textContent='Could not read this image automatically: '+(e.message||e)+'. You can still enter the fields manually.'}
 }
 function addTransaction(type){openModal(type==='income'?'Add income':'Add expense',`<form id="txForm"><div class="formgrid">${field('Description','title')}${field('Amount ('+state.currency+')','amount','number')}${field('Date','date','date',today())}${field('Category','category','select','','<option>Salary</option><option>Food</option><option>Housing</option><option>Transport</option><option>Shopping</option><option>Health</option><option>Bonus</option><option>Other</option>')}<div class="field full"><label>Note (optional)</label><input name="note" placeholder="Add details..."></div>${type==='expense'?slipUploadMarkup('txForm'):''}</div><div class="formactions"><button type="button" class="pill" onclick="closeModal()">Cancel</button><button class="primary">Save record</button></div></form>`);document.getElementById('txForm').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);state.transactions.unshift({id:crypto.randomUUID(),type,title:f.get('title'),amount:Number(f.get('amount')),date:f.get('date'),category:f.get('category'),note:f.get('note')});save();closeModal();render();toast('Record saved')}}
