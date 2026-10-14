@@ -63,6 +63,11 @@ async function getSlipOcr(){
  if(!fmOcrPromise)fmOcrPromise=new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';s.onload=()=>resolve(window.Tesseract);s.onerror=()=>reject(new Error('Could not load OCR engine. Check internet connection and try again.'));document.head.appendChild(s)});
  return fmOcrPromise;
 }
+async function getSlipOcrWorker(){
+ const T=await getSlipOcr();
+ // Download trained language data on demand; include Myanmar for Burmese-language memos.
+ return await T.createWorker(['eng','tha','mya'],1,{logger:m=>{}});
+}
 function parseSlipText(text){
  const thaiDigits={'๐':'0','๑':'1','๒':'2','๓':'3','๔':'4','๕':'5','๖':'6','๗':'7','๘':'8','๙':'9'};
  const normalized=String(text||'').replace(/[๐-๙]/g,ch=>thaiDigits[ch]||ch).replace(/[฿]/g,' THB ');
@@ -117,8 +122,7 @@ async function readBankSlip(input,formId){
  if(!file.type.startsWith('image/')){statusEl.textContent='Please choose an image file.';return}
  statusEl.textContent='Reading slip… This may take a little while on a phone.';
  try{
-   const T=await getSlipOcr();
-   const worker=await T.createWorker('eng+tha');
+   const worker=await getSlipOcrWorker();
    const result=await worker.recognize(file);
    await worker.terminate();
    const parsed=parseSlipText(result.data.text||'');
