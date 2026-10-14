@@ -467,10 +467,11 @@ function borrowerPortalPage(){
  const loans=state.loans||[];
  let html=pageHead('Borrower Portal','Create a read-only borrower link. Borrowers can request payments; only you can approve them.');
  html+='<div class="notice"><b>Security:</b> Each private link grants access to one borrower account. Treat the link like a password and revoke it if shared incorrectly.</div>';
- html+='<section class="panel"><div class="panelhead"><div><h2>Create borrower link</h2><p>Select a loan account to share.</p></div></div>';
- if(loans.length){html+='<div class="field full"><label>Borrower account</label><select id="borrowerAccountSelect">'+loans.map(l=>'<option value="'+escapeHtml(l.id)+'">'+escapeHtml(l.person)+' — '+moneyFor(loanLedger('loan',l).principalOutstanding,l)+' remaining</option>').join('')+'</select></div><div class="formactions"><button class="primary" onclick="createBorrowerShareFromSelection()">Create secure share link</button></div>';}
- else{html+='<div class="empty">Add a loan account first.</div>';}
- html+='</section><section class="panel" style="margin-top:16px"><div class="panelhead"><div><h2>Active share links</h2><p>Update the account snapshot or revoke access.</p></div></div>';
+ html+='<section class="panel"><div class="panelhead"><div><h2>Automatic borrower links</h2><p>Each loan account gets its own private link automatically. New accounts are linked when you open this page.</p></div></div>';
+ if(!window.fmBorrowerCloud||!window.fmBorrowerCloud.ready){html+='<div class="empty">Sign in to Finance Master to generate private links automatically.</div>';}
+ else if(!loans.length){html+='<div class="empty">Add a loan account first.</div>';}
+ else{html+='<div class="notice">Automatic link creation is enabled. Each name below receives a separate read-only link. Use Copy private link to send it to that borrower only.</div>';}
+ html+='</section><section class="panel" style="margin-top:16px"><div class="panelhead"><div><h2>Borrower links by name</h2><p>One separate link per loan account.</p></div></div>';
  if(!window.fmBorrowerCloud||!window.fmBorrowerCloud.ready){html+='<div class="empty">Sign in to Finance Master to manage borrower links.</div>';}
  else if(!shares.length){html+='<div class="empty">No borrower links yet.</div>';}
  else{html+=shares.map(sh=>'<article class="borrower-link-card"><h3>'+escapeHtml(sh.borrowerName||'Borrower')+'</h3><p>Account: '+escapeHtml(sh.accountId)+' · '+(sh.active?'Active':'Revoked')+'</p><p>Snapshot remaining: '+escapeHtml(fmt(sh.snapshot&&sh.snapshot.principalOutstanding,sh.currency||'THB'))+' principal · '+escapeHtml(fmt(sh.snapshot&&sh.snapshot.interestOutstanding,sh.currency||'THB'))+' interest</p><div class="borrower-link-actions">'+(sh.active?'<button class="primary" onclick="copyBorrowerLink(\''+escapeHtml(sh.id)+'\')">Copy private link</button><button class="pill" onclick="updateBorrowerShare(\''+escapeHtml(sh.id)+'\')">Update snapshot</button><button class="pill" onclick="revokeBorrowerShare(\''+escapeHtml(sh.id)+'\')">Revoke link</button>':'<span class="tag out">Revoked</span>')+'</div></article>').join('');}
@@ -485,10 +486,29 @@ function borrowerSnapshotForLoan(l){
  const payments=(state.payments||[]).filter(p=>p.kind==='loan'&&p.account===l.id).map(p=>({date:p.date||'',amount:Number(p.amount)||0,currency:recordCurrency(p)||recordCurrency(l)||'THB',apply:p.apply||'auto',note:p.note||'',interestApplied:Number(p.interestApplied)||0,principalApplied:Number(p.principalApplied)||0}));
  return {person:l.person||'',currency:recordCurrency(l)||'THB',principal:Number(l.principal)||0,principalPaid:Number(l.principalPaid)||0,rate:Number(l.rate)||0,period:l.period||'monthly',method:l.method||'simple',start:l.start||'',stop:l.stop||'',due:l.due||'',note:l.note||'',principalOutstanding:ledger.principalOutstanding,interestOutstanding:ledger.interestOutstanding,monthlyInterest:ledger.monthlyInterest,unpaidMonths:ledger.unpaidMonths,interestBuckets:ledger.interestBuckets.map(b=>({date:b.date,original:b.original,remaining:b.remaining})),payments};
 }
+let borrowerAutoCreateRunning=false;
+const borrowerAutoCreateAttempted=new Set();
+async function ensureBorrowerLinksForAll(){
+ if(borrowerAutoCreateRunning||!window.fmBorrowerCloud?.ready)return;
+ borrowerAutoCreateRunning=true;
+ let created=0,skipped=0;
+ try{
+  const existing=window.fmBorrowerCloud.shares||[];
+  for(const loan of (state.loans||[])){
+   if(existing.some(sh=>sh.accountId===loan.id))continue;
+   if(borrowerAutoCreateAttempted.has(loan.id))continue;
+   borrowerAutoCreateAttempted.add(loan.id);
+   if(!recordCurrency(loan)){skipped++;continue;}
+   try{await window.fmBorrowerCloud.createShare(loan.id,borrowerSnapshotForLoan(loan),{silent:true});created++;}
+   catch(e){borrowerAutoCreateAttempted.delete(loan.id);console.error('Auto borrower link failed',loan.person,e);}
+  }
+  if(created||skipped)status('Automatic borrower links: '+created+' created'+(skipped?', '+skipped+' skipped (assign currency first)':'')+'.');
+ }finally{borrowerAutoCreateRunning=false;}
+}
 async function createBorrowerShareFromSelection(){const id=document.getElementById('borrowerAccountSelect')?.value;if(!id)return toast('Choose a borrower account');const l=state.loans.find(x=>x.id===id);if(!l)return toast('Borrower account not found');if(!recordCurrency(l))return toast('Assign a currency before sharing');try{await window.fmBorrowerCloud.createShare(l.id,borrowerSnapshotForLoan(l));}catch(e){toast('Could not create link: '+String(e?.message||e));}}
 async function updateBorrowerShare(id){const sh=(window.fmBorrowerCloud?.shares||[]).find(x=>x.id===id);const l=state.loans.find(x=>x.id===sh?.accountId);if(!l)return toast('Loan account not found');try{await window.fmBorrowerCloud.updateShare(id,borrowerSnapshotForLoan(l));toast('Borrower snapshot updated');}catch(e){toast('Update failed: '+String(e?.message||e));}}
 async function revokeBorrowerShare(id){if(!confirm('Revoke this borrower link?'))return;try{await window.fmBorrowerCloud.revokeShare(id);toast('Share link revoked');}catch(e){toast('Revoke failed: '+String(e?.message||e));}}
-async function copyBorrowerLink(id){const sh=(window.fmBorrowerCloud?.shares||[]).find(x=>x.id===id);if(!sh)return;const url=new URL('borrower.html?token='+encodeURIComponent(id),window.location.href).href;try{await navigator.clipboard.writeText(url);toast('Private link copied');}catch(e){openModal('Copy borrower link','<p>Copy this private link and send it only to the borrower.</p><textarea readonly style="width:100%;min-height:90px;padding:10px">'+escapeHtml(url)+'</textarea>');}}
+async function copyBorrowerLink(id){const sh=(window.fmBorrowerCloud?.shares||[]).find(x=>x.id===id);if(!sh)return;const url=new URL('borrower.html?token='+encodeURIComponent(id),new URL('.',window.location.href)).href;try{await navigator.clipboard.writeText(url);toast('Private link copied');}catch(e){openModal('Copy borrower link','<p>Copy this private link and send it only to the borrower.</p><textarea readonly style="width:100%;min-height:90px;padding:10px">'+escapeHtml(url)+'</textarea>');}}
 async function approveBorrowerRequest(id){const req=(window.fmBorrowerCloud?.requests||[]).find(x=>x.id===id);if(!req||req.status!=='pending')return toast('Request is no longer pending');if(!window.fmApp?.applyBorrowerPaymentRequest(req))return;try{await window.fmBorrowerCloud.setRequestStatus(id,'approved');const l=state.loans.find(x=>x.id===req.accountId);if(l&&req.token)await window.fmBorrowerCloud.updateShare(req.token,borrowerSnapshotForLoan(l));toast('Approved and added to Payment History');render();}catch(e){toast('Payment was recorded. Share refresh or request status sync failed; check Payment History before retrying.');}}
 async function rejectBorrowerRequest(id){if(!confirm('Reject this request? Loan data will not change.'))return;try{await window.fmBorrowerCloud.setRequestStatus(id,'rejected');toast('Request rejected');}catch(e){toast('Could not reject request: '+String(e?.message||e));}}
 
@@ -745,12 +765,12 @@ window.fmBorrowerCloud={
  get shares(){return borrowerShares;},
  get requests(){return borrowerRequests;},
  refresh(){if(currentUser)startBorrowerListeners(currentUser);},
- async createShare(accountId,snapshot){
+ async createShare(accountId,snapshot,options={}){
   if(!currentUser)throw new Error('Sign in to Finance Master first.');
   const token=Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,'0')).join('');
   await setDoc(doc(db,'borrowerShares',token),{ownerUid:currentUser.uid,accountId,borrowerName:String(snapshot.person||'Borrower'),currency:snapshot.currency||'THB',snapshot,active:true,createdAt:serverTimestamp(),updatedAt:serverTimestamp(),schemaVersion:1});
-  const url=new URL('borrower.html?token='+encodeURIComponent(token),window.location.href).href;
-  try{await navigator.clipboard.writeText(url);status('Secure borrower link created and copied. Send it only to the intended borrower.');}catch(e){status('Secure borrower link created. Use Copy private link in Borrower Portal.');}
+  const url=new URL('borrower.html?token='+encodeURIComponent(token),new URL('.',window.location.href)).href;
+  if(!options.silent){try{await navigator.clipboard.writeText(url);status('Secure borrower link created and copied. Send it only to the intended borrower.');}catch(e){status('Secure borrower link created. Use Copy private link in Borrower Portal.');}}
   startBorrowerListeners(currentUser);return url;
  },
  async updateShare(token,snapshot){if(!currentUser)throw new Error('Sign in required.');await updateDoc(doc(db,'borrowerShares',token),{snapshot,borrowerName:String(snapshot.person||'Borrower'),currency:snapshot.currency||'THB',updatedAt:serverTimestamp()});},
@@ -766,6 +786,7 @@ onAuthStateChanged(auth, user => {
   startBorrowerListeners(user);
   if(user) status('Signed in as '+user.email+'. Connecting live cloud sync…');
   else status('Not signed in. Create an account or sign in to enable cloud sync.');
+  if(user){setTimeout(()=>{if(currentUser&&document.getElementById('crumbPage')?.textContent==='Borrower Portal'){ensureBorrowerLinksForAll();}},900);}
 });
 </script>
 </body></html>
