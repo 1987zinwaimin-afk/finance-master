@@ -55,7 +55,7 @@ function closeModal(){document.getElementById('modalback').classList.remove('sho
 function field(label,name,type='text',value='',opts=''){return `<div class="field"><label>${label}</label>${type==='select'?`<select name="${name}" required>${opts}</select>`:`<input name="${name}" type="${type}" value="${escapeHtml(value)}" ${type==='number'?'min="0" step="0.01"':''} required`+`>`}</div>`}
 
 function slipUploadMarkup(formId){
- return '<div class="field full" style="border:1px dashed var(--line);border-radius:12px;padding:12px"><label>Bank QR slip / payment receipt (auto-read)</label><input type="file" accept="image/*" capture="environment" onchange="readBankSlip(this,\''+formId+'\')" style="max-width:100%"><small class="sub" style="display:block;margin-top:6px">Upload a bank transfer receipt image. Amount and remark will be read automatically; please verify them before saving.</small><div id="slipStatus_'+formId+'" class="sub" style="margin-top:8px"></div></div>';
+ return '<div class="field full" style="border:1px dashed var(--line);border-radius:12px;padding:12px"><label>Bank QR slip / payment receipt (auto-read)</label><input type="file" accept="image/*" onchange="readBankSlip(this,\''+formId+'\')" style="max-width:100%"><small class="sub" style="display:block;margin-top:6px">Upload a bank transfer receipt image. Amount and remark will be read automatically; please verify them before saving.</small><div id="slipStatus_'+formId+'" class="sub" style="margin-top:8px"></div></div>';
 }
 let fmOcrPromise=null;
 async function getSlipOcr(){
