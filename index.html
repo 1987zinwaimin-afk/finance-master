@@ -699,6 +699,7 @@ const scheduleSyncRetry = (delay=900) => {
 };
 const writeCurrentState = async () => {
   if(!currentUser || !syncReady || applyingRemote || syncConflict || !localDirty || syncWriteInFlight) return;
+  if(!window.fmApp || typeof window.fmApp.getState!=='function') return;
   const userAtStart=currentUser;
   const data=window.fmApp.getState();
   const signature=stateSignature(data);
@@ -737,6 +738,13 @@ const startCloudListener = user => {
   if(!user) return;
   stopCloudListener=onSnapshot(cloudRef(user.uid), async snap => {
     if(!currentUser || currentUser.uid!==user.uid) return;
+    // Auth can resolve before the classic app script has exposed fmApp.
+    // Wait for app initialization before reading or replacing any local data.
+    if(!window.fmApp || typeof window.fmApp.getState!=='function'){
+      if(stopCloudListener){stopCloudListener();stopCloudListener=null;}
+      setTimeout(()=>{if(currentUser && currentUser.uid===user.uid) startCloudListener(user);},300);
+      return;
+    }
     if(!snap.exists()){
       if(!initialSnapshotHandled){
         initialSnapshotHandled=true;
