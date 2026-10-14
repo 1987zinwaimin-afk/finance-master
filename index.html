@@ -190,7 +190,8 @@ window.fmUploadLocal = async () => {
     if (snap.exists() && !confirm('Cloud data already exists. Replace the cloud copy with this device’s data? This cannot be undone from this screen. Cancel to keep the cloud copy.')) return;
     const data=window.fmApp.getState();
     await setDoc(ref,{data, schemaVersion:1, ownerUid:currentUser.uid, updatedAt:serverTimestamp()});
-    status('Upload complete. Your device data was copied to your cloud account.');
+    syncConflict=false; syncReady=true; localDirty=false; lastCloudSignature=stateSignature(data);
+    status('Upload complete. Your device data was copied to your cloud account. Live sync is active.');
     window.fmApp.toast('Cloud backup uploaded');
   } catch(e) { status(errText(e),true); }
 };
@@ -211,8 +212,11 @@ window.fmDownloadCloud = async () => {
       budgets:Array.isArray(payload.budgets)?payload.budgets:[],
       payments:Array.isArray(payload.payments)?payload.payments:[]
     };
+    applyingRemote=true;
     window.fmApp.replaceState(safeState);
-    status('Cloud data downloaded to this device. Review your records and export a backup.');
+    applyingRemote=false;
+    syncConflict=false; syncReady=true; localDirty=false; lastCloudSignature=stateSignature(safeState);
+    status('Cloud data downloaded to this device. Live sync is active. Review your records and export a backup.');
     window.fmApp.toast('Cloud data downloaded');
   } catch(e) { status(errText(e),true); }
 };
@@ -220,6 +224,7 @@ let stopCloudListener=null;
 let applyingRemote=false;
 let syncReady=false;
 let localDirty=false;
+let syncConflict=false;
 let syncTimer=null;
 let lastCloudSignature='';
 let initialSnapshotHandled=false;
@@ -256,14 +261,14 @@ const writeCurrentState = async () => {
   }
 };
 window.fmScheduleSync = () => {
-  if(!currentUser || !syncReady || applyingRemote) return;
+  if(!currentUser || !syncReady || applyingRemote || syncConflict) return;
   localDirty=true;
   if(syncTimer) clearTimeout(syncTimer);
   syncTimer=setTimeout(writeCurrentState,900);
 };
 const startCloudListener = user => {
   if(stopCloudListener){stopCloudListener();stopCloudListener=null;}
-  syncReady=false; initialSnapshotHandled=false; localDirty=false; lastCloudSignature='';
+  syncReady=false; syncConflict=false; initialSnapshotHandled=false; localDirty=false; lastCloudSignature='';
   if(!user) return;
   stopCloudListener=onSnapshot(cloudRef(user.uid), async snap => {
     if(!currentUser || currentUser.uid!==user.uid) return;
@@ -303,10 +308,14 @@ const startCloudListener = user => {
       return;
     }
     if(snap.metadata?.hasPendingWrites) return;
+    if(syncConflict) return;
     if(remoteSignature===lastCloudSignature) return;
     if(localDirty){
-      // Preserve unsent local edits instead of applying a remote snapshot over them.
-      await writeCurrentState();return;
+      // Do not overwrite either side when both devices changed the shared document.
+      if(syncTimer){clearTimeout(syncTimer);syncTimer=null;}
+      syncReady=false; syncConflict=true; localDirty=false;
+      status('Sync paused to protect data: this device and cloud changed at the same time. Export a JSON backup, then choose Upload or Download only after reviewing which copy to keep.',true);
+      return;
     }
     if(remoteSignature!==localSignature){
       applyingRemote=true;window.fmApp.replaceState(remote);applyingRemote=false;
