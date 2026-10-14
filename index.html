@@ -74,7 +74,7 @@ function paymentsPage(){return `${pageHead('Payment history','Every repayment in
 function budgetPage(){return `${pageHead('Budget planner','Set spending limits and compare them with recorded expenses.','Add budget','addBudget()')}<div class="layout"><section class="panel"><div class="panelhead"><div><h2>Category budgets</h2><p>Monthly spending limits</p></div></div>${state.budgets.length?state.budgets.map(b=>{const spent=state.transactions.filter(t=>t.type==='expense'&&t.category===b.category&&t.date?.startsWith(today().slice(0,7))).reduce((s,t)=>s+t.amount,0);return `<div style="padding:14px 0;border-bottom:1px solid var(--line)"><div style="display:flex;justify-content:space-between"><b style="font-size:12px">${escapeHtml(b.category)}</b><span style="font-size:11px">${fmt(spent)} / ${fmt(b.limit)}</span></div><div style="height:7px;background:#eef1f5;border-radius:9px;margin-top:10px;overflow:hidden"><div style="height:100%;width:${Math.min(100,spent/b.limit*100)}%;background:${spent>b.limit?'var(--red)':'var(--gold)'}"></div></div><small class="sub">${spent>b.limit?'Over budget by '+fmt(spent-b.limit):fmt(b.limit-spent)+' remaining'}</small></div>`}).join(''):'<div class="empty">No budgets yet. Set a category limit to get started.</div>'}</section><section class="panel"><h2 style="font-size:15px;margin-top:0">This month</h2><p class="sub">Total expenses recorded</p><strong style="font-size:27px">${fmt(state.transactions.filter(t=>t.type==='expense'&&t.date?.startsWith(today().slice(0,7))).reduce((s,t)=>s+t.amount,0))}</strong><p class="sub">Only transactions dated in the current month are included.</p></section></div>`}
 function addBudget(){openModal('Add category budget',`<form id="budgetForm"><div class="formgrid">${field('Category','category','select','','<option>Food</option><option>Housing</option><option>Transport</option><option>Shopping</option><option>Health</option><option>Other</option>')}${field('Monthly limit ('+state.currency+')','limit','number')}</div><div class="formactions"><button type="button" class="pill" onclick="closeModal()">Cancel</button><button class="primary">Save budget</button></div></form>`);document.getElementById('budgetForm').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);state.budgets.push({id:crypto.randomUUID(),category:f.get('category'),limit:Number(f.get('limit'))});save();closeModal();render();toast('Budget saved')}}
 function reportsPage(){const income=total('income'),expense=total('expense');const cats={};state.transactions.filter(t=>t.type==='expense').forEach(t=>cats[t.category]=(cats[t.category]||0)+t.amount);return `${pageHead('Reports & insights','A simple snapshot of your recorded financial activity.','Export CSV','exportCSV()')}<div class="cards">${metric('Income',fmt(income),'↗','Recorded total')}${metric('Expenses',fmt(expense),'↘','Recorded total')}${metric('Net cash flow',fmt(income-expense),'◈','Income minus expenses')}${metric('Savings rate',income?Math.round((income-expense)/income*100)+'%':'—','％','Based on recorded income')}</div><div class="layout"><section class="panel"><div class="panelhead"><div><h2>Expense breakdown</h2><p>By category · all recorded time</p></div></div>${Object.entries(cats).length?Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([cat,n])=>`<div style="padding:11px 0;border-bottom:1px solid var(--line)"><div style="display:flex;justify-content:space-between;font-size:12px"><b>${escapeHtml(cat)}</b><span>${fmt(n)}</span></div><div style="height:6px;background:#edf0f5;border-radius:9px;margin-top:8px"><div style="height:100%;width:${expense?n/expense*100:0}%;background:var(--gold);border-radius:9px"></div></div></div>`).join(''):'<div class="empty">Add expense records to see a breakdown.</div>'}</section><section class="panel"><h2 style="font-size:15px;margin-top:0">Export & review</h2><p style="font-size:12px;line-height:1.7;color:var(--muted)">Download your transaction records as CSV for spreadsheets, or export all records as a JSON backup. Keep backups somewhere secure.</p><button class="primary" onclick="exportCSV()">⇩ Download transaction CSV</button><p><button class="pill" onclick="exportData()">Download full JSON backup</button></p></section></div>`}
-function settingsPage(){return `${pageHead('Settings & backup','Manage your preferences and protect your records.')}<div class="notice"><b>Important:</b> This starter currently saves data in this browser on this device only. It does not yet sync to Firebase or provide account-based cloud backup. Export a JSON backup regularly. Do not enter sensitive financial data until cloud authentication and security rules are configured.</div><div class="settingsgrid"><section class="panel"><h2 style="font-size:15px;margin-top:0">Preferences</h2><div class="field" style="margin:16px 0"><label>Currency</label><select id="currency" onchange="state.currency=this.value;save();render()"><option value="THB" ${state.currency==='THB'?'selected':''}>Thai Baht (THB ฿)</option><option value="MMK" ${state.currency==='MMK'?'selected':''}>Myanmar Kyat (MMK)</option><option value="USD" ${state.currency==='USD'?'selected':''}>US Dollar (USD $)</option><option value="SGD" ${state.currency==='SGD'?'selected':''}>Singapore Dollar (SGD)</option></select></div><p class="sub">Currency changes the display symbol; it does not convert saved amounts.</p></section><section class="panel"><h2 style="font-size:15px;margin-top:0">Backup & restore</h2><p class="sub">Export a complete copy of all records or restore from a previous Finance Master JSON backup.</p><p><button class="primary" onclick="exportData()">⇩ Export full backup</button></p><p><label class="pill" style="display:inline-block">⇧ Restore JSON backup <input type="file" accept=".json,application/json" onchange="restoreData(event)" style="display:none"></label></p><button class="pill" onclick="exportCSV()">Export transactions CSV</button></section><section class="panel"><h2 style="font-size:15px;margin-top:0">Cloud & security status</h2><p><span class="tag out">Cloud sync not configured</span></p><p class="sub">Firebase Authentication, Firestore, account-level access controls and scheduled reminders must be connected before this becomes a cloud-synced production finance app.</p></section><section class="panel"><h2 style="font-size:15px;margin-top:0">Data controls</h2><p class="sub">Reset permanently deletes the records stored in this browser. Export a backup first.</p><button class="pill" style="color:var(--red)" onclick="resetData()">Reset local data</button></section></div>`}
+function settingsPage(){return `${pageHead('Settings & backup','Manage your preferences and protect your records.')}<div class="notice"><b>Important:</b> This starter currently saves data in this browser on this device only. It does not yet sync to Firebase or provide account-based cloud backup. Export a JSON backup regularly. Do not enter sensitive financial data until cloud authentication and security rules are configured.</div><div class="settingsgrid"><section class="panel"><h2 style="font-size:15px;margin-top:0">Preferences</h2><div class="field" style="margin:16px 0"><label>Currency</label><select id="currency" onchange="state.currency=this.value;save();render()"><option value="THB" ${state.currency==='THB'?'selected':''}>Thai Baht (THB ฿)</option><option value="MMK" ${state.currency==='MMK'?'selected':''}>Myanmar Kyat (MMK)</option><option value="USD" ${state.currency==='USD'?'selected':''}>US Dollar (USD $)</option><option value="SGD" ${state.currency==='SGD'?'selected':''}>Singapore Dollar (SGD)</option></select></div><p class="sub">Currency changes the display symbol; it does not convert saved amounts.</p></section><section class="panel"><h2 style="font-size:15px;margin-top:0">Backup & restore</h2><p class="sub">Export a complete copy of all records or restore from a previous Finance Master JSON backup.</p><p><button class="primary" onclick="exportData()">⇩ Export full backup</button></p><p><label class="pill" style="display:inline-block">⇧ Restore JSON backup <input type="file" accept=".json,application/json" onchange="restoreData(event)" style="display:none"></label></p><button class="pill" onclick="exportCSV()">Export transactions CSV</button></section><section class="panel" style="grid-column:1/-1"><h2 style="font-size:15px;margin-top:0">Firebase Cloud Sync</h2><p class="sub">Sign in with your own Finance Master account. Your existing device data stays local until you explicitly upload it.</p><div id="fmAuthStatus" class="notice">Checking Firebase connection…</div><div class="formgrid"><div class="field"><label>Email</label><input id="fmEmail" type="email" autocomplete="username" placeholder="you@example.com"></div><div class="field"><label>Password</label><input id="fmPassword" type="password" autocomplete="current-password" placeholder="At least 6 characters"></div></div><div class="formactions" style="justify-content:flex-start;flex-wrap:wrap"><button class="primary" onclick="window.fmSignIn()">Sign in</button><button class="pill" onclick="window.fmSignUp()">Create account</button><button class="pill" onclick="window.fmSignOut()">Sign out</button></div><div style="height:1px;background:var(--line);margin:16px 0"></div><div class="notice"><b>Protect your data:</b> Export a full JSON backup before the first upload or before replacing local data. Upload and download are manual; nothing is silently overwritten. Keep your password private.</div><div class="formactions" style="justify-content:flex-start;flex-wrap:wrap"><button class="primary goldbtn" onclick="window.fmUploadLocal()">Upload this device to cloud</button><button class="pill" onclick="window.fmDownloadCloud()">Download cloud data to this device</button></div><p class="sub">If sign-in is blocked after deployment, add <b>finance-master-starter.vercel.app</b> under Firebase Authentication → Settings → Authorized domains.</p></section><section class="panel"><h2 style="font-size:15px;margin-top:0">Data controls</h2><p class="sub">Reset permanently deletes the records stored in this browser. Export a backup first.</p><button class="pill" style="color:var(--red)" onclick="resetData()">Reset local data</button></section></div>`}
 function editTx(id){
  const t=state.transactions.find(x=>x.id===id);
  if(!t){toast('Transaction not found');return}
@@ -128,4 +128,98 @@ function restoreData(e){const file=e.target.files[0];if(!file)return;const reade
 function resetData(){if(!confirm('Permanently delete ALL local Finance Master records on this device? Export a backup first.'))return;state={currency:state.currency,transactions:[],loans:[],debts:[],savings:[],budgets:[],payments:[]};save();render();toast('Local records reset')}
 function render(){const el=document.getElementById('content');switch(current){case'Dashboard':el.innerHTML=dashboard();break;case'Income':el.innerHTML=transactionsPage('income');break;case'Expenses':el.innerHTML=transactionsPage('expense');break;case'Savings':el.innerHTML=savingsPage();break;case'Loans':el.innerHTML=loansPage('loan');break;case'Debts':el.innerHTML=loansPage('debt');break;case'Payments':el.innerHTML=paymentsPage();break;case'Budget':el.innerHTML=budgetPage();break;case'Reports':el.innerHTML=reportsPage();break;case'Settings':el.innerHTML=settingsPage();break;default:el.innerHTML=dashboard()}}
 render();
-</script></body></html>
+window.fmApp={getState:()=>state,replaceState:(next)=>{state=next;save();render()},hasLocalRecords:()=>Boolean((state.transactions||[]).length||(state.loans||[]).length||(state.debts||[]).length||(state.savings||[]).length||(state.budgets||[]).length||(state.payments||[]).length),toast};
+</script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+const firebaseConfig = {
+  apiKey: "AIzaSyDCNyu8OFTZ2gAxq5lCbpTDd_bUTyO8Rr0",
+  authDomain: "finance-master-8d227.firebaseapp.com",
+  projectId: "finance-master-8d227",
+  storageBucket: "finance-master-8d227.firebasestorage.app",
+  messagingSenderId: "881817485868",
+  appId: "1:881817485868:web:2135de290e0a1150274789"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+let currentUser = null;
+const status = (message, bad=false) => {
+  const el = document.getElementById('fmAuthStatus');
+  if (el) { el.textContent = message; el.style.background = bad ? '#fff0f0' : '#fff8e8'; el.style.color = bad ? '#a62d2d' : '#795d26'; }
+};
+const emailValue = () => (document.getElementById('fmEmail')?.value || '').trim();
+const passwordValue = () => document.getElementById('fmPassword')?.value || '';
+const cloudRef = uid => doc(db, 'users', uid, 'finance', 'data');
+const errText = e => {
+  const map = {
+    'auth/email-already-in-use':'This email already has an account. Sign in instead.',
+    'auth/invalid-email':'Please enter a valid email address.',
+    'auth/weak-password':'Password must be at least 6 characters.',
+    'auth/invalid-credential':'Email or password is incorrect.',
+    'auth/operation-not-allowed':'Email/Password sign-in is not enabled in Firebase Authentication.',
+    'auth/unauthorized-domain':'This website domain is not authorized in Firebase Authentication settings.',
+    'permission-denied':'Firestore denied access. Check the user-only Security Rules.',
+    'unavailable':'Firebase is temporarily unavailable. Check your connection and try again.'
+  };
+  return map[e?.code] || (e?.message || 'An unexpected Firebase error occurred.');
+};
+window.fmSignUp = async () => {
+  const email=emailValue(), password=passwordValue();
+  if (!email || password.length < 6) return status('Enter a valid email and a password with at least 6 characters.', true);
+  try { await createUserWithEmailAndPassword(auth,email,password); status('Account created and signed in. Export a backup, then you can upload your local records.'); }
+  catch(e) { status(errText(e),true); }
+};
+window.fmSignIn = async () => {
+  const email=emailValue(), password=passwordValue();
+  if (!email || !password) return status('Enter your email and password.',true);
+  try { await signInWithEmailAndPassword(auth,email,password); status('Signed in. Your local records have not been changed.'); }
+  catch(e) { status(errText(e),true); }
+};
+window.fmSignOut = async () => {
+  try { await signOut(auth); status('Signed out. Local data remains on this device.'); }
+  catch(e) { status(errText(e),true); }
+};
+window.fmUploadLocal = async () => {
+  if (!currentUser) return status('Sign in first to upload data.',true);
+  if (!confirm('Before uploading, export a full JSON backup from Settings. Continue with uploading the records currently on this device to your private cloud account?')) return;
+  try {
+    const ref=cloudRef(currentUser.uid), snap=await getDoc(ref);
+    if (snap.exists() && !confirm('Cloud data already exists. Replace the cloud copy with this device’s data? This cannot be undone from this screen. Cancel to keep the cloud copy.')) return;
+    const data=window.fmApp.getState();
+    await setDoc(ref,{data, schemaVersion:1, ownerUid:currentUser.uid, updatedAt:serverTimestamp()});
+    status('Upload complete. Your device data was copied to your cloud account.');
+    window.fmApp.toast('Cloud backup uploaded');
+  } catch(e) { status(errText(e),true); }
+};
+window.fmDownloadCloud = async () => {
+  if (!currentUser) return status('Sign in first to download cloud data.',true);
+  try {
+    const snap=await getDoc(cloudRef(currentUser.uid));
+    if (!snap.exists()) return status('No cloud backup found for this account. Your local data was not changed. Upload this device’s data if this is your first sync.',true);
+    const payload=snap.data()?.data;
+    if (!payload || !Array.isArray(payload.transactions)) return status('Cloud backup format is invalid. Local data was not changed.',true);
+    if (window.fmApp.hasLocalRecords() && !confirm('This will replace the records on this device with the cloud copy. Export a JSON backup first if you need to keep the current local records. Continue?')) return;
+    const safeState={
+      currency: ['THB','MMK','USD','SGD'].includes(payload.currency) ? payload.currency : 'THB',
+      transactions:Array.isArray(payload.transactions)?payload.transactions:[],
+      loans:Array.isArray(payload.loans)?payload.loans:[],
+      debts:Array.isArray(payload.debts)?payload.debts:[],
+      savings:Array.isArray(payload.savings)?payload.savings:[],
+      budgets:Array.isArray(payload.budgets)?payload.budgets:[],
+      payments:Array.isArray(payload.payments)?payload.payments:[]
+    };
+    window.fmApp.replaceState(safeState);
+    status('Cloud data downloaded to this device. Review your records and export a backup.');
+    window.fmApp.toast('Cloud data downloaded');
+  } catch(e) { status(errText(e),true); }
+};
+onAuthStateChanged(auth, user => {
+  currentUser=user;
+  if (user) status('Signed in as '+user.email+'. Local data remains local until you choose Upload or Download.');
+  else status('Not signed in. Create an account or sign in to enable manual cloud backup.');
+});
+</script>
+</body></html>
