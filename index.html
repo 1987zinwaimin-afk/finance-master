@@ -13,6 +13,51 @@
 /* Person-specific loan workspace */
 .account-list{display:grid;gap:12px}.account-card{border:1px solid var(--line);border-radius:16px;background:#fff;overflow:hidden;transition:border-color .18s,box-shadow .18s}.account-card:hover{border-color:#d8c28f;box-shadow:0 8px 24px #18233a0b}.account-open{width:100%;display:flex;align-items:center;gap:13px;padding:16px;border:0;background:transparent;text-align:left;cursor:pointer;color:inherit}.account-avatar,.person-avatar{display:grid;place-items:center;flex:0 0 auto;width:46px;height:46px;border-radius:15px;background:#f4ecd9;color:#8c6b2e;font-size:19px;font-weight:800}.account-main{display:flex;flex:1;min-width:0;flex-direction:column;gap:5px}.account-main>b{font-size:14px;color:var(--navy)}.account-main small,.account-balance small{font-size:11px;color:var(--muted)}.account-openhint{font-size:11px;color:#9a783a}.account-openhint span{font-size:18px;margin-left:3px}.account-balance{display:flex;flex-direction:column;align-items:flex-end;gap:4px;text-align:right}.account-balance>b{font-size:15px;color:var(--navy)}.account-balance em{font-style:normal;color:#9a783a;font-size:10px}.account-actions{display:flex;gap:9px;padding:9px 15px;border-top:1px solid #f0f1f4;background:#fcfcfd}.account-count{font-size:11px;color:var(--muted);white-space:nowrap}.account-empty{border:1px dashed var(--line);border-radius:15px;padding:30px 15px}.empty-icon{font-size:28px;color:#a88b50;margin-bottom:8px}.account-empty p{font-size:12px;color:var(--muted);margin:7px 0 0}.loan-tip{display:flex;flex-direction:column;gap:5px}.person-page{padding-bottom:12px}.person-head{padding:4px 0 17px}.back-account{border:0;background:transparent;color:#8a6b31;padding:5px 0 15px;font-size:12px;font-weight:700;cursor:pointer}.person-title-row{display:flex;align-items:center;gap:13px}.person-avatar{width:54px;height:54px;font-size:22px}.person-title{flex:1;min-width:0}.person-title h1{font-size:25px;letter-spacing:-.5px;margin:0;color:var(--navy);overflow-wrap:anywhere}.person-title p{margin:5px 0 0;color:var(--muted);font-size:12px;line-height:1.5}.person-quick-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:17px}.person-tabs{display:flex;gap:8px;padding:7px;margin:0 0 17px;border:1px solid var(--line);background:#fff;border-radius:14px;overflow-x:auto}.person-tabs button{display:flex;align-items:center;justify-content:center;gap:7px;flex:1;min-width:110px;padding:11px 13px;border:0;border-radius:10px;background:transparent;color:var(--muted);font-size:12px;font-weight:700;white-space:nowrap;cursor:pointer}.person-tabs button span{font-size:16px}.person-tabs button.active{background:#f5eddd;color:#8a682d}.person-tab-content{min-height:230px}.person-metrics{margin-bottom:16px}.detail-panel{margin-top:15px}.detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 20px}.detail-item{display:flex;flex-direction:column;gap:7px;padding:13px 0;border-bottom:1px solid var(--line);min-width:0}.detail-item small{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.55px}.detail-item b{font-size:13px;line-height:1.5;overflow-wrap:anywhere;color:var(--navy)}.ledger-metrics{margin-bottom:17px}.ledger-table table,.person-payments table{min-width:540px}.status-pill{display:inline-block;border-radius:20px;padding:5px 9px;font-size:10px;font-weight:800}.status-due{color:#96661e;background:#fff2d8}.status-paid{color:#2b7959;background:#e5f6ee}.database-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:20px}.danger-action{color:#a63c3c!important;border-color:#f0d4d4!important}.person-mobile-nav{box-shadow:0 -8px 26px #15223a0b}.person-mobile-nav button{flex:1;font-size:10px;padding:6px 2px}.person-mobile-nav button span{font-size:19px}.person-mobile-nav button.active{color:#9a783a}
 @media(max-width:700px){.account-open{gap:10px;padding:13px 12px}.account-avatar{width:40px;height:40px;border-radius:13px;font-size:16px}.account-main>b{font-size:13px}.account-main small{font-size:10px}.account-openhint{font-size:10px}.account-balance>b{font-size:12px}.account-balance small{font-size:9px}.account-balance em{font-size:9px;max-width:100px}.account-actions{padding:8px 12px}.account-actions .linkbtn{font-size:10px}.person-title h1{font-size:22px}.person-title p{font-size:11px}.person-edit{padding:9px 11px}.person-quick-actions>*{flex:1;font-size:11px;padding:11px 10px}.person-tabs{display:none}.person-tab-content{padding-bottom:14px}.person-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.detail-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:0 13px}.detail-item{padding:12px 0}.detail-item small{font-size:9px}.detail-item b{font-size:12px}.panelhead{gap:8px}.panelhead h2{font-size:14px}.panelhead p{font-size:11px;line-height:1.45}.ledger-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.ledger-table,.person-payments{margin-right:-5px}.database-actions>*{flex:1}.content{padding-bottom:100px}.person-page{padding-bottom:5px}}
+
+/* Mobile overflow hardening */
+.app,.main,.content,.layout,.panel,.metric,.setting,.account-card,.account-main,.account-balance,.person-title,.person-tab-content,.detail-item,.panelhead,.pagehead,.welcome,.toolbar,.topactions{min-width:0;max-width:100%}
+.content *,.modal *,.mobile-more-panel *{min-width:0}
+h1,h2,h3,p,small,b,strong,label,button,a,span,td,th,.notice,.setting,.empty{overflow-wrap:anywhere}
+button,.primary,.pill,.linkbtn,.toolbar button,.formactions button{max-width:100%;white-space:normal;line-height:1.35}
+input,select,textarea{min-width:0;max-width:100%}
+.tablewrap,.ledger-table,.person-payments{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{max-width:100%}
+img,svg,canvas,video{max-width:100%}
+@media(max-width:700px){
+  .content{width:100%;padding-left:12px;padding-right:12px}
+  .welcome,.pagehead,.panelhead{flex-wrap:wrap}
+  .welcome>.primary{white-space:normal;max-width:100%}
+  .welcome h1,.pagehead h1,.person-title h1{overflow-wrap:anywhere;word-break:normal}
+  .cards,.person-metrics,.ledger-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .metric{padding:12px 10px}
+  .metric strong,.content .metric strong{font-size:clamp(12px,3.6vw,16px);line-height:1.25;letter-spacing:-.25px;overflow-wrap:anywhere;word-break:normal}
+  .metrichead{flex-wrap:wrap}
+  .account-open{min-width:0;flex-wrap:wrap}
+  .account-main{flex:1 1 100px}
+  .account-balance{max-width:100%;overflow-wrap:anywhere}
+  .account-balance>b{font-size:clamp(11px,3.2vw,14px);overflow-wrap:anywhere}
+  .detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .detail-item b{overflow-wrap:anywhere;word-break:normal}
+  .quick{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .quick button{min-width:0}
+  .toolbar{width:100%}
+  .toolbar>*{max-width:100%;min-width:0}
+  .formgrid,.settingsgrid{grid-template-columns:minmax(0,1fr)}
+  .modal{width:100%;max-width:540px;padding:18px}
+  .formactions{flex-wrap:wrap}
+  .topbar{min-width:0;gap:6px}
+  .crumb{min-width:0;overflow-wrap:anywhere}
+  .mobile-nav button{min-width:0;overflow-wrap:anywhere}
+}
+@media(max-width:360px){
+  .content{padding-left:9px;padding-right:9px}
+  .cards,.person-metrics,.ledger-metrics{gap:8px}
+  .metric{padding:10px 8px}
+  .metric strong,.content .metric strong{font-size:12px;letter-spacing:-.3px}
+  .panel{padding:12px}
+  .account-open{padding:10px}
+}
+
 </style></head>
 <body>
 <div class="app">
