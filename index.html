@@ -337,7 +337,7 @@ function loanRows(list,kind){
  if(!list.length)return '<div class="empty account-empty"><div class="empty-icon">⇄</div><b>No accounts yet</b><p>Add your first '+(kind==='loan'?'loan given':'debt')+' to see its details here.</p></div>';
  return '<div class="account-list">'+list.map(l=>{
   const ledger=loanLedger(kind,l),bal=ledger.principalOutstanding;
-  return '<article class="account-card"><button class="account-open" onclick="openPerson(\''+kind+'\',\''+l.id+'\')" aria-label="Open '+escapeHtml(l.person)+' details"><span class="account-avatar">'+escapeHtml(String(l.person||'?').trim().charAt(0).toUpperCase())+'</span><span class="account-main"><b>'+escapeHtml(l.person)+'</b><small>'+(kind==='loan'?'Loan receivable':'Debt payable')+' · '+(l.rate||0)+'% / '+(l.period==='yearly'?'year':l.period==='none'?'no interest':'month')+' · '+currencyLabel(recordCurrency(l)||'Unclassified')+'</small><span class="account-openhint">View account details <span>›</span></span></span><span class="account-balance"><b>'+moneyFor(bal,l)+'</b><small>Principal left</small><em>'+moneyFor(ledger.interestOutstanding,l)+' interest due</em></span></button><div class="account-actions"><button class="linkbtn" onclick="payFor(\''+kind+'\',\''+l.id+'\')">＋ Payment</button><button class="linkbtn" onclick="editLoan(\''+kind+'\',\''+l.id+'\')">Edit details</button></div></article>';
+  return '<article class="account-card"><button class="account-open" onclick="openPerson(\''+kind+'\',\''+l.id+'\')" aria-label="Open '+escapeHtml(l.person)+' details"><span class="account-avatar">'+escapeHtml(String(l.person||'?').trim().charAt(0).toUpperCase())+'</span><span class="account-main"><b>'+escapeHtml(l.person)+'</b><small>'+(kind==='loan'?'Loan receivable':'Debt payable')+' · '+(l.rate||0)+'% / '+(l.period==='yearly'?'year':l.period==='none'?'no interest':'month')+' · '+currencyLabel(recordCurrency(l)||'Unclassified')+'</small><span class="account-openhint">View account details <span>›</span></span></span><span class="account-balance"><b>'+moneyFor(bal,l)+'</b><small>Principal left</small><em>'+moneyFor(ledger.interestOutstanding,l)+' interest due</em></span></button><div class="account-actions">'+(kind==='loan'?'<button class="linkbtn" onclick="autoShareBorrowerLink(\''+l.id+'\')">↗ Auto Share Link</button>':'')+'<button class="linkbtn" onclick="payFor(\''+kind+'\',\''+l.id+'\')">＋ Payment</button><button class="linkbtn" onclick="editLoan(\''+kind+'\',\''+l.id+'\')">Edit details</button></div></article>';
  }).join('')+'</div>';
 }
 
@@ -504,6 +504,34 @@ async function ensureBorrowerLinksForAll(){
   }
   if(created||skipped)status('Automatic borrower links: '+created+' created'+(skipped?', '+skipped+' skipped (assign currency first)':'')+'.');
  }finally{borrowerAutoCreateRunning=false;}
+}
+function borrowerShareUrl(token){return new URL('borrower.html?token='+encodeURIComponent(token),new URL('.',window.location.href)).href;}
+function showBorrowerShareActions(url,name){
+ const safeUrl=escapeHtml(url),safeName=escapeHtml(name||'Borrower');
+ openModal('Auto Share Link · '+safeName,'<p>ဤ Link ကို သက်ဆိုင်ရာ Borrower တစ်ဦးတည်းထံ ပို့ပါ။ Home Screen App ထဲကနေလည်း Share ခလုတ်ကိုသုံးနိုင်ပါတယ်။</p><div class="field full"><label>Private borrower link</label><textarea id="borrowerAutoLinkField" readonly style="width:100%;min-height:96px;padding:10px;overflow-wrap:anywhere">'+safeUrl+'</textarea></div><div class="formactions"><button class="primary" onclick="copyAutoBorrowerLink()">Copy Link</button><button class="pill" onclick="shareAutoBorrowerLink()">Share…</button><button class="pill" onclick="closeModal()">Close</button></div>');
+}
+async function copyAutoBorrowerLink(){
+ const field=document.getElementById('borrowerAutoLinkField');if(!field)return;
+ try{await navigator.clipboard.writeText(field.value);toast('Borrower link copied');}
+ catch(e){field.focus();field.select();field.setSelectionRange(0,field.value.length);try{const ok=document.execCommand('copy');if(ok)toast('Borrower link copied');else toast('Link ကို select လုပ်ထားပါတယ်။ Copy ကိုနှိပ်ပါ။');}catch(_){toast('Link ကိုဖိထားပြီး Copy လုပ်ပါ။')}}
+}
+async function shareAutoBorrowerLink(){
+ const field=document.getElementById('borrowerAutoLinkField');if(!field)return;
+ try{if(navigator.share){await navigator.share({title:'Finance Master · Borrower Account',text:'Your private borrower account link',url:field.value});}
+ else{await copyAutoBorrowerLink();}}
+ catch(e){if(e?.name!=='AbortError')toast('Share မရပါ။ Copy Link ကိုသုံးပါ။')}
+}
+async function autoShareBorrowerLink(accountId){
+ const loan=(state.loans||[]).find(x=>x.id===accountId);if(!loan)return toast('Borrower account not found');
+ if(!window.fmBorrowerCloud?.ready)return toast('Owner အကောင့်နဲ့ Sign In ဝင်ပြီးမှ Share Link ဖန်တီးနိုင်ပါတယ်။');
+ if(!recordCurrency(loan))return toast('ဒီအကောင့်ရဲ့ Currency ကို အရင်သတ်မှတ်ပါ။');
+ try{
+  let sh=(window.fmBorrowerCloud.shares||[]).find(x=>x.accountId===accountId&&x.active);
+  let url;
+  if(sh){url=borrowerShareUrl(sh.id);}
+  else{url=await window.fmBorrowerCloud.createShare(accountId,borrowerSnapshotForLoan(loan),{silent:true});}
+  showBorrowerShareActions(url,loan.person);
+ }catch(e){toast('Auto Share Link မဖန်တီးနိုင်ပါ: '+String(e?.message||e));}
 }
 async function createBorrowerShareFromSelection(){const id=document.getElementById('borrowerAccountSelect')?.value;if(!id)return toast('Choose a borrower account');const l=state.loans.find(x=>x.id===id);if(!l)return toast('Borrower account not found');if(!recordCurrency(l))return toast('Assign a currency before sharing');try{await window.fmBorrowerCloud.createShare(l.id,borrowerSnapshotForLoan(l));}catch(e){toast('Could not create link: '+String(e?.message||e));}}
 async function updateBorrowerShare(id){const sh=(window.fmBorrowerCloud?.shares||[]).find(x=>x.id===id);const l=state.loans.find(x=>x.id===sh?.accountId);if(!l)return toast('Loan account not found');try{await window.fmBorrowerCloud.updateShare(id,borrowerSnapshotForLoan(l));toast('Borrower snapshot updated');}catch(e){toast('Update failed: '+String(e?.message||e));}}
