@@ -177,6 +177,19 @@ body,.app,.main,.content,.panel,.metric,.layout,.cards,.settingsgrid,.person-pag
 <div class="modalback" id="modalback" onclick="if(event.target===this)closeModal()"><div class="modal"><div class="modalhead"><h2 id="modalTitle">Add record</h2><button class="close" onclick="closeModal()">×</button></div><div id="modalBody"></div></div></div>
 <div class="toast" id="toast"></div>
 <script>
+(function(){
+ function showBootError(message,source,line,column){
+  try{
+   var el=document.getElementById('content');
+   if(!el)return;
+   el.innerHTML='<section style="margin:16px;padding:20px;background:#fff;border:1px solid #e5caca;border-radius:16px;color:#243047"><h2 style="color:#a63c3c">Finance Master could not start</h2><p>The page script stopped before the dashboard loaded. Your saved records have not been deleted.</p><pre style="white-space:pre-wrap;overflow-wrap:anywhere;background:#f6f7fb;padding:12px;border-radius:8px">'+String(message||'Unknown JavaScript error').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})+'</pre><p>Location: '+String(source||'').replace(/[&<>"]/g,'')+':'+String(line||'')+':'+String(column||'')+'</p><button onclick="location.reload()" style="padding:10px 14px;border:0;border-radius:9px;background:#14213d;color:white">Reload</button></section>';
+  }catch(ignore){}
+ }
+ window.addEventListener('error',function(e){showBootError(e.message,e.filename,e.lineno,e.colno);});
+ window.addEventListener('unhandledrejection',function(e){showBootError(e.reason&&e.reason.message||e.reason,'Promise rejection','','');});
+})();
+</script>
+<script>
 const KEY='finance-master-personal-v1';
 const today=()=>new Date().toISOString().slice(0,10);
 const fmt=(n,currency=state.currency||'THB')=>new Intl.NumberFormat('en-US',{style:'currency',currency:['THB','MMK','USD','SGD'].includes(currency)?currency:'THB',maximumFractionDigits:2}).format(Number(n)||0);
