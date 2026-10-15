@@ -21,6 +21,38 @@ service cloud.firestore {
         && resource.data.ownerUid == request.auth.uid
         && request.resource.data.ownerUid == resource.data.ownerUid;
       allow delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+
+      match /messages/{messageId} {
+        function parentShare() {
+          return get(/databases/$(database)/documents/borrowerShares/$(token)).data;
+        }
+        allow read: if parentShare().active == true
+          || (request.auth != null && request.auth.uid == parentShare().ownerUid);
+        allow create: if request.resource.data.keys().hasOnly([
+            'token', 'senderRole', 'senderName', 'text', 'imageData', 'createdAt'
+          ])
+          && request.resource.data.keys().hasAll([
+            'token', 'senderRole', 'senderName', 'text', 'imageData', 'createdAt'
+          ])
+          && request.resource.data.token == token
+          && request.resource.data.senderName is string
+          && request.resource.data.text is string
+          && request.resource.data.text.size() <= 3000
+          && request.resource.data.imageData is string
+          && request.resource.data.imageData.size() <= 600000
+          && request.resource.data.createdAt is timestamp
+          && (
+            (request.auth != null
+              && request.auth.uid == parentShare().ownerUid
+              && parentShare().active == true
+              && request.resource.data.senderRole == 'owner')
+            ||
+            (request.auth == null
+              && parentShare().active == true
+              && request.resource.data.senderRole == 'borrower')
+          );
+        allow update, delete: if false;
+      }
     }
 
     // Borrowers may submit a new payment request only for the account behind their active token.
