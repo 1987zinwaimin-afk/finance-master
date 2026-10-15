@@ -413,8 +413,8 @@ function deleteOrphanPayments(kind,oldAccount){
   const liveAccounts=ctx.kind==='loan'?state.loans:state.debts;
   const current=(state.payments||[]).filter(p=>p.kind===ctx.kind&&String(p.account||'')===String(ctx.oldAccount||'')&&!liveAccounts.some(a=>a.id===p.account));
   if(!current.length){toast('No unlinked payment records remain');closeModal();render();return}
-  const ids=new Set(current.map(p=>p.id));
-  state.payments=(state.payments||[]).filter(p=>!ids.has(p.id));
+  const removeSet=new Set(current);
+  state.payments=(state.payments||[]).filter(p=>!removeSet.has(p));
   save();closeModal();render();toast('Deleted '+current.length+' unlinked payment records');
   delete window.__fmOrphanDelete;delete window.confirmDeleteOrphanPayments;
  };
