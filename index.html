@@ -845,6 +845,18 @@ const normalizeState = payload => ({
   payments:Array.isArray(payload?.payments)?payload.payments:[],
   payroll:payload?.payroll&&typeof payload.payroll==='object'&&!Array.isArray(payload.payroll)?payload.payroll:{}
 });
+const cloudSnapshotWouldDropLocalData = (local, remote) => {
+  const groups=['transactions','loans','debts','savings','budgets','payments'];
+  for(const key of groups){
+    const localCount=Array.isArray(local?.[key])?local[key].length:0;
+    const remoteCount=Array.isArray(remote?.[key])?remote[key].length:0;
+    if(localCount>remoteCount)return key;
+  }
+  const localPayroll=local?.payroll&&typeof local.payroll==='object'?Object.keys(local.payroll).length:0;
+  const remotePayroll=remote?.payroll&&typeof remote.payroll==='object'?Object.keys(remote.payroll).length:0;
+  if(localPayroll>remotePayroll)return 'payroll';
+  return '';
+};
 const stateSignature = value => {
   const normalized=normalizeState(value);
   return JSON.stringify(Object.keys(normalized).sort().reduce((out,key)=>{out[key]=normalized[key];return out;},{}));
@@ -948,6 +960,14 @@ const startCloudListener = user => {
       return;
     }
     if(remoteSignature!==localSignature){
+      // Never automatically replace populated local data with a smaller cloud snapshot.
+      // Deletions must be reviewed explicitly through the manual Upload/Download controls.
+      const atRiskGroup=cloudSnapshotWouldDropLocalData(local,remote);
+      if(atRiskGroup){
+        syncReady=false;syncConflict=true;localDirty=false;
+        status('Sync paused to protect '+atRiskGroup+' data: the cloud copy contains fewer records than this device. Local data was kept. Export a JSON backup, then review before choosing Upload or Download.',true);
+        return;
+      }
       // Keep the attendance dropdown alive if an incoming snapshot only differs
       // outside payroll while the user is actively choosing an attendance value.
       const active=document.activeElement;
