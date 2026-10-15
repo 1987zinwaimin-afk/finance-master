@@ -1,5 +1,8 @@
 /* Finance Master monthly payroll module */
 (function(){
+  const payrollTabStyle=document.createElement('style');
+  payrollTabStyle.textContent='.payroll-employee-tabs{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 12px;margin:16px 0 8px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}.payroll-employee-tab{flex:0 0 150px;min-width:150px;display:flex;flex-direction:column;align-items:flex-start;gap:7px;padding:14px 12px;border:1px solid var(--line);border-radius:14px;background:#fff;color:var(--text,#172033);text-align:left;scroll-snap-align:start;cursor:pointer}.payroll-employee-tab.active{border:2px solid var(--navy,#1c2b4a);background:#edf3ff;box-shadow:0 3px 12px rgba(25,48,90,.10)}.payroll-tab-avatar{font-size:20px;line-height:1.2}.payroll-tab-name{font-weight:800;line-height:1.35;overflow-wrap:anywhere}.payroll-employee-tab small{font-size:11px;color:#23836f;font-weight:750}.payroll-people{display:block;margin:8px 0 16px}.payroll-person{width:100%}';
+  document.head.appendChild(payrollTabStyle);
   const DEFAULT_PEOPLE = ['Zin Wai Min','Khom','Zin Min Thu'];
   let selectedMonth = new Date().toISOString().slice(0,7);
   let selectedEmployeeId = 'pay-0';
