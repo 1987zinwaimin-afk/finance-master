@@ -834,17 +834,8 @@ function flushPendingPayrollCloudUpdate(){
 document.addEventListener('focusout',()=>{
   setTimeout(flushPendingPayrollCloudUpdate,0);
 },true);
-const stateSignature = value => JSON.stringify({
-  currency:value?.currency || 'THB',
-  transactions:Array.isArray(value?.transactions)?value.transactions:[],
-  loans:Array.isArray(value?.loans)?value.loans:[],
-  debts:Array.isArray(value?.debts)?value.debts:[],
-  savings:Array.isArray(value?.savings)?value.savings:[],
-  budgets:Array.isArray(value?.budgets)?value.budgets:[],
-  payments:Array.isArray(value?.payments)?value.payments:[],
-  payroll:value?.payroll&&typeof value.payroll==='object'&&!Array.isArray(value.payroll)?value.payroll:{}
-});
 const normalizeState = payload => ({
+  ...(payload&&typeof payload==='object'&&!Array.isArray(payload)?payload:{}),
   currency:['THB','MMK','USD','SGD'].includes(payload?.currency)?payload.currency:'THB',
   transactions:Array.isArray(payload?.transactions)?payload.transactions:[],
   loans:Array.isArray(payload?.loans)?payload.loans:[],
@@ -854,6 +845,10 @@ const normalizeState = payload => ({
   payments:Array.isArray(payload?.payments)?payload.payments:[],
   payroll:payload?.payroll&&typeof payload.payroll==='object'&&!Array.isArray(payload.payroll)?payload.payroll:{}
 });
+const stateSignature = value => {
+  const normalized=normalizeState(value);
+  return JSON.stringify(Object.keys(normalized).sort().reduce((out,key)=>{out[key]=normalized[key];return out;},{}));
+};
 let syncWriteInFlight=false;
 const scheduleSyncRetry = (delay=900) => {
   if(syncTimer) clearTimeout(syncTimer);
