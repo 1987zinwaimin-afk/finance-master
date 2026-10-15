@@ -40,7 +40,8 @@ service cloud.firestore {
           && request.resource.data.text.size() <= 3000
           && request.resource.data.imageData is string
           && request.resource.data.imageData.size() <= 600000
-          && request.resource.data.createdAt is timestamp
+          && (request.resource.data.createdAt is timestamp
+              || request.resource.data.createdAt == request.time)
           && (
             (request.auth != null
               && request.auth.uid == parentShare().ownerUid
