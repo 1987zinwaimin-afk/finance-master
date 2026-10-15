@@ -85,7 +85,7 @@
     return pageHead('Monthly Payroll / လစာစာရင်း','လူ ၃ ယောက်အတွက် လစာစတင်ရက်၊ လစာပိတ်ရက်၊ အလုပ်ဆင်းရက်နှင့် လစဉ်မှတ်တမ်းကို စီမံပါ။')+
       '<section class="panel payroll-period"><div class="panelhead"><div><h2>Payroll period / လစာကာလ</h2><p>Set the salary start and closing dates for this payroll cycle. New months default to the 26th through the 25th of the next month.</p></div><span class="tag">'+months.length+' saved month(s)</span></div><div class="formgrid"><div class="field"><label>Month / လ</label><select onchange="changePayrollMonth(this.value)">'+monthOptions+'</select></div><div class="field"><label>Currency / ငွေကြေး</label><select onchange="setPayrollCurrency(this.value)"><option value="THB" '+(currentCurrency(rec)==='THB'?'selected':'')+'>THB ฿</option><option value="MMK" '+(currentCurrency(rec)==='MMK'?'selected':'')+'>MMK K</option><option value="USD" '+(currentCurrency(rec)==='USD'?'selected':'')+'>USD $</option><option value="SGD" '+(currentCurrency(rec)==='SGD'?'selected':'')+'>SGD $</option></select></div><div class="field"><label>Salary period start / လစာစတင်ရက် (ဥပမာ 26 ရက်)</label><input type="date" value="'+esc(rec.periodStart||'')+'" onchange="setPayrollPeriod(\'periodStart\',this.value)"></div><div class="field"><label>Salary closing date / လစာပိတ်ရက် (ဥပမာ နောက်လ 25 ရက်)</label><input type="date" value="'+esc(rec.periodEnd||'')+'" onchange="setPayrollPeriod(\'periodEnd\',this.value)"></div></div><div class="notice" style="margin-top:15px;margin-bottom:0"><b>Attend</b> ရက်ကို နေ့စားနှုန်းနဲ့တွက်မယ်။ <b>Absent</b> က ပျက်ရက်၊ <b>Day Off</b> က နားရက်ပါ။ Manual monthly salary ဖြည့်ထားရင် အလိုအလျောက်တွက်ချက်မှုအစား ကိုယ်တိုင်သတ်မှတ်ထားတဲ့ လစာကို အသုံးပြုမယ်။ အပြောင်းအလဲတိုင်းကို လအလိုက် သိမ်းထားမယ်။</div></section>'+
       '<div class="cards payroll-summary"><div class="metric"><div class="metrichead">Employees</div><strong>3</strong><div class="sub">Payroll team</div></div><div class="metric"><div class="metrichead">Total attend days</div><strong>'+totalPresent+'</strong></div><div class="metric"><div class="metrichead">Total absent days</div><strong>'+totalAbsent+'</strong></div><div class="metric"><div class="metrichead">Total salary</div><strong>'+esc(money(total,currentCurrency(rec)))+'</strong></div></div>'+
-      '<div class="toolbar"><button class="primary" onclick="savePayrollMonth()">✓ Save this month</button><button class="pill" onclick="exportPayrollCSV()">⇩ Export payroll CSV</button><button class="pill" onclick="newPayrollMonth()">＋ New month</button></div>'+
+      '<div class="toolbar"><button class="primary" onclick="savePayrollMonth()">✓ Save this month</button><button class="pill" onclick="exportPayrollCSV()">⇩ Export payroll CSV</button><button class="pill" onclick="exportPayrollExcel()">📊 Download Excel report</button><button class="pill" onclick="newPayrollMonth()">＋ New month</button></div>'+
       '<div class="payroll-employee-tabs" role="tablist" aria-label="Select employee">'+rec.employees.map((e,i)=>'<button type="button" role="tab" aria-selected="'+(e.id===selectedEmployeeId?'true':'false')+'" class="payroll-employee-tab '+(e.id===selectedEmployeeId?'active':'')+'" onclick="selectPayrollEmployee(&quot;'+esc(e.id)+'&quot;)"><span class="payroll-tab-avatar">👤</span><span class="payroll-tab-name">'+esc(e.name)+'</span><small>'+stats(e,days).present+' attend</small></button>').join('')+'</div>'+
       '<div class="payroll-people">'+employeeCard(rec.employees.find(e=>e.id===selectedEmployeeId)||rec.employees[0],Math.max(0,rec.employees.findIndex(e=>e.id===selectedEmployeeId)),rec,days)+'</div>'+
       '<section class="panel"><div class="panelhead"><div><h2>Previous months / အရင်လစာရင်း</h2><p>Saved months remain available after you move to another month.</p></div></div><div class="tablewrap"><table><thead><tr><th>Month</th><th>Period</th><th>Employees</th><th>Total salary</th><th>Action</th></tr></thead><tbody>'+history+'</tbody></table></div></section>';
@@ -100,5 +100,31 @@
   window.changePayrollMonth=function(value){if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(value))return;selectedMonth=value;monthRecord(value);save();render();};
   window.newPayrollMonth=function(){const now=new Date();const def=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');const value=prompt('Enter payroll month as YYYY-MM',def);if(!value)return;if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(value)){toast('Use YYYY-MM format');return;}selectedMonth=value;monthRecord(value);save();render();};
   window.savePayrollMonth=function(){monthRecord(selectedMonth).updatedAt=new Date().toISOString();save();toast('Payroll month saved');render();};
+  window.exportPayrollExcel=function(){
+    const rec=monthRecord(selectedMonth),days=daysFor(rec),currency=currentCurrency(rec);
+    const xmlEsc=v=>String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const cell=(value,type)=>'<Cell><Data ss:Type="'+(type||((typeof value==='number')?'Number':'String'))+'">'+xmlEsc(value)+'</Data></Cell>';
+    const row=items=>'<Row>'+items.map(x=>Array.isArray(x)?cell(x[0],x[1]):cell(x)).join('')+'</Row>';
+    const details=[row(['Month','Employee','Date','Weekday','Attendance status','Daily wage','Currency','Daily pay counted'])];
+    const summaries=[row(['Month','Employee','Period start','Period end','Currency','Daily wage','Attend days','Absent days','Day off','Not marked days','Calculated salary','Manual salary','Final salary'])];
+    rec.employees.forEach(emp=>{
+      const st=stats(emp,days);
+      days.forEach(day=>{
+        const statusValue=emp.attendance[day]||'unmarked';
+        const statusLabel={present:'Attend / အလုပ်ဆင်း',absent:'Absent / ပျက်ရက်',off:'Day Off / နားရက်',unmarked:'Not marked / မမှတ်ရသေး'}[statusValue]||'Not marked / မမှတ်ရသေး';
+        const weekday=new Date(day+'T00:00:00').toLocaleDateString('en-US',{weekday:'long'});
+        details.push(row([selectedMonth,emp.name,day,weekday,statusLabel,Number(emp.dailyRate)||0,currency,statusValue==='present'?(Number(emp.dailyRate)||0):0]));
+      });
+      summaries.push(row([selectedMonth,emp.name,rec.periodStart||'',rec.periodEnd||'',currency,Number(emp.dailyRate)||0,st.present,st.absent,st.off,st.unmarked,st.calculated,emp.salaryOverride===''?'':Number(emp.salaryOverride),st.salary]));
+    });
+    const sheet=(name,rows)=>'<Worksheet ss:Name="'+name+'"><Table>'+rows.join('')+'</Table></Worksheet>';
+    const workbook='<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">'+sheet('Attendance Details',details)+sheet('Salary Summary',summaries)+'</Workbook>';
+    const blob=new Blob(['\ufeff',workbook],{type:'application/vnd.ms-excel;charset=utf-8'});
+    const url=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=url;a.download='finance-master-attendance-'+selectedMonth+'.xls';
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1500);
+    toast('Excel attendance report downloaded');
+  };
   window.exportPayrollCSV=function(){const rec=monthRecord(selectedMonth),days=daysFor(rec);const rows=[['Month','Period Start','Period End','Employee','Currency','Daily Wage','Attend Days','Absent Days','Day Off','Calculated Salary','Manual Salary','Final Salary','Not Marked Days']];rec.employees.forEach(e=>{const st=stats(e,days);rows.push([selectedMonth,rec.periodStart,rec.periodEnd,e.name,currentCurrency(rec),e.dailyRate,st.present,st.absent,st.off,st.calculated,e.salaryOverride,st.salary,st.unmarked]);});const csv=rows.map(row=>row.map(v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"').join(',')).join('\r\n');const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='finance-master-payroll-'+selectedMonth+'.csv';a.click();URL.revokeObjectURL(url);};
 })();
