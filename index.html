@@ -168,7 +168,7 @@ body,.app,.main,.content,.panel,.metric,.layout,.cards,.settingsgrid,.person-pag
   <div class="sidefoot"><strong>✦ Your financial clarity</strong><br>Small daily records. Better long-term decisions.<br><br><span id="saveStatus">● Saved on this device</span></div>
 </aside>
 <main class="main">
-<header class="topbar"><div class="crumb"><button class="mobilemenu" onclick="toggleMobile()">☰</button><span>Workspace&nbsp; / &nbsp;<strong id="crumbPage">Dashboard</strong></span></div><div class="topactions"><span id="appVersion" class="pill version-pill" title="Current website update">Update v7</span><label class="lang-label" for="languageSelect">Language</label><select id="languageSelect" class="pill language-select" aria-label="Language"><option value="my">မြန်မာ</option><option value="en">English</option><option value="th">ไทย</option></select><button class="pill" onclick="exportData()">⇩ Export data</button><button class="pill" onclick="go('Settings')">⚙ Settings</button><div class="avatar">FM</div></div></header>
+<header class="topbar"><div class="crumb"><button class="mobilemenu" onclick="toggleMobile()">☰</button><span>Workspace&nbsp; / &nbsp;<strong id="crumbPage">Dashboard</strong></span></div><div class="topactions"><span id="appVersion" class="pill version-pill" title="Current website update">Update v8</span><label class="lang-label" for="languageSelect">Language</label><select id="languageSelect" class="pill language-select" aria-label="Language"><option value="my">မြန်မာ</option><option value="en">English</option><option value="th">ไทย</option></select><button class="pill" onclick="exportData()">⇩ Export data</button><button class="pill" onclick="go('Settings')">⚙ Settings</button><div class="avatar">FM</div></div></header>
 <div class="content" id="content"></div>
 </main>
 </div>
@@ -333,11 +333,13 @@ function loanAddMonths(start,n){const d=new Date(start+'T00:00:00Z');const day=d
 function loanMonthlyRate(l){if(!l||!Number(l.rate)||l.period==='none')return 0;return Number(l.rate)/100/(l.period==='yearly'?12:1)}
 function monthlyTargetStatus(l,kind='loan',asOf=today()){
  const target=Math.max(0,Number(l?.monthlyTarget)||0);if(!target)return {target:0,underpaidMonths:0,consecutive:0,paidThisMonth:0,warning:false,statuses:[]};
- const start=String(l.monthlyTargetSince||l.start||l.created||asOf).slice(0,10),startMonth=start.slice(0,7),endMonth=String(asOf).slice(0,7),months=[];let cursor=startMonth;
- for(let guard=0;cursor<=endMonth&&guard<600;guard++){months.push(cursor);const [y,m]=cursor.split('-').map(Number);cursor=new Date(Date.UTC(y,m,1)).toISOString().slice(0,7);}
- const statuses=months.map(month=>{const paid=(state.payments||[]).filter(p=>p.kind===kind&&p.account===l.id&&String(p.date||'').slice(0,7)===month&&recordCurrency(p)===recordCurrency(l)).reduce((sum,p)=>sum+Math.max(0,Number(p.amount)||0),0);return {month,paid,under:paid+0.004<target};});
+ const currentMonth=String(asOf).slice(0,7),start=String(l.monthlyTargetSince||l.start||l.created||asOf).slice(0,10),startMonth=start.slice(0,7),months=[];let cursor=startMonth;
+ const completedThrough=String(asOf).slice(8,10)==='01'?(()=>{const [y,m]=currentMonth.split('-').map(Number);return new Date(Date.UTC(y,m-1,0)).toISOString().slice(0,7)})():(()=>{const [y,m]=currentMonth.split('-').map(Number);return new Date(Date.UTC(y,m-1,0)).toISOString().slice(0,7)})();
+ for(let guard=0;cursor<=completedThrough&&guard<600;guard++){months.push(cursor);const [y,m]=cursor.split('-').map(Number);cursor=new Date(Date.UTC(y,m,1)).toISOString().slice(0,7);}
+ const monthPaid=month=>(state.payments||[]).filter(p=>p.kind===kind&&p.account===l.id&&String(p.date||'').slice(0,7)===month&&recordCurrency(p)===recordCurrency(l)).reduce((sum,p)=>sum+Math.max(0,Number(p.amount)||0),0);
+ const statuses=months.map(month=>{const paid=monthPaid(month);return {month,paid,under:paid+0.004<target};});
  let consecutive=0;for(let i=statuses.length-1;i>=0&&statuses[i].under;i--)consecutive++;
- return {target,underpaidMonths:statuses.filter(x=>x.under).length,consecutive,paidThisMonth:statuses.find(x=>x.month===endMonth)?.paid||0,warning:consecutive>=3,statuses};
+ return {target,underpaidMonths:statuses.filter(x=>x.under).length,consecutive,paidThisMonth:monthPaid(currentMonth),warning:consecutive>=3,statuses};
 }
 function loanLedger(kind,l,throughDate=today(),excludePaymentId=''){
  const through=String(throughDate||today()).slice(0,10),start=String(l.start||l.created||today()).slice(0,10);
@@ -741,7 +743,7 @@ function borrowerPortalPage(){
 function borrowerSnapshotForLoan(l){
  const ledger=loanLedger('loan',l);
  const payments=(state.payments||[]).filter(p=>p.kind==='loan'&&p.account===l.id).map(p=>({date:p.date||'',amount:Number(p.amount)||0,currency:recordCurrency(p)||recordCurrency(l)||'THB',apply:p.apply||'auto',note:p.note||'',interestApplied:Number(p.interestApplied)||0,principalApplied:Number(p.principalApplied)||0}));
- return {person:l.person||'',currency:recordCurrency(l)||'THB',principal:Number(l.principal)||0,principalPaid:Number(l.principalPaid)||0,rate:Number(l.rate)||0,period:l.period||'monthly',method:l.method||'simple',start:l.start||'',stop:l.stop||'',due:l.due||'',note:l.note||'',monthlyTarget:Number(l.monthlyTarget)||0,underpaymentMessage:l.underpaymentMessage||'',principalOutstanding:ledger.principalOutstanding,interestOutstanding:ledger.interestOutstanding,monthlyInterest:ledger.monthlyInterest,unpaidMonths:ledger.unpaidMonths,interestBuckets:ledger.interestBuckets.map(b=>({date:b.date,original:b.original,remaining:b.remaining})),payments};
+ return {person:l.person||'',currency:recordCurrency(l)||'THB',principal:Number(l.principal)||0,principalPaid:Number(l.principalPaid)||0,rate:Number(l.rate)||0,period:l.period||'monthly',method:l.method||'simple',start:l.start||'',stop:l.stop||'',due:l.due||'',note:l.note||'',monthlyTarget:Number(l.monthlyTarget)||0,monthlyTargetSince:l.monthlyTargetSince||'',underpaymentMessage:l.underpaymentMessage||'',consecutiveUnderpaidMonths:monthlyTargetStatus(l,'loan').consecutive,principalOutstanding:ledger.principalOutstanding,interestOutstanding:ledger.interestOutstanding,monthlyInterest:ledger.monthlyInterest,unpaidMonths:ledger.unpaidMonths,interestBuckets:ledger.interestBuckets.map(b=>({date:b.date,original:b.original,remaining:b.remaining})),payments};
 }
 let borrowerAutoCreateRunning=false;
 const borrowerAutoCreateAttempted=new Set();
