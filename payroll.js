@@ -53,7 +53,10 @@
     monthRecord(selectedMonth).updatedAt=new Date().toISOString();
     save();
     if(message)toast(message);
-    render();
+    // Do not rebuild the whole page while a user is selecting attendance.
+    // The selected dropdown remains open and the new value is already visible.
+    const status=document.getElementById('saveStatus');
+    if(status)status.textContent='● Saved on this device';
   }
   function employeeCard(emp,index,rec,days){
     const st=stats(emp,days), currency=currentCurrency(rec);
