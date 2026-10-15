@@ -143,7 +143,7 @@ body,.app,.main,.content,.panel,.metric,.layout,.cards,.settingsgrid,.person-pag
 }
 
 .borrower-link-card{border:1px solid var(--line);border-radius:14px;padding:15px;margin:10px 0;min-width:0}.borrower-link-card h3{font-size:14px;margin:0 0 6px;overflow-wrap:anywhere}.borrower-link-card p{font-size:11px;color:var(--muted);line-height:1.5;overflow-wrap:anywhere}.borrower-link-actions,.request-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.borrower-link-actions button,.request-actions button{max-width:100%;white-space:normal}.borrower-request{border:1px solid var(--line);border-radius:13px;padding:14px;margin:10px 0}.borrower-request.pending{border-color:#d8b56d;background:#fffcf5}.borrower-request .request-top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}@media(max-width:700px){.borrower-link-card,.borrower-request{padding:12px}.borrower-link-actions button,.request-actions button{flex:1 1 120px}}.topactions .language-select{display:block;visibility:visible}@media(max-width:700px){.topactions .language-select{display:block;max-width:96px;padding:8px 6px}}
-</style></head>
+/* Monthly payroll responsive layout */ .payroll-period{margin-bottom:16px}.payroll-summary{margin-top:16px}.payroll-people{display:grid;gap:16px;margin:16px 0}.payroll-person{min-width:0}.payroll-person .formgrid{margin-bottom:14px}.payroll-stats{grid-template-columns:repeat(4,minmax(0,1fr));margin:0 0 14px}.payroll-stats .metric{padding:12px}.payroll-stats .metric strong{font-size:18px}.payroll-status{min-width:175px;padding:8px;border:1px solid var(--line);border-radius:9px;background:#fff;font-size:12px}.payroll-attendance summary{cursor:pointer;padding:12px;background:#f8f9fc;border-radius:10px;font-size:12px;font-weight:800;color:var(--navy)}.payroll-attendance{border:1px solid var(--line);border-radius:12px;padding:8px}.payroll-attendance table{min-width:290px}.payroll-attendance td{padding:8px}.payroll-person .panelhead{margin-bottom:15px}@media(max-width:700px){.payroll-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.payroll-stats .metric strong{font-size:15px}.payroll-status{min-width:145px}.payroll-period .formgrid{grid-template-columns:1fr 1fr}.payroll-person{padding:14px}.payroll-person .formgrid{gap:10px}.payroll-attendance summary{line-height:1.5}}</style></head>
 <body>
 <div class="app">
 <aside class="sidebar">
@@ -153,7 +153,7 @@ body,.app,.main,.content,.panel,.metric,.layout,.cards,.settingsgrid,.person-pag
     <button class="active" data-page="Dashboard"><span>◫</span>Dashboard</button>
     <button data-page="Income"><span>↗</span>Income</button><button data-page="Expenses"><span>↘</span>Expenses</button>
     <button data-page="Savings"><span>◈</span>Savings & Goals</button><button data-page="Loans"><span>⇄</span>Loans Given</button>
-    <button data-page="Debts"><span>▤</span>My Debts</button><button data-page="Payments"><span>✓</span>Payment History</button>
+    <button data-page="Debts"><span>▤</span>My Debts</button><button data-page="Payments"><span>✓</span>Payment History</button><button data-page="Payroll"><span>▦</span>Payroll</button>
     <button data-page="Budget"><span>◉</span>Budget Planner</button><button data-page="Reports"><span>▥</span>Reports</button>
     <button data-page="BorrowerPortal"><span>♧</span>Borrower Portal</button><button data-page="Settings"><span>⚙</span>Settings & Backup</button>
   </nav>
@@ -197,7 +197,7 @@ const fmt=(n,currency=state.currency||'THB')=>new Intl.NumberFormat('en-US',{sty
 const recordCurrency=x=>['THB','MMK','USD','SGD'].includes(x?.currency)?x.currency:null;
 const moneyFor=(n,x)=>fmt(n,recordCurrency(x)||state.currency||'THB');
 const currencyLabel=c=>({THB:'THB ฿',MMK:'MMK K',USD:'USD $',SGD:'SGD $'}[c]||c||'Unclassified');
-let state={currency:'THB',transactions:[],loans:[],debts:[],savings:[],budgets:[],payments:[]};
+let state={currency:'THB',transactions:[],loans:[],debts:[],savings:[],budgets:[],payments:[],payroll:{}};
 try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s)state={...state,...s}}catch(e){}
 let current='Dashboard';
 function save(){localStorage.setItem(KEY,JSON.stringify(state));const el=document.getElementById('saveStatus');if(el)el.textContent='● Saved on this device';if(window.fmScheduleSync)window.fmScheduleSync(state)}
@@ -680,7 +680,7 @@ async function rejectBorrowerRequest(id){if(!confirm('Reject this request? Loan 
 
 function render(){
  const el=document.getElementById('content');
- const labels={Dashboard:'Dashboard',Income:'Income',Expenses:'Expenses',Savings:'Savings & Goals',Loans:'Loans Given',Debts:'My Debts',Payments:'Payment History',Budget:'Budget Planner',Reports:'Reports',Settings:'Settings & Backup'};
+ const labels={Dashboard:'Dashboard',Income:'Income',Expenses:'Expenses',Savings:'Savings & Goals',Loans:'Loans Given',Debts:'My Debts',Payments:'Payment History',Payroll:'Payroll',Budget:'Budget Planner',Reports:'Reports',Settings:'Settings & Backup'};
  try{
   if(!el)throw new Error('Main content element is missing');
   if(current==='PersonDetail'){
@@ -690,7 +690,7 @@ function render(){
    el.innerHTML=personDetailPage();
   }else{
    document.getElementById('crumbPage').textContent=labels[current]||current;
-   switch(current){case'Dashboard':el.innerHTML=dashboard();break;case'Income':el.innerHTML=transactionsPage('income');break;case'Expenses':el.innerHTML=transactionsPage('expense');break;case'Savings':el.innerHTML=savingsPage();break;case'Loans':el.innerHTML=loansPage('loan');break;case'Debts':el.innerHTML=loansPage('debt');break;case'Payments':el.innerHTML=paymentsPage();break;case'Budget':el.innerHTML=budgetPage();break;case'Reports':el.innerHTML=reportsPage();break;case'Settings':el.innerHTML=settingsPage();break;case'BorrowerPortal':el.innerHTML=borrowerPortalPage();if(window.fmBorrowerCloud?.ready)setTimeout(()=>ensureBorrowerLinksForAll(),900);break;default:el.innerHTML=dashboard()}
+   switch(current){case'Dashboard':el.innerHTML=dashboard();break;case'Income':el.innerHTML=transactionsPage('income');break;case'Expenses':el.innerHTML=transactionsPage('expense');break;case'Savings':el.innerHTML=savingsPage();break;case'Loans':el.innerHTML=loansPage('loan');break;case'Debts':el.innerHTML=loansPage('debt');break;case'Payments':el.innerHTML=paymentsPage();break;case'Payroll':el.innerHTML=payrollPage();break;case'Budget':el.innerHTML=budgetPage();break;case'Reports':el.innerHTML=reportsPage();break;case'Settings':el.innerHTML=settingsPage();break;case'BorrowerPortal':el.innerHTML=borrowerPortalPage();if(window.fmBorrowerCloud?.ready)setTimeout(()=>ensureBorrowerLinksForAll(),900);break;default:el.innerHTML=dashboard()}
   }
   syncMobileNav();
  }catch(err){
@@ -806,7 +806,8 @@ const stateSignature = value => JSON.stringify({
   debts:Array.isArray(value?.debts)?value.debts:[],
   savings:Array.isArray(value?.savings)?value.savings:[],
   budgets:Array.isArray(value?.budgets)?value.budgets:[],
-  payments:Array.isArray(value?.payments)?value.payments:[]
+  payments:Array.isArray(value?.payments)?value.payments:[],
+  payroll:value?.payroll&&typeof value.payroll==='object'&&!Array.isArray(value.payroll)?value.payroll:{}
 });
 const normalizeState = payload => ({
   currency:['THB','MMK','USD','SGD'].includes(payload?.currency)?payload.currency:'THB',
@@ -815,7 +816,8 @@ const normalizeState = payload => ({
   debts:Array.isArray(payload?.debts)?payload.debts:[],
   savings:Array.isArray(payload?.savings)?payload.savings:[],
   budgets:Array.isArray(payload?.budgets)?payload.budgets:[],
-  payments:Array.isArray(payload?.payments)?payload.payments:[]
+  payments:Array.isArray(payload?.payments)?payload.payments:[],
+  payroll:payload?.payroll&&typeof payload.payroll==='object'&&!Array.isArray(payload.payroll)?payload.payroll:{}
 });
 let syncWriteInFlight=false;
 const scheduleSyncRetry = (delay=900) => {
@@ -993,4 +995,5 @@ onAuthStateChanged(auth, user => {
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup);else setup();
 })();
 </script>
+<script src="payroll.js"></script>
 </body></html>
