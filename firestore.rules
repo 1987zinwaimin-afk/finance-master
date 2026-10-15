@@ -46,7 +46,7 @@ service cloud.firestore {
             (request.auth != null
               && request.auth.uid == parentShare().ownerUid
               && parentShare().active == true
-              && request.resource.data.senderRole == 'owner')
+              && request.resource.data.senderRole in ['owner', 'system'])
             ||
             (request.auth == null
               && parentShare().active == true
