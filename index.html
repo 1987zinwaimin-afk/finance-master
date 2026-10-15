@@ -927,6 +927,16 @@ const startCloudListener = user => {
       return;
     }
     if(remoteSignature!==localSignature){
+      // Keep the attendance dropdown alive if an incoming snapshot only differs
+      // outside payroll while the user is actively choosing an attendance value.
+      const active=document.activeElement;
+      const choosingPayrollStatus=active && active.classList && active.classList.contains('payroll-status');
+      const localPayroll=JSON.stringify(local.payroll||{});
+      const remotePayroll=JSON.stringify(remote.payroll||{});
+      if(choosingPayrollStatus && localPayroll===remotePayroll){
+        lastCloudSignature=remoteSignature;
+        return;
+      }
       applyingRemote=true;window.fmApp.replaceState(remote);applyingRemote=false;
       lastCloudSignature=remoteSignature;
       status('New cloud changes received. This device is up to date.');
