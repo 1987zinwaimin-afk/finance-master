@@ -52,7 +52,33 @@ service cloud.firestore {
               && parentShare().active == true
               && request.resource.data.senderRole == 'borrower')
           );
-        allow update, delete: if false;
+        // Editing is limited to the original sender and only changes message text.
+        allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text'])
+          && request.resource.data.text is string
+          && request.resource.data.text.size() <= 3000
+          && request.resource.data.token == resource.data.token
+          && request.resource.data.senderRole == resource.data.senderRole
+          && request.resource.data.senderName == resource.data.senderName
+          && request.resource.data.imageData == resource.data.imageData
+          && request.resource.data.createdAt == resource.data.createdAt
+          && (
+            (request.auth != null
+              && request.auth.uid == parentShare().ownerUid
+              && parentShare().active == true
+              && resource.data.senderRole == 'owner')
+            ||
+            (request.auth == null
+              && parentShare().active == true
+              && resource.data.senderRole == 'borrower')
+          );
+        // Delete removes the shared document, so both sides see it disappear.
+        // Owner can remove either side's message; borrower can remove their own.
+        allow delete: if parentShare().active == true
+          && (
+            (request.auth != null && request.auth.uid == parentShare().ownerUid)
+            ||
+            (request.auth == null && resource.data.senderRole == 'borrower')
+          );
       }
     }
 
