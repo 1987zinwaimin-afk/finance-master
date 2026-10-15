@@ -788,7 +788,8 @@ window.fmDownloadCloud = async () => {
       debts:Array.isArray(payload.debts)?payload.debts:[],
       savings:Array.isArray(payload.savings)?payload.savings:[],
       budgets:Array.isArray(payload.budgets)?payload.budgets:[],
-      payments:Array.isArray(payload.payments)?payload.payments:[]
+      payments:Array.isArray(payload.payments)?payload.payments:[],
+      payroll:payload.payroll&&typeof payload.payroll==='object'&&!Array.isArray(payload.payroll)?payload.payroll:{}
     };
     applyingRemote=true;
     window.fmApp.replaceState(safeState);
