@@ -808,6 +808,30 @@ let syncConflict=false;
 let syncTimer=null;
 let lastCloudSignature='';
 let initialSnapshotHandled=false;
+let pendingPayrollCloudUpdate=null;
+function flushPendingPayrollCloudUpdate(){
+  if(!pendingPayrollCloudUpdate)return;
+  const active=document.activeElement;
+  if(active && active.classList && active.classList.contains('payroll-status'))return;
+  const pending=pendingPayrollCloudUpdate;
+  pendingPayrollCloudUpdate=null;
+  if(localDirty || syncConflict){
+    if(syncTimer){clearTimeout(syncTimer);syncTimer=null;}
+    syncReady=false;syncConflict=true;localDirty=false;
+    status('Sync paused to protect data: cloud changed while attendance was being edited. Export a JSON backup, then review before choosing Upload or Download.',true);
+    return;
+  }
+  if(!window.fmApp || typeof window.fmApp.replaceState!=='function')return;
+  applyingRemote=true;
+  window.fmApp.replaceState(pending.remote);
+  applyingRemote=false;
+  lastCloudSignature=pending.remoteSignature;
+  status('New cloud changes received. This device is up to date.');
+  window.fmApp.toast('Cloud changes received');
+}
+document.addEventListener('focusout',()=>{
+  setTimeout(flushPendingPayrollCloudUpdate,0);
+},true);
 const stateSignature = value => JSON.stringify({
   currency:value?.currency || 'THB',
   transactions:Array.isArray(value?.transactions)?value.transactions:[],
@@ -931,10 +955,11 @@ const startCloudListener = user => {
       // outside payroll while the user is actively choosing an attendance value.
       const active=document.activeElement;
       const choosingPayrollStatus=active && active.classList && active.classList.contains('payroll-status');
-      const localPayroll=JSON.stringify(local.payroll||{});
-      const remotePayroll=JSON.stringify(remote.payroll||{});
-      if(choosingPayrollStatus && localPayroll===remotePayroll){
-        lastCloudSignature=remoteSignature;
+      if(choosingPayrollStatus){
+        // Defer all remote replacements while attendance is being selected.
+        // If the user changes attendance before blur, conflict protection keeps
+        // both copies safe instead of replacing the active dropdown or losing edits.
+        pendingPayrollCloudUpdate={remote,remoteSignature};
         return;
       }
       applyingRemote=true;window.fmApp.replaceState(remote);applyingRemote=false;
