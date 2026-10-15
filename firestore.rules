@@ -113,7 +113,15 @@ service cloud.firestore {
               && request.resource.data.receiptImage.size() > 0))
         && request.resource.data.status == 'pending'
         && request.resource.data.schemaVersion == 1;
-      allow read: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+      allow read: if (
+          request.auth != null
+          && resource.data.ownerUid == request.auth.uid
+        ) || (
+          resource.data.token is string
+          && exists(/databases/$(database)/documents/borrowerShares/$(resource.data.token))
+          && get(/databases/$(database)/documents/borrowerShares/$(resource.data.token)).data.active == true
+          && get(/databases/$(database)/documents/borrowerShares/$(resource.data.token)).data.accountId == resource.data.accountId
+        );
       allow update: if request.auth != null
         && resource.data.ownerUid == request.auth.uid
         && request.resource.data.ownerUid == resource.data.ownerUid
