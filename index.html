@@ -816,13 +816,13 @@ function borrowerPortalPage(){
  const shares=window.fmBorrowerCloud?window.fmBorrowerCloud.shares:[];
  const requests=window.fmBorrowerCloud?window.fmBorrowerCloud.requests:[];
  const loans=state.loans||[];
- let html=pageHead('Borrower Portal','Create a read-only borrower link. Borrowers can request payments; only you can approve them.');
- html+='<div class="notice"><b>Security:</b> Each private link grants access to one borrower account. Treat the link like a password and revoke it if shared incorrectly.</div>';
- html+='<section class="panel"><div class="panelhead"><div><h2>Automatic borrower links</h2><p>Each loan account gets its own private link automatically. New accounts are linked when you open this page.</p></div></div>';
+ let html=pageHead('Borrower Portal','');
+
+ html+='<section class="panel">';
  if(!window.fmBorrowerCloud||!window.fmBorrowerCloud.ready){html+='<div class="empty">Sign in to Finance Master to generate private links automatically.</div>';}
  else if(!loans.length){html+='<div class="empty">Add a loan account first.</div>';}
- else{html+='<div class="notice">Automatic link creation is enabled. Each name below receives a separate read-only link. Use Copy private link to send it to that borrower only.</div>';}
- html+='</section><section class="panel" style="margin-top:16px"><div class="panelhead"><div><h2>Borrower links by name</h2><p>One separate link per loan account.</p></div></div>';
+ else{}
+ html+='</section><section class="panel" style="margin-top:16px"><div class="panelhead"><div><h2>Borrower links by name</h2></div></div>';
  if(!window.fmBorrowerCloud||!window.fmBorrowerCloud.ready){html+='<div class="empty">Sign in to Finance Master to manage borrower links.</div>';}
  else if(!shares.length){html+='<div class="empty">No borrower links yet.</div>';}
  else{html+=shares.map(sh=>'<article class="borrower-link-card"><h3>'+escapeHtml(sh.borrowerName||'Borrower')+'</h3><p>Account: '+escapeHtml(sh.accountId)+' · '+(sh.active?'Active':'Revoked')+'</p><p>Snapshot remaining: '+escapeHtml(fmt(sh.snapshot&&sh.snapshot.principalOutstanding,sh.currency||'THB'))+' principal · '+escapeHtml(fmt(sh.snapshot&&sh.snapshot.interestOutstanding,sh.currency||'THB'))+' interest</p><div class="borrower-link-actions">'+(sh.active?'<button class="primary" onclick="copyBorrowerLink(\''+escapeHtml(sh.id)+'\')">Copy private link</button><button class="pill" onclick="updateBorrowerShare(\''+escapeHtml(sh.id)+'\')">Update snapshot</button><button class="pill" onclick="revokeBorrowerShare(\''+escapeHtml(sh.id)+'\')">Revoke link</button>':'<span class="tag out">Revoked</span>')+'</div></article>').join('');}
