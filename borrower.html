@@ -132,7 +132,7 @@ async function handleBankReceiptChange(event){const file=event.target.files?.[0]
 async function submitRequest(e){
  e.preventDefault();const paymentMethod=$("paymentMethod").value,button=paymentMethod==="bank"?$("sendBankReceipt"):$("sendRequest");if(button)button.disabled=true;$("requestResult").innerHTML="";
  const amount=Number($("amount").value),date=$("payDate").value,apply=$("apply").value,note=$("note").value.trim(),s=share.snapshot||{};
- if(!Number.isFinite(amount)||amount<=0||!date){$("requestResult").innerHTML='<div class="error">Enter a valid amount and date.</div>';if(button)if(button)if(button)if(button)button.disabled=false;return;}
+ if(!Number.isFinite(amount)||amount<=0||!date){$("requestResult").innerHTML='<div class="error">Enter a valid amount and date.</div>';if(button)button.disabled=false;return;}
  if(paymentMethod==="bank"&&!bankQrShown){$("requestResult").innerHTML='<div class="error">Tap Get Bank QR first and complete the bank transfer.</div>';button.disabled=false;return;}
  if(paymentMethod==="bank"&&!paymentReceiptImage){$("requestResult").innerHTML='<div class="error">Please upload the transfer receipt before sending it to the owner.</div>';button.disabled=false;return;}
  try{
