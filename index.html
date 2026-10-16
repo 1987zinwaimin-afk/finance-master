@@ -643,7 +643,23 @@ body.fm-dark:not(.fm-login-mode) .toast{background:#1a2940;color:var(--ink);bord
 @media(max-width:700px){.trend-actions{justify-content:flex-start}.trend-currency{min-width:95px}}
 body.fm-dark:not(.fm-login-mode) .trend-currency{background:#101a2b;color:var(--ink);border-color:var(--line)}
 
-</style></head>
+</style><style id="fm-accessibility-polish">
+/* Finance Master accessibility polish */
+:where(button,a,input,select,textarea,[role="button"],[tabindex]):focus-visible{
+  outline:3px solid #D8B56D!important;
+  outline-offset:3px!important;
+}
+button,a,[role="button"]{-webkit-tap-highlight-color:transparent}
+button:disabled,[role="button"][aria-disabled="true"]{cursor:not-allowed;opacity:.62}
+@media(max-width:700px){
+  input,select,textarea{font-size:16px}
+  button,[role="button"]{touch-action:manipulation}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
 <body>
 <div class="app">
 <aside class="sidebar">
