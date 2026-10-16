@@ -1126,7 +1126,21 @@ async function approveBorrowerRequest(id){const req=(window.fmBorrowerCloud?.req
 async function deleteBorrowerRequest(id){const req=(window.fmBorrowerCloud?.requests||[]).find(x=>x.id===id);if(!req)return toast('Payment request not found.');const statusLabel=req.status==='approved'?'approved':req.status==='rejected'?'rejected':'pending';const warning=req.status==='approved'?'\\n\\nThis removes only the request card. The recorded Payment History and loan balance will NOT be reversed.':'\\n\\nThis removes only the request record; it does not change the loan balance or Payment History.';if(!confirm('Delete this '+statusLabel+' payment request for '+String(req.borrowerName||'Borrower')+' · '+fmt(Number(req.amount)||0,req.currency||'THB')+'?'+warning))return;try{await window.fmBorrowerCloud.deleteRequest(id);toast('Payment request deleted. Loan balance and Payment History were not changed.');render();}catch(e){toast('Could not delete payment request: '+String(e?.message||e));}}
 async function rejectBorrowerRequest(id){const req=(window.fmBorrowerCloud?.requests||[]).find(x=>x.id===id);if(!req||req.status!=='pending')return toast('Request is no longer pending');if(rejectingBorrowerRequests.has(id)||approvingBorrowerRequests.has(id))return toast('This request is already being processed.');const reason=prompt('Optional: tell the borrower why this request is being rejected. Leave blank if no explanation is needed.','');if(reason===null)return;if(!confirm('Reject this request? Loan data will not change.'))return;rejectingBorrowerRequests.add(id);render();try{await window.fmBorrowerCloud.setRequestStatus(id,'rejected',reason);if(req.token)await window.fmBorrowerCloud.sendPaymentDecisionMessage(req.token,req,'rejected',reason);toast('Request rejected. Borrower notified in Chat.');}catch(e){toast('Request status saved or notification failed: '+String(e?.message||e));}finally{rejectingBorrowerRequests.delete(id);render();}}
 
+function securityGatePage(){
+ const mode=window.fmSecurityState||'checking';
+ const headline=mode==='checking'?'Checking account access…':mode==='no-cloud'?'No private cloud records for this account':mode==='error'?'Private cloud access unavailable':'Sign in to view private finance records';
+ const message=mode==='checking'?'Finance Master is checking the signed-in account before showing any finance data.':mode==='no-cloud'?'This account has no cloud backup yet. For privacy, records saved on this device are hidden and will not be uploaded automatically. Sign in with the account that owns the existing cloud records.':mode==='error'?'The account could not be verified against its private cloud record. Finance data remains hidden until access is restored.':'You are signed out. Sign in with the owner account to view its private records. Other accounts cannot view records stored in a different account’s cloud.';
+ return '<div class="pagehead"><div><h1>Private Finance Workspace</h1><p>Account-protected finance data</p></div></div><section class="panel" style="max-width:760px;margin:20px auto"><div style="font-size:34px;margin-bottom:12px">🔐</div><h2 style="margin-top:0">'+escapeHtml(headline)+'</h2><p class="sub">'+escapeHtml(message)+'</p><div class="notice" style="margin:16px 0">Use the same Gmail/password account that owns your Finance Master cloud backup. Signing in with another account will not import or reveal the owner’s records.</div><div id="fmAuthStatus" class="notice">Firebase connection status will appear here.</div><div class="formgrid"><div class="field"><label>Email</label><input id="fmEmail" type="email" autocomplete="username" placeholder="Owner Gmail address"></div><div class="field"><label>Password</label><input id="fmPassword" type="password" autocomplete="current-password" placeholder="Account password"></div></div><div class="formactions" style="justify-content:flex-start;flex-wrap:wrap"><button class="primary" onclick="window.fmSignIn()">Sign in</button><button class="pill" onclick="window.fmSignUp()">Create account</button><button class="pill" onclick="window.fmSignOut()">Sign out</button></div><p class="sub" style="margin-top:14px">Existing device data has not been deleted. It stays hidden until the correct cloud account is available.</p></section>';
+}
 function render(){
+ if(window.fmSecurityState!=='ready'){
+  document.body.classList.remove('messages-fullscreen','payroll-page');
+  const protectedContent=document.getElementById('content');
+  if(protectedContent)protectedContent.innerHTML=securityGatePage();
+  const crumb=document.getElementById('crumbPage');if(crumb)crumb.textContent='Private Workspace';
+  const title=document.getElementById('pageTitle');if(title)title.textContent='Private Workspace';
+  return;
+ }
  document.body.classList.toggle('messages-fullscreen',current==='Messages');
  document.body.classList.toggle('payroll-page',current==='Payroll');
  const el=document.getElementById('content');
@@ -1152,7 +1166,7 @@ function render(){
  }
 }
 render();
-window.fmApp={getState:()=>state,replaceState:(next)=>{state=next;save();render()},hasLocalRecords:()=>Boolean((state.transactions||[]).length||(state.loans||[]).length||(state.debts||[]).length||(state.savings||[]).length||(state.budgets||[]).length||(state.payments||[]).length||Object.keys(state.payroll||{}).length),toast,applyBorrowerPaymentRequest:(req)=>{const l=state.loans.find(x=>x.id===req.accountId);if(!l||!Number.isFinite(Number(req.amount))||Number(req.amount)<=0){toast('Invalid request or loan account missing');return false;}if(state.payments.some(p=>p.borrowerRequestId===req.id)){return true;}const allocation=allocatePayment('loan',l,Number(req.amount),String(req.date||today()),String(req.apply||'auto'));if(allocation.error){toast(allocation.error);return false;}const p={id:'borrower-request-'+req.id,borrowerRequestId:req.id,account:l.id,kind:'loan',amount:Number(req.amount),currency:recordCurrency(l)||'THB',date:String(req.date||today()),apply:String(req.apply||'auto'),note:'Borrower '+(req.paymentMethod==='bank'?'bank transfer':'cash payment')+' request: '+String(req.note||'').trim(),interestApplied:allocation.interestApplied,principalApplied:allocation.principalApplied};state.payments.unshift(p);if(p.principalApplied>0)l.principalPaid=Math.min(Number(l.principal)||0,Number(l.principalPaid||0)+p.principalApplied);save();render();return true;}};
+window.fmApp={render:()=>render(),getState:()=>state,replaceState:(next)=>{state=next;save();render()},hasLocalRecords:()=>Boolean((state.transactions||[]).length||(state.loans||[]).length||(state.debts||[]).length||(state.savings||[]).length||(state.budgets||[]).length||(state.payments||[]).length||Object.keys(state.payroll||{}).length),toast,applyBorrowerPaymentRequest:(req)=>{const l=state.loans.find(x=>x.id===req.accountId);if(!l||!Number.isFinite(Number(req.amount))||Number(req.amount)<=0){toast('Invalid request or loan account missing');return false;}if(state.payments.some(p=>p.borrowerRequestId===req.id)){return true;}const allocation=allocatePayment('loan',l,Number(req.amount),String(req.date||today()),String(req.apply||'auto'));if(allocation.error){toast(allocation.error);return false;}const p={id:'borrower-request-'+req.id,borrowerRequestId:req.id,account:l.id,kind:'loan',amount:Number(req.amount),currency:recordCurrency(l)||'THB',date:String(req.date||today()),apply:String(req.apply||'auto'),note:'Borrower '+(req.paymentMethod==='bank'?'bank transfer':'cash payment')+' request: '+String(req.note||'').trim(),interestApplied:allocation.interestApplied,principalApplied:allocation.principalApplied};state.payments.unshift(p);if(p.principalApplied>0)l.principalPaid=Math.min(Number(l.principal)||0,Number(l.principalPaid||0)+p.principalApplied);save();render();return true;}};
 </script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
@@ -1175,6 +1189,7 @@ try { await setPersistence(auth, browserLocalPersistence); }
 catch (e) { authPersistenceReady = false; console.warn("Firebase persistent login unavailable:", e?.code || e?.message || e); }
 const db = getFirestore(app);
 let currentUser = null;
+window.fmSecurityState = 'checking';
 const status = (message, bad=false) => {
   const el = document.getElementById('fmAuthStatus');
   if (el) { el.textContent = message; el.style.background = bad ? '#fff0f0' : '#fff8e8'; el.style.color = bad ? '#a62d2d' : '#795d26'; }
@@ -1352,7 +1367,8 @@ window.fmScheduleSync = () => {
 const startCloudListener = user => {
   if(stopCloudListener){stopCloudListener();stopCloudListener=null;}
   syncReady=false; syncConflict=false; initialSnapshotHandled=false; localDirty=false; lastCloudSignature='';
-  if(!user) return;
+  if(!user) { window.fmSecurityState='signed-out'; if(window.fmApp?.render)window.fmApp.render(); return; }
+  window.fmSecurityState='checking';if(window.fmApp?.render)window.fmApp.render();
   stopCloudListener=onSnapshot(cloudRef(user.uid), async snap => {
     if(!currentUser || currentUser.uid!==user.uid) return;
     // Auth can resolve before the classic app script has exposed fmApp.
@@ -1364,8 +1380,9 @@ const startCloudListener = user => {
     }
     if(!snap.exists()){
       if(!initialSnapshotHandled){
-        initialSnapshotHandled=true;
-        status('Signed in. No cloud backup found yet. Export a JSON backup, then use Upload this device to cloud.');
+        initialSnapshotHandled=true;syncReady=false;window.fmSecurityState='no-cloud';
+        status('This account has no cloud backup. Device records are hidden for privacy and will not be uploaded automatically.',true);
+        if(window.fmApp?.render)window.fmApp.render();
       }
       return;
     }
@@ -1379,22 +1396,15 @@ const startCloudListener = user => {
     const localSignature=stateSignature(local);
     if(!initialSnapshotHandled){
       initialSnapshotHandled=true;
+      // Never let a different account see or upload device-local records automatically.
       if(remoteSignature!==localSignature && window.fmApp.hasLocalRecords()){
-        const useCloud=confirm('Cloud data and this device data are different. OK = replace this device with cloud data. Cancel = keep this device and upload its data to cloud.');
-        if(useCloud){
-          applyingRemote=true;window.fmApp.replaceState(remote);applyingRemote=false;
-          lastCloudSignature=remoteSignature;localDirty=false;
-        } else {
-          syncReady=true;localDirty=true;await writeCurrentState();
-        }
-      } else if(remoteSignature!==localSignature){
-        applyingRemote=true;window.fmApp.replaceState(remote);applyingRemote=false;
-        lastCloudSignature=remoteSignature;localDirty=false;
-      } else {
-        lastCloudSignature=remoteSignature;
+        try{localStorage.setItem('finance-master-device-backup-before-account-switch-v1',JSON.stringify({savedAt:new Date().toISOString(),state:local}));}catch(e){console.warn('Could not preserve a local recovery copy',e);}
       }
-      syncReady=true;
-      status('Cloud sync is live. Changes on signed-in devices update automatically.');
+      if(remoteSignature!==localSignature){applyingRemote=true;window.fmApp.replaceState(remote);applyingRemote=false;}
+      lastCloudSignature=remoteSignature;localDirty=false;syncReady=true;
+      window.fmSecurityState='ready';
+      status('Signed in as '+user.email+'. Private cloud data loaded; account isolation is active.');
+      if(window.fmApp?.render)window.fmApp.render();
       return;
     }
     if(snap.metadata?.hasPendingWrites) return;
@@ -1433,8 +1443,9 @@ const startCloudListener = user => {
       window.fmApp.toast('Cloud changes received');
     }
   }, e => {
-    syncReady=false;
-    status('Live sync connection failed: '+errText(e)+'. Local data is still available.',true);
+    syncReady=false;window.fmSecurityState='error';
+    status('Private cloud access failed: '+errText(e)+'. Finance records remain hidden until access is restored.',true);
+    if(window.fmApp?.render)window.fmApp.render();
   });
 };
 
@@ -1484,6 +1495,7 @@ onAuthStateChanged(auth, user => {
   startBorrowerListeners(user);
   if(user) status('Signed in as '+user.email+'. Connecting live cloud sync…'+(authPersistenceReady?'':' Persistent login is blocked by this browser; avoid closing this browser tab.'));
   else status('Not signed in. Create an account or sign in to enable cloud sync.'+(authPersistenceReady?'':' Persistent login is blocked by this browser. Open the site in Chrome and allow site storage.'));
+  if(!user){window.fmSecurityState='signed-out';if(window.fmApp?.render)window.fmApp.render();}
   if(user){setTimeout(()=>{if(currentUser&&document.getElementById('crumbPage')?.textContent==='Borrower Portal'){ensureBorrowerLinksForAll();}},900);}
 });
 </script>
