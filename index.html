@@ -717,7 +717,8 @@ const recordCurrency=x=>['THB','MMK','USD','SGD'].includes(x?.currency)?x.curren
 const moneyFor=(n,x)=>fmt(n,recordCurrency(x)||state.currency||'THB');
 const currencyLabel=c=>({THB:'THB ฿',MMK:'MMK K',USD:'USD $',SGD:'SGD $'}[c]||c||'Unclassified');
 let state={currency:'THB',transactions:[],loans:[],debts:[],savings:[],budgets:[],payments:[],payroll:{},expenseGroups:['အိမ်အသုံးစရိတ်','စားသောက်စရိတ်','သွားလာစရိတ်'],ownerData:{phone:'',address:'',bankName:'',bankQr:'',remark:''}};
-try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s)state={...state,...s}}catch(e){}\nif(!Array.isArray(state.expenseGroups))state.expenseGroups=['အိမ်အသုံးစရိတ်','စားသောက်စရိတ်','သွားလာစရိတ်'];
+try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s)state={...state,...s}}catch(e){};
+if(!Array.isArray(state.expenseGroups))state.expenseGroups=['အိမ်အသုံးစရိတ်','စားသောက်စရိတ်','သွားလာစရိတ်'];
 let current='Dashboard';
 function save(){localStorage.setItem(KEY,JSON.stringify(state));const el=document.getElementById('saveStatus');if(el)el.textContent='● Saved on this device';if(window.fmScheduleSync)window.fmScheduleSync(state)}
 function toast(s){const t=document.getElementById('toast');t.textContent=s;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
