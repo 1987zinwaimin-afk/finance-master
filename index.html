@@ -1191,9 +1191,6 @@ const db = getFirestore(app);
 // Only this verified Gmail may open the Owner finance workspace. Other accounts remain data-blind.
 const OWNER_EMAIL = '1987zinwaimin@gmail.com';
 const isOwnerUser = user => !!user?.email && user.email.trim().toLowerCase() === OWNER_EMAIL.toLowerCase();
-// Only this verified Gmail may open the Owner finance workspace. Other accounts remain data-blind.
-const OWNER_EMAIL = '1987zinwaimin@gmail.com';
-const isOwnerUser = user => !!user?.email && user.email.trim().toLowerCase() === OWNER_EMAIL.toLowerCase();
 let currentUser = null;
 window.fmSecurityState = 'checking';
 const status = (message, bad=false) => {
