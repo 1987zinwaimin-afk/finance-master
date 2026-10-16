@@ -391,6 +391,14 @@ tbody tr:hover td{background:#f8faff}
  .field.full{grid-column:auto}
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{transition:none!important;animation:none!important}}
+
+/* Hide the requested explanatory copy on Payroll, keeping all payroll controls visible. */
+body.payroll-page #content > .pagehead > p,
+body.payroll-page #content .payroll-period .panelhead p,
+body.payroll-page #content .payroll-period .notice,
+body.payroll-page #content .payroll-period .payroll-tip,
+body.payroll-page #content .payroll-period .helper-text,
+body.payroll-page #content .payroll-period .subtext{display:none!important}
 </style></head>
 <body>
 <div class="app">
@@ -1068,6 +1076,7 @@ async function rejectBorrowerRequest(id){const req=(window.fmBorrowerCloud?.requ
 
 function render(){
  document.body.classList.toggle('messages-fullscreen',current==='Messages');
+ document.body.classList.toggle('payroll-page',current==='Payroll');
  const el=document.getElementById('content');
  const labels={Dashboard:'Dashboard',Income:'Income',Expenses:'Expenses',Savings:'Savings & Goals',Loans:'Loans Given',Debts:'My Debts',Payments:'Payment History',Payroll:'Payroll',Budget:'Budget Planner',Reports:'Reports',BorrowerPortal:'Borrower Portal',Messages:'Borrower Messages',Settings:'Settings & Backup'};
  try{
@@ -1445,9 +1454,3 @@ onAuthStateChanged(auth, user => {
 <script src="payroll.js"></script>
 <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));}</script>
 </body></html>
-/* Hide the explanatory copy requested on the Payroll screen only. */
-.payroll-period .panelhead p,
-.payroll-period .notice,
-.payroll-period .payroll-tip,
-.payroll-period .helper-text,
-.payroll-period .subtext{display:none!important}
