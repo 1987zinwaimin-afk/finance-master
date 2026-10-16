@@ -451,6 +451,55 @@ body.fm-login-mode .content{width:100%;max-width:470px;padding:0;margin:auto}
   }
 }
 
+
+/* Mobile dashboard: navigate between complete sections horizontally */
+@media(max-width:700px){
+  #content.dashboard-horizontal{
+    display:flex;
+    flex-flow:row nowrap;
+    align-items:flex-start;
+    gap:12px;
+    overflow-x:auto;
+    overflow-y:visible;
+    scroll-snap-type:x mandatory;
+    scroll-padding-left:12px;
+    padding-right:12px;
+    padding-bottom:100px;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior-x:contain;
+    scrollbar-width:thin;
+  }
+  #content.dashboard-horizontal>.welcome{display:none}
+  #content.dashboard-horizontal>.layout{display:contents}
+  #content.dashboard-horizontal>.dashboard-currency-panel,
+  #content.dashboard-horizontal>.layout>.panel,
+  #content.dashboard-horizontal>section.panel{
+    flex:0 0 100%;
+    width:100%;
+    min-width:100%;
+    max-width:100%;
+    margin:0 0 8px!important;
+    scroll-snap-align:start;
+  }
+  #content.dashboard-horizontal .dashboard-metrics{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px;
+    overflow:visible;
+    padding:0;
+    margin:0;
+  }
+  #content.dashboard-horizontal .dashboard-metrics>.metric{
+    flex:initial;
+    width:auto;
+    min-width:0;
+    max-width:none;
+    scroll-snap-align:none;
+  }
+  #content.dashboard-horizontal>.layout>.panel .chart{height:210px}
+  #content.dashboard-horizontal>.layout>.panel .quick{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
 </style></head>
 <body>
 <div class="app">
@@ -1213,6 +1262,7 @@ function render(){
  document.body.classList.toggle('messages-fullscreen',current==='Messages');
  document.body.classList.toggle('payroll-page',current==='Payroll');
  const el=document.getElementById('content');
+ if(el)el.classList.toggle('dashboard-horizontal',current==='Dashboard');
  const labels={Dashboard:'Dashboard',Income:'Income',Expenses:'Expenses',Savings:'Savings & Goals',Loans:'Loans Given',Debts:'My Debts',Payments:'Payment History',Payroll:'Payroll',Budget:'Budget Planner',Reports:'Reports',BorrowerPortal:'Borrower Portal',Messages:'Borrower Messages',Settings:'Settings & Backup'};
  try{
   if(!el)throw new Error('Main content element is missing');
