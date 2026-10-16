@@ -422,6 +422,35 @@ body.fm-login-mode .content{width:100%;max-width:470px;padding:0;margin:auto}
 .fm-login-status:empty{display:none}
 .fm-login-foot{color:#818895;font-size:11px;line-height:1.5;text-align:center;margin:24px 0 0}
 @media(max-width:420px){body.fm-login-mode .main{padding:18px 14px}.fm-login-card{padding:28px 23px;border-radius:22px}.fm-login-title{font-size:25px}.fm-login-input{margin-bottom:20px}}
+
+/* Dashboard horizontal metric carousel */
+@media(max-width:700px){
+  .dashboard-currency-panel .dashboard-metrics{
+    display:flex;
+    flex-wrap:nowrap;
+    gap:12px;
+    overflow-x:auto;
+    overflow-y:hidden;
+    padding:2px 2px 12px;
+    margin:0 -2px 0;
+    scroll-snap-type:x mandatory;
+    scroll-padding-left:2px;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior-x:contain;
+    scrollbar-width:thin;
+  }
+  .dashboard-currency-panel .dashboard-metrics>.metric{
+    flex:0 0 82%;
+    width:82%;
+    min-width:82%;
+    max-width:82%;
+    scroll-snap-align:start;
+  }
+  .dashboard-currency-panel .dashboard-metrics>.metric strong{
+    font-size:clamp(15px,4.2vw,19px);
+  }
+}
+
 </style></head>
 <body>
 <div class="app">
@@ -655,7 +684,7 @@ function dashboard(){
   const receivable=outstanding(state.loans,currency),payable=outstanding(state.debts,currency);
   const savings=state.savings.filter(x=>recordCurrency(x)===currency).reduce((n,x)=>n+Number(x.saved||0),0);
   const accrued=state.loans.filter(x=>recordCurrency(x)===currency).reduce((n,x)=>n+Number(interest(x)||0),0);
-  return '<section class="panel" style="margin-bottom:18px"><div class="panelhead"><div><h2>'+currencyLabel(currency)+'</h2></div><button class="linkbtn" onclick="go(\'Reports\')">Monthly report ↗</button></div><div class="cards">'+
+  return '<section class="panel dashboard-currency-panel" style="margin-bottom:18px"><div class="panelhead"><div><h2>'+currencyLabel(currency)+'</h2></div><button class="linkbtn" onclick="go(\'Reports\')">Monthly report ↗</button></div><div class="cards dashboard-metrics">'+
    metric('This month income',fmt(monthly('income',currency),currency),'↗','Current calendar month')+
    metric('This month expenses',fmt(monthly('expense',currency),currency),'↘','Current calendar month')+
    metric('Net cash flow',fmt(net,currency),'◈','All recorded time · '+(net>=0?'Positive':'Negative'))+
