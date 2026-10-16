@@ -99,7 +99,7 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/borrowerShares/$(request.resource.data.token))
         && get(/databases/$(database)/documents/borrowerShares/$(request.resource.data.token)).data.active == true
         && get(/databases/$(database)/documents/borrowerShares/$(request.resource.data.token)).data.ownerUid == request.resource.data.ownerUid
-        && get(/databases/$(database)/documents/borrowerShares/$(request.resource.data.token)).data.accountId == request.resource.data.accountId
+        && (get(/databases/$(database)/documents/borrowerShares/$(request.resource.data.token)).data.accountId == request.resource.data.accountId || (get(/databases/$(database)/documents/borrowerShares/$(request.resource.data.token)).data.accountIds is list && request.resource.data.accountId in get(/databases/$(database)/documents/borrowerShares/$(request.resource.data.token)).data.accountIds))
         && request.resource.data.amount is number
         && request.resource.data.amount > 0
         && request.resource.data.date is string
@@ -120,7 +120,7 @@ service cloud.firestore {
           resource.data.token is string
           && exists(/databases/$(database)/documents/borrowerShares/$(resource.data.token))
           && get(/databases/$(database)/documents/borrowerShares/$(resource.data.token)).data.active == true
-          && get(/databases/$(database)/documents/borrowerShares/$(resource.data.token)).data.accountId == resource.data.accountId
+          && (get(/databases/$(database)/documents/borrowerShares/$(resource.data.token)).data.accountId == resource.data.accountId || (get(/databases/$(database)/documents/borrowerShares/$(resource.data.token)).data.accountIds is list && resource.data.accountId in get(/databases/$(database)/documents/borrowerShares/$(resource.data.token)).data.accountIds))
         );
       allow update: if request.auth != null
         && resource.data.ownerUid == request.auth.uid
