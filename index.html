@@ -1239,7 +1239,19 @@ function syncMobileNav(){
 
 let selectedBorrowerChatToken='',activeBorrowerChatStop=null,activeBorrowerChatMessages=[];
 function borrowerMessagesPage(){
- const shares=(window.fmBorrowerCloud?.shares||[]).filter(sh=>sh.active).sort((a,b)=>String(a.borrowerName||'').localeCompare(String(b.borrowerName||'')));
+ const activeShares=(window.fmBorrowerCloud?.shares||[]).filter(sh=>sh.active);
+ // One chat entry per person, even when the same borrower has several loan links.
+ // Prefer a link already covering more loan accounts, without deleting or changing any share records.
+ const borrowerKey=sh=>String(sh.borrowerName||'').trim().replace(/\\s+/g,' ').toLocaleLowerCase();
+ const byBorrower=new Map();
+ activeShares.forEach(sh=>{
+  const key=borrowerKey(sh);
+  if(!key)return;
+  const existing=byBorrower.get(key);
+  const accountCount=sh=>Array.isArray(sh.accountIds)&&sh.accountIds.length?sh.accountIds.length:(sh.accountId?1:0);
+  if(!existing||accountCount(sh)>accountCount(existing))byBorrower.set(key,sh);
+ });
+ const shares=[...byBorrower.values()].sort((a,b)=>String(a.borrowerName||'').localeCompare(String(b.borrowerName||'')));
  if(!window.fmBorrowerCloud?.ready)return '<section class="panel chat-list-panel"><div class="chat-list-title"><b>Borrower Messages</b><p>Sign in as owner to chat with borrowers.</p></div><div class="empty">Sign in to Finance Master first.</div></section>';
  const selected=shares.find(sh=>sh.id===selectedBorrowerChatToken)||null;
  if(selected){
