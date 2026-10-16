@@ -1038,7 +1038,7 @@ async function ensureBorrowerLinksForAll(){
  try{
   const existing=window.fmBorrowerCloud.shares||[];
   for(const loan of (state.loans||[])){
-   if(existing.some(sh=>sh.accountId===loan.id))continue;
+   if(existing.some(sh=>sh.accountId===loan.id||(Array.isArray(sh.accountIds)&&sh.accountIds.includes(loan.id))))continue;
    if(borrowerAutoCreateAttempted.has(loan.id))continue;
    if(!recordCurrency(loan)){skipped++;continue;}
    borrowerAutoCreateAttempted.add(loan.id);
