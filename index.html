@@ -676,8 +676,19 @@ function loansPage(kind){
  '<section class="panel account-panel"><div class="panelhead"><div><h2>'+(kind==='loan'?'People who borrowed':'My creditors')+'</h2><p>Select one account to view its complete details</p></div><span class="account-count">'+list.length+' '+(list.length===1?'account':'accounts')+'</span></div>'+loanRows(list,kind)+'</section>';
 }
 let personDetail={kind:'loan',id:'',tab:'overview'};
-function openPerson(kind,id,tab='overview'){personDetail={kind,id,tab};current='PersonDetail';render();if(window.scrollTo)window.scrollTo({top:0,behavior:'auto'});}
+let borrowerGroupPerson='';
+function openPerson(kind,id,tab='overview'){const list=kind==='loan'?state.loans:state.debts,l=list.find(x=>x.id===id);if(kind==='loan'&&l){const group=list.filter(x=>String(x.person||'').trim().toLocaleLowerCase()===String(l.person||'').trim().toLocaleLowerCase());if(group.length>1){borrowerGroupPerson=l.person||'';current='BorrowerGroup';render();if(window.scrollTo)window.scrollTo({top:0,behavior:'auto'});return;}}personDetail={kind,id,tab};current='PersonDetail';render();if(window.scrollTo)window.scrollTo({top:0,behavior:'auto'});}
 function openPersonTab(tab){personDetail.tab=tab;render();if(window.scrollTo)window.scrollTo({top:0,behavior:'auto'});}
+function borrowerGroupPage(){
+ const loans=(state.loans||[]).filter(l=>String(l.person||'').trim().toLocaleLowerCase()===String(borrowerGroupPerson||'').trim().toLocaleLowerCase());
+ if(!loans.length){current='Loans';return loansPage('loan');}
+ const currencyTotals={};
+ let html='<div class="person-head"><button class="back-account" onclick="go(\'Loans\')">‹ Back to Loans</button><div class="person-title-row"><div class="person-avatar">'+escapeHtml(String(borrowerGroupPerson||'?').trim().charAt(0).toUpperCase())+'</div><div class="person-title"><h1>'+escapeHtml(borrowerGroupPerson)+'</h1><p>'+loans.length+' loan accounts · all loan types for this borrower</p></div></div><div class="person-quick-actions"><button class="primary" onclick="openBorrowerShareChooser(\''+escapeHtml(loans[0].id)+'\')">↗ Choose accounts to Share</button></div></div>';
+ html+='<div class="cards">'+metric('Loan accounts',String(loans.length),'▤','Under this borrower name')+metric('Payments recorded',String((state.payments||[]).filter(p=>p.kind==='loan'&&loans.some(l=>l.id===p.account)).length),'✓','Across these accounts')+'</div>';
+ html+='<section class="panel account-panel"><div class="panelhead"><div><h2>All loan types</h2><p>Each loan stays as a separate account. Select a loan to see its full history.</p></div></div><div class="account-list">'+loans.map((l,i)=>{const ledger=loanLedger('loan',l);return '<article class="account-card"><button class="account-open" onclick="openSinglePerson(\''+escapeHtml(l.id)+'\')"><span class="account-avatar">'+(i+1)+'</span><span class="account-main"><b>Loan '+(i+1)+' · '+escapeHtml(l.person||'Borrower')+'</b><small>'+escapeHtml(currencyLabel(recordCurrency(l)||'Unclassified'))+' · '+escapeHtml(String(l.rate||0))+'% / '+(l.period==='yearly'?'year':l.period==='none'?'no interest':'month')+'</small><span class="account-openhint">View this loan details <span>›</span></span></span><span class="account-balance"><b>'+escapeHtml(moneyFor(ledger.principalOutstanding,l))+'</b><small>Principal left</small><em>'+escapeHtml(moneyFor(ledger.interestOutstanding,l))+' interest due</em></span></button><div class="account-actions"><button class="linkbtn" onclick="payFor(\'loan\',\''+escapeHtml(l.id)+'\')">＋ Payment</button><button class="linkbtn" onclick="editLoan(\'loan\',\''+escapeHtml(l.id)+'\')">Edit details</button><button class="linkbtn danger-action" onclick="deleteLoan(\'loan\',\''+escapeHtml(l.id)+'\')">Delete account</button></div></article>';}).join('')+'</div></section>';
+ return html;
+}
+function openSinglePerson(id){const l=(state.loans||[]).find(x=>x.id===id);if(!l)return;personDetail={kind:'loan',id,tab:'overview'};current='PersonDetail';render();if(window.scrollTo)window.scrollTo({top:0,behavior:'auto'});}
 function personDetailPage(){
  const kind=personDetail.kind,l=(kind==='loan'?state.loans:state.debts).find(x=>x.id===personDetail.id);
  if(!l){current=kind==='loan'?'Loans':'Debts';return loansPage(kind);}
@@ -1017,10 +1028,11 @@ function borrowerSnapshotForLoan(l){
  const payments=(state.payments||[]).filter(p=>p.kind==='loan'&&p.account===l.id).map(p=>({accountId:l.id,accountPerson:l.person||'',date:p.date||'',amount:Number(p.amount)||0,currency:recordCurrency(p)||currency,apply:p.apply||'auto',note:p.note||'',interestApplied:Number(p.interestApplied)||0,principalApplied:Number(p.principalApplied)||0}));
  return {accountId:l.id,person:l.person||'',currency,principal:Number(l.principal)||0,principalPaid:Number(l.principalPaid)||0,rate:Number(l.rate)||0,period:l.period||'monthly',method:l.method||'simple',start:l.start||'',stop:l.stop||'',due:l.due||'',note:l.note||'',monthlyTarget:Number(l.monthlyTarget)||0,monthlyTargetSince:l.monthlyTargetSince||'',underpaymentMessage:l.underpaymentMessage||'',consecutiveUnderpaidMonths:monthlyTargetStatus(l,'loan').consecutive,principalOutstanding:ledger.principalOutstanding,interestOutstanding:ledger.interestOutstanding,monthlyInterest:ledger.monthlyInterest,unpaidMonths:ledger.unpaidMonths,interestBuckets:ledger.interestBuckets.map(b=>({accountId:l.id,accountPerson:l.person||'',currency,date:b.date,original:b.original,remaining:b.remaining})),payments};
 }
-function borrowerSnapshotForPerson(selectedLoan){
+function borrowerSnapshotForPerson(selectedLoan,selectedIds){
  const person=String(selectedLoan.person||'').trim().toLocaleLowerCase();
- const loans=(state.loans||[]).filter(l=>String(l.person||'').trim().toLocaleLowerCase()===person);
- const accounts=loans.map(borrowerSnapshotForLoan),primary=accounts.find(a=>a.accountId===selectedLoan.id)||borrowerSnapshotForLoan(selectedLoan);
+ let loans=(state.loans||[]).filter(l=>String(l.person||'').trim().toLocaleLowerCase()===person);
+ if(Array.isArray(selectedIds)&&selectedIds.length)loans=loans.filter(l=>selectedIds.includes(l.id));
+ const accounts=loans.map(borrowerSnapshotForLoan),primary=accounts.find(a=>a.accountId===selectedLoan.id)||accounts[0]||borrowerSnapshotForLoan(selectedLoan);
  return {...primary,person:selectedLoan.person||'',accounts,accountCount:accounts.length,interestBuckets:accounts.flatMap(a=>a.interestBuckets||[]),payments:accounts.flatMap(a=>a.payments||[])};
 }
 function borrowerSnapshotForShare(sh){
@@ -1064,25 +1076,40 @@ async function shareAutoBorrowerLink(){
  else{await copyAutoBorrowerLink();}}
  catch(e){if(e?.name!=='AbortError')toast('Share မရပါ။ Copy Link ကိုသုံးပါ။')}
 }
-async function autoShareBorrowerLink(accountId){
+function autoShareBorrowerLink(accountId){openBorrowerShareChooser(accountId);}
+function openBorrowerShareChooser(accountId){
  const loan=(state.loans||[]).find(x=>x.id===accountId);if(!loan)return toast('Borrower account not found');
  if(!window.fmBorrowerCloud?.ready)return toast('Owner အကောင့်နဲ့ Sign In ဝင်ပြီးမှ Share Link ဖန်တီးနိုင်ပါတယ်။');
- const snapshot=borrowerSnapshotForPerson(loan),ids=snapshot.accounts.map(a=>a.accountId),samePersonLoans=(state.loans||[]).filter(x=>String(x.person||'').trim().toLocaleLowerCase()===String(loan.person||'').trim().toLocaleLowerCase());
- if(samePersonLoans.some(a=>!recordCurrency(a)))return toast('ဒီလူရဲ့ ချေးငွေအကောင့်အားလုံးမှာ Currency သတ်မှတ်ပေးပါ။');
+ const loans=(state.loans||[]).filter(x=>String(x.person||'').trim().toLocaleLowerCase()===String(loan.person||'').trim().toLocaleLowerCase());
+ const shares=(window.fmBorrowerCloud.shares||[]).filter(sh=>sh.active&&(sh.accountId===loan.id||(Array.isArray(sh.accountIds)&&sh.accountIds.includes(loan.id))));
+ const existing=shares.find(sh=>sh.accountIds?.length)||shares[0];
+ const selectedIds=existing?(existing.accountIds||[existing.accountId]):loans.map(x=>x.id);
+ const items=loans.map((l,i)=>{const ledger=loanLedger('loan',l);return '<label class="share-loan-option" style="display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid var(--line,#e3e8f2);border-radius:12px;margin:8px 0"><input type="checkbox" name="shareLoanAccount" value="'+escapeHtml(l.id)+'" '+(selectedIds.includes(l.id)?'checked':'')+' style="margin-top:4px;width:18px;height:18px"><span style="flex:1"><b>Loan '+(i+1)+' · '+escapeHtml(l.person||'Borrower')+'</b><br><small>'+escapeHtml(currencyLabel(recordCurrency(l)||'Unclassified'))+' · '+escapeHtml(String(l.rate||0))+'% / '+(l.period==='yearly'?'year':l.period==='none'?'no interest':'month')+'</small><br><small>Principal left: '+escapeHtml(moneyFor(ledger.principalOutstanding,l))+' · Interest due: '+escapeHtml(moneyFor(ledger.interestOutstanding,l))+'</small></span></label>';}).join('');
+ openModal('Choose loan accounts to share','<p>Select the accounts to include in this one private link. You can select all '+loans.length+' accounts or only the ones you want to share.</p><div style="max-height:48vh;overflow:auto">'+items+'</div><div class="formactions"><button class="pill" onclick="document.querySelectorAll(\'input[name=shareLoanAccount]\').forEach(x=>x.checked=true)">Select all</button><button class="pill" onclick="document.querySelectorAll(\'input[name=shareLoanAccount]\').forEach(x=>x.checked=false)">Clear</button><button class="pill" onclick="closeModal()">Cancel</button><button class="primary" onclick="createSelectedBorrowerShare(\''+escapeHtml(loan.id)+'\')">Create Share Link</button></div>');
+}
+async function createSelectedBorrowerShare(accountId){
+ const loan=(state.loans||[]).find(x=>x.id===accountId);if(!loan)return toast('Borrower account not found');
+ const ids=Array.from(document.querySelectorAll('input[name="shareLoanAccount"]:checked')).map(x=>x.value);
+ if(!ids.length)return toast('Select at least one loan account to share');
+ const loans=(state.loans||[]).filter(x=>ids.includes(x.id)&&String(x.person||'').trim().toLocaleLowerCase()===String(loan.person||'').trim().toLocaleLowerCase());
+ if(loans.length!==ids.length)return toast('Please select accounts belonging to this borrower only');
+ if(loans.some(x=>!recordCurrency(x)))return toast('Assign a currency to every selected loan account first');
+ const snapshot=borrowerSnapshotForPerson(loan,ids),sortedIds=ids.slice().sort();
  try{
-  let sh=(window.fmBorrowerCloud.shares||[]).find(x=>x.active&&Array.isArray(x.accountIds)&&ids.length===x.accountIds.length&&ids.every(id=>x.accountIds.includes(id)));
+  const shares=window.fmBorrowerCloud.shares||[];
+  let sh=shares.find(x=>x.active&&Array.isArray(x.accountIds)&&x.accountIds.length===sortedIds.length&&x.accountIds.slice().sort().every((id,i)=>id===sortedIds[i]));
   let url;
-  if(sh){url=borrowerShareUrl(sh.id);await window.fmBorrowerCloud.updateShare(sh.id,snapshot);}
-  else{url=await window.fmBorrowerCloud.createShare(loan.id,snapshot,{silent:true});}
-  showBorrowerShareActions(url,loan.person+' · '+ids.length+' loan account(s)');
- }catch(e){toast('Auto Share Link မဖန်တီးနိုင်ပါ: '+String(e?.message||e));}
+  if(sh){await window.fmBorrowerCloud.updateShare(sh.id,snapshot);url=borrowerShareUrl(sh.id);}
+  else{url=await window.fmBorrowerCloud.createShare(loan.id,snapshot);sh=(window.fmBorrowerCloud.shares||[]).find(x=>x.accountId===loan.id&&x.active&&Array.isArray(x.accountIds)&&x.accountIds.length===ids.length&&ids.every(id=>x.accountIds.includes(id)));}
+  closeModal();showBorrowerShareActions(url,loan.person+' · '+ids.length+' selected loan account(s)');
+ }catch(e){toast('Could not create Share Link: '+String(e?.message||e));}
 }
 async function createBorrowerShareFromSelection(){const id=document.getElementById('borrowerAccountSelect')?.value;if(!id)return toast('Choose a borrower account');const l=state.loans.find(x=>x.id===id);if(!l)return toast('Borrower account not found');const snapshot=borrowerSnapshotForPerson(l);if((state.loans||[]).filter(x=>String(x.person||'').trim().toLocaleLowerCase()===String(l.person||'').trim().toLocaleLowerCase()).some(a=>!recordCurrency(a)))return toast('Assign currency to every loan account for this borrower first');try{await window.fmBorrowerCloud.createShare(l.id,snapshot);}catch(e){toast('Could not create link: '+String(e?.message||e));}}
-async function updateBorrowerShare(id){const sh=(window.fmBorrowerCloud?.shares||[]).find(x=>x.id===id);const l=state.loans.find(x=>x.id===sh?.accountId);if(!l)return toast('Loan account not found');const snapshot=borrowerSnapshotForPerson(l);if((state.loans||[]).filter(x=>String(x.person||'').trim().toLocaleLowerCase()===String(l.person||'').trim().toLocaleLowerCase()).some(a=>!recordCurrency(a)))return toast('Assign currency to every loan account for this borrower first');try{await window.fmBorrowerCloud.updateShare(id,snapshot);toast('Borrower snapshot updated with all loan accounts');}catch(e){toast('Update failed: '+String(e?.message||e));}}
+async function updateBorrowerShare(id){const sh=(window.fmBorrowerCloud?.shares||[]).find(x=>x.id===id);const l=state.loans.find(x=>x.id===sh?.accountId);if(!l)return toast('Loan account not found');const snapshot=borrowerSnapshotForPerson(l,sh.accountIds||[sh.accountId]);if(snapshot.accounts.some(a=>!a.currency))return toast('Assign currency to every selected loan account first');try{await window.fmBorrowerCloud.updateShare(id,snapshot);toast('Selected borrower accounts updated');}catch(e){toast('Update failed: '+String(e?.message||e));}}
 
 async function deleteRevokedBorrowerShare(id){const sh=(window.fmBorrowerCloud?.shares||[]).find(x=>x.id===id);if(!sh){toast('Link not found');return;}if(sh.active){toast('Close the link before deleting it');return;}if(!confirm('Permanently delete this closed borrower link? The link record will be removed. Loan and payment records will not be deleted.'))return;try{await window.fmBorrowerCloud.deleteRevokedShare(id);toast('Closed link deleted');if(window.fmBorrowerCloud?.refresh)window.fmBorrowerCloud.refresh();render();}catch(e){toast('Delete failed: '+String(e?.message||e));}}
 async function revokeBorrowerShare(id){if(!confirm('Revoke this borrower link?'))return;try{await window.fmBorrowerCloud.revokeShare(id);toast('Share link revoked');}catch(e){toast('Revoke failed: '+String(e?.message||e));}}
-async function copyBorrowerLink(id){const sh=(window.fmBorrowerCloud?.shares||[]).find(x=>x.id===id);if(!sh)return;const l=state.loans.find(x=>x.id===sh.accountId);if(!l)return toast('Loan account not found');const snapshot=borrowerSnapshotForPerson(l);if((state.loans||[]).filter(x=>String(x.person||'').trim().toLocaleLowerCase()===String(l.person||'').trim().toLocaleLowerCase()).some(a=>!recordCurrency(a)))return toast('Assign currency to every loan account for this borrower first');try{await window.fmBorrowerCloud.updateShare(id,snapshot);const url=new URL('borrower.html?token='+encodeURIComponent(id),new URL('.',window.location.href)).href;try{await navigator.clipboard.writeText(url);toast('Private link copied · all '+snapshot.accounts.length+' loan accounts included');}catch(e){openModal('Copy borrower link','<p>One private link includes all '+snapshot.accounts.length+' loan accounts for '+escapeHtml(l.person||'this borrower')+'. Send it only to this borrower.</p><textarea readonly style="width:100%;min-height:90px;padding:10px">'+escapeHtml(url)+'</textarea>');}}catch(e){toast('Could not update borrower link: '+String(e?.message||e));}}
+async function copyBorrowerLink(id){const sh=(window.fmBorrowerCloud?.shares||[]).find(x=>x.id===id);if(!sh)return;const l=state.loans.find(x=>x.id===sh.accountId);if(!l)return toast('Loan account not found');const ids=sh.accountIds||[sh.accountId],snapshot=borrowerSnapshotForPerson(l,ids);if(snapshot.accounts.some(a=>!a.currency))return toast('Assign currency to every selected loan account first');try{await window.fmBorrowerCloud.updateShare(id,snapshot);const url=new URL('borrower.html?token='+encodeURIComponent(id),new URL('.',window.location.href)).href;try{await navigator.clipboard.writeText(url);toast('Private link copied · '+snapshot.accounts.length+' selected loan account(s) included');}catch(e){openModal('Copy borrower link','<p>One private link includes '+snapshot.accounts.length+' selected loan account(s) for '+escapeHtml(l.person||'this borrower')+'. Send it only to this borrower.</p><textarea readonly style="width:100%;min-height:90px;padding:10px">'+escapeHtml(url)+'</textarea>');}}catch(e){toast('Could not update borrower link: '+String(e?.message||e));}}
 const approvingBorrowerRequests=new Set();
 const rejectingBorrowerRequests=new Set();
 async function approveBorrowerRequest(id){const req=(window.fmBorrowerCloud?.requests||[]).find(x=>x.id===id);if(!req||req.status!=='pending')return toast('Request is no longer pending');if(approvingBorrowerRequests.has(id))return toast('This request is already being processed.');if(req.paymentMethod==='bank'&&!req.receiptImage)return toast('Bank transfer receipt is missing. Ask the borrower to upload the receipt before approval.');const amount=fmt(Number(req.amount)||0,req.currency||'THB');if(!confirm('Verify the transfer receipt or cash payment before continuing.\n\nBorrower: '+String(req.borrowerName||'Borrower')+'\nAmount: '+amount+'\nDate: '+String(req.date||'—')+'\n\nApprove and record this payment once?'))return;approvingBorrowerRequests.add(id);render();try{if(!window.fmApp?.applyBorrowerPaymentRequest(req))return;await window.fmBorrowerCloud.setRequestStatus(id,'approved');const l=state.loans.find(x=>x.id===req.accountId);let snapshot=null;if(l){const sh=(window.fmBorrowerCloud?.shares||[]).find(x=>x.id===req.token);snapshot=sh?borrowerSnapshotForShare(sh):borrowerSnapshotForLoan(l);if(req.token)await window.fmBorrowerCloud.updateShare(req.token,snapshot);}if(req.token)await window.fmBorrowerCloud.sendPaymentDecisionMessage(req.token,req,'approved','',snapshot);toast('Approved and added to Payment History. Borrower notified in Chat.');render();}catch(e){toast('Payment may already be recorded. Check Payment History before trying again. Status, Share Link, or Chat notification needs verification: '+String(e?.message||e));}finally{approvingBorrowerRequests.delete(id);render();}}
@@ -1096,7 +1123,10 @@ function render(){
  const labels={Dashboard:'Dashboard',Income:'Income',Expenses:'Expenses',Savings:'Savings & Goals',Loans:'Loans Given',Debts:'My Debts',Payments:'Payment History',Payroll:'Payroll',Budget:'Budget Planner',Reports:'Reports',BorrowerPortal:'Borrower Portal',Messages:'Borrower Messages',Settings:'Settings & Backup'};
  try{
   if(!el)throw new Error('Main content element is missing');
-  if(current==='PersonDetail'){
+  if(current==='BorrowerGroup'){
+   document.getElementById('crumbPage').textContent=borrowerGroupPerson||'Borrower accounts';
+   el.innerHTML=borrowerGroupPage();
+  }else if(current==='PersonDetail'){
    const list=personDetail.kind==='loan'?state.loans:state.debts;
    const person=list.find(x=>x&&x.id===personDetail.id);
    document.getElementById('crumbPage').textContent=person?person.person:'Account details';
