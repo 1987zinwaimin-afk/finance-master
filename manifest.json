@@ -1,0 +1,20 @@
+{
+  "id": "/",
+  "name": "Finance Master",
+  "short_name": "Finance Master",
+  "description": "Personal finance management",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f4f6fa",
+  "theme_color": "#101c33",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
