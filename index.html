@@ -1169,7 +1169,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 // Keep the owner signed in across page refreshes and browser restarts.
-await setPersistence(auth, browserLocalPersistence);
+// If the browser blocks persistent storage, keep the app running and show a clear warning.
+let authPersistenceReady = true;
+try { await setPersistence(auth, browserLocalPersistence); }
+catch (e) { authPersistenceReady = false; console.warn("Firebase persistent login unavailable:", e?.code || e?.message || e); }
 const db = getFirestore(app);
 let currentUser = null;
 const status = (message, bad=false) => {
@@ -1479,8 +1482,8 @@ onAuthStateChanged(auth, user => {
   localDirty=false;
   startCloudListener(user);
   startBorrowerListeners(user);
-  if(user) status('Signed in as '+user.email+'. Connecting live cloud sync…');
-  else status('Not signed in. Create an account or sign in to enable cloud sync.');
+  if(user) status('Signed in as '+user.email+'. Connecting live cloud sync…'+(authPersistenceReady?'':' Persistent login is blocked by this browser; avoid closing this browser tab.'));
+  else status('Not signed in. Create an account or sign in to enable cloud sync.'+(authPersistenceReady?'':' Persistent login is blocked by this browser. Open the site in Chrome and allow site storage.'));
   if(user){setTimeout(()=>{if(currentUser&&document.getElementById('crumbPage')?.textContent==='Borrower Portal'){ensureBorrowerLinksForAll();}},900);}
 });
 </script>
