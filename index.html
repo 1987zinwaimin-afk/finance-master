@@ -658,6 +658,7 @@ button:disabled,[role="button"][aria-disabled="true"]{cursor:not-allowed;opacity
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+.expense-group-manager{margin:16px 0}.expense-group-chips{display:flex;flex-wrap:wrap;gap:10px}.expense-group-chip{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:9px 12px;border:1px solid var(--border,#e2e8f0);border-radius:12px;background:var(--card,#fff)}.expense-group-chip span{font-weight:700}.expense-group-chip button{font-size:12px;padding:5px 8px;border:1px solid var(--border,#e2e8f0);border-radius:8px;background:transparent;color:inherit}.expense-group-summary .metric{min-width:0}.expense-group-summary .metric strong{font-size:15px}.expense-group-summary .metric span{font-size:12px;overflow-wrap:anywhere}@media(max-width:700px){.expense-group-chips{display:grid;grid-template-columns:1fr}.expense-group-chip{justify-content:space-between}.expense-group-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
 <body>
@@ -1171,10 +1172,11 @@ function editTx(id){
  '<div class="field"><label>Amount</label><input name="amount" type="number" min="0.01" step="0.01" required value="'+Number(t.amount||0)+'"></div>'+currencyField(recordCurrency(t)||state.currency||'THB')+
  '<div class="field"><label>Date</label><input name="date" type="date" required value="'+escapeHtml(t.date||today())+'"></div>'+
  '<div class="field full"><label>Category</label><select name="category">'+options+'</select></div>'+
- '<div class="field full"><label>Note</label><input name="note" value="'+escapeHtml(t.note||'')+'"></div></div>'+
+ (t.type==='expense'?'<div class="field"><label>Expense group</label><select name="groupName">'+expenseGroupOptions(t.groupName||'')+'</select></div><div class="field"><label>Payment method</label><select name="paymentMethod"><option value="cash" '+((t.paymentMethod||'cash')==='cash'?'selected':'')+'>Cash</option><option value="bank" '+(t.paymentMethod==='bank'?'selected':'')+'>Bank transfer / bank</option><option value="card" '+(t.paymentMethod==='card'?'selected':'')+'>Bank card</option><option value="other" '+(t.paymentMethod==='other'?'selected':'')+'>Other</option></select></div>':'')+
+ '<div class="field full"><label>Note / detailed costs</label><textarea name="note" rows="2">'+escapeHtml(t.note||'')+'</textarea></div></div>'+
  '<div class="formactions"><button type="button" class="pill" onclick="closeModal()">Cancel</button><button class="primary" type="submit">Save changes</button></div></form>');
  const form=document.getElementById('editTxForm');
- form.onsubmit=function(e){e.preventDefault();const d=new FormData(form),amount=Number(d.get('amount')),title=String(d.get('title')||'').trim();if(!title||!Number.isFinite(amount)||amount<=0){toast('Enter a valid description and amount');return}Object.assign(t,{title,amount,currency:d.get('currency')||recordCurrency(t)||state.currency||'THB',date:d.get('date'),category:d.get('category'),note:d.get('note')});save();closeModal();render();toast('Transaction updated')};
+ form.onsubmit=function(e){e.preventDefault();const d=new FormData(form),amount=Number(d.get('amount')),title=String(d.get('title')||'').trim();if(!title||!Number.isFinite(amount)||amount<=0){toast('Enter a valid description and amount');return}Object.assign(t,{title,amount,currency:d.get('currency')||recordCurrency(t)||state.currency||'THB',date:d.get('date'),category:d.get('category'),note:d.get('note'),...(t.type==='expense'?{groupName:String(d.get('groupName')||''),paymentMethod:String(d.get('paymentMethod')||'cash')}:{})});save();closeModal();render();toast('Transaction updated')};
 }
 function deleteTx(id){if(confirm('Delete this transaction? This cannot be undone. Export a backup first if needed.')){state.transactions=state.transactions.filter(t=>t.id!==id);save();render();toast('Transaction deleted')}}
 function editLoan(kind,id){
