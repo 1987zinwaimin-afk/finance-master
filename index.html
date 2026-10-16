@@ -1705,7 +1705,9 @@ const startCloudListener = user => {
   if(!user) { window.fmSecurityState='signed-out'; if(window.fmApp?.render)window.fmApp.render(); return; }
   if(!isOwnerUser(user)) { syncReady=false; localDirty=false; window.fmSecurityState='not-owner'; status('This Gmail is not the designated Owner account. Owner finance data is hidden; no data was changed.',true); if(window.fmApp?.render)window.fmApp.render(); return; }
   window.fmSecurityState='checking';if(window.fmApp?.render)window.fmApp.render();
+  let cloudGateTimeout=setTimeout(()=>{if(currentUser&&currentUser.uid===user.uid&&window.fmSecurityState==='checking'){window.fmSecurityState='error';status('Cloud verification is taking too long. Check your internet connection, then reload. Your saved records have not been deleted.',true);if(window.fmApp?.render)window.fmApp.render();}},15000);
   stopCloudListener=onSnapshot(cloudRef(user.uid), async snap => {
+    clearTimeout(cloudGateTimeout);
     if(!currentUser || currentUser.uid!==user.uid) return;
     // Auth can resolve before the classic app script has exposed fmApp.
     // Wait for app initialization before reading or replacing any local data.
@@ -1779,6 +1781,7 @@ const startCloudListener = user => {
       window.fmApp.toast('Cloud changes received');
     }
   }, e => {
+    clearTimeout(cloudGateTimeout);
     syncReady=false;window.fmSecurityState='error';
     status('Private cloud access failed: '+errText(e)+'. Finance records remain hidden until access is restored.',true);
     if(window.fmApp?.render)window.fmApp.render();
