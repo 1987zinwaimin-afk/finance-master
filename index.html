@@ -1190,7 +1190,7 @@ catch (e) { authPersistenceReady = false; console.warn("Firebase persistent logi
 const db = getFirestore(app);
 // Only this verified Gmail may open the Owner finance workspace. Other accounts remain data-blind.
 // Owner Gmail must be explicitly provided by the user; deny access until configured.
-const OWNER_EMAIL = '';
+const OWNER_EMAIL = '1987zinwaimin@gmail.com';
 const isOwnerUser = user => !!OWNER_EMAIL && !!user?.email && user.email.trim().toLowerCase() === OWNER_EMAIL.toLowerCase();
 let currentUser = null;
 window.fmSecurityState = 'checking';
