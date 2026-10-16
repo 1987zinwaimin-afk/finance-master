@@ -3,7 +3,7 @@
   "name": "Finance Master",
   "short_name": "Finance Master",
   "description": "Personal finance management",
-  "start_url": "/",
+  "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
@@ -11,19 +11,19 @@
   "theme_color": "#101c33",
   "icons": [
     {
-      "src": "/icon-192.svg?v=mk20261016",
+      "src": "/icon-192.svg?v=mk20261016b",
       "sizes": "192x192",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/icon-512.svg?v=mk20261016",
+      "src": "/icon-512.svg?v=mk20261016b",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/icon-512.svg?v=mk20261016",
+      "src": "/icon-512.svg?v=mk20261016b",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "maskable"
