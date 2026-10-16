@@ -1013,9 +1013,21 @@ function borrowerPortalPage(){
 }
 function refreshBorrowerShareForLoan(l){if(!l||!window.fmBorrowerCloud?.ready)return;const sh=(window.fmBorrowerCloud.shares||[]).find(x=>x.accountId===l.id&&x.active);if(sh)window.fmBorrowerCloud.updateShare(sh.id,borrowerSnapshotForLoan(l)).catch(e=>toast('Payment saved; borrower snapshot refresh failed: '+String(e?.message||e)));}
 function borrowerSnapshotForLoan(l){
- const ledger=loanLedger('loan',l);
- const payments=(state.payments||[]).filter(p=>p.kind==='loan'&&p.account===l.id).map(p=>({date:p.date||'',amount:Number(p.amount)||0,currency:recordCurrency(p)||recordCurrency(l)||'THB',apply:p.apply||'auto',note:p.note||'',interestApplied:Number(p.interestApplied)||0,principalApplied:Number(p.principalApplied)||0}));
- return {person:l.person||'',currency:recordCurrency(l)||'THB',principal:Number(l.principal)||0,principalPaid:Number(l.principalPaid)||0,rate:Number(l.rate)||0,period:l.period||'monthly',method:l.method||'simple',start:l.start||'',stop:l.stop||'',due:l.due||'',note:l.note||'',monthlyTarget:Number(l.monthlyTarget)||0,monthlyTargetSince:l.monthlyTargetSince||'',underpaymentMessage:l.underpaymentMessage||'',consecutiveUnderpaidMonths:monthlyTargetStatus(l,'loan').consecutive,principalOutstanding:ledger.principalOutstanding,interestOutstanding:ledger.interestOutstanding,monthlyInterest:ledger.monthlyInterest,unpaidMonths:ledger.unpaidMonths,interestBuckets:ledger.interestBuckets.map(b=>({date:b.date,original:b.original,remaining:b.remaining})),payments};
+ const ledger=loanLedger('loan',l),currency=recordCurrency(l)||'THB';
+ const payments=(state.payments||[]).filter(p=>p.kind==='loan'&&p.account===l.id).map(p=>({accountId:l.id,accountPerson:l.person||'',date:p.date||'',amount:Number(p.amount)||0,currency:recordCurrency(p)||currency,apply:p.apply||'auto',note:p.note||'',interestApplied:Number(p.interestApplied)||0,principalApplied:Number(p.principalApplied)||0}));
+ return {accountId:l.id,person:l.person||'',currency,principal:Number(l.principal)||0,principalPaid:Number(l.principalPaid)||0,rate:Number(l.rate)||0,period:l.period||'monthly',method:l.method||'simple',start:l.start||'',stop:l.stop||'',due:l.due||'',note:l.note||'',monthlyTarget:Number(l.monthlyTarget)||0,monthlyTargetSince:l.monthlyTargetSince||'',underpaymentMessage:l.underpaymentMessage||'',consecutiveUnderpaidMonths:monthlyTargetStatus(l,'loan').consecutive,principalOutstanding:ledger.principalOutstanding,interestOutstanding:ledger.interestOutstanding,monthlyInterest:ledger.monthlyInterest,unpaidMonths:ledger.unpaidMonths,interestBuckets:ledger.interestBuckets.map(b=>({accountId:l.id,accountPerson:l.person||'',currency,date:b.date,original:b.original,remaining:b.remaining})),payments};
+}
+function borrowerSnapshotForPerson(selectedLoan){
+ const person=String(selectedLoan.person||'').trim().toLocaleLowerCase();
+ const loans=(state.loans||[]).filter(l=>String(l.person||'').trim().toLocaleLowerCase()===person);
+ const accounts=loans.map(borrowerSnapshotForLoan),primary=accounts.find(a=>a.accountId===selectedLoan.id)||borrowerSnapshotForLoan(selectedLoan);
+ return {...primary,person:selectedLoan.person||'',accounts,accountCount:accounts.length,interestBuckets:accounts.flatMap(a=>a.interestBuckets||[]),payments:accounts.flatMap(a=>a.payments||[])};
+}
+function borrowerSnapshotForShare(sh){
+ const ids=Array.isArray(sh?.accountIds)&&sh.accountIds.length?sh.accountIds:(Array.isArray(sh?.snapshot?.accounts)?sh.snapshot.accounts.map(a=>a.accountId):[sh?.accountId]);
+ const loans=(state.loans||[]).filter(l=>ids.includes(l.id));
+ if(!loans.length)return sh?.snapshot||null;
+ return loans.length>1?borrowerSnapshotForPerson(loans[0]):borrowerSnapshotForLoan(loans[0]);
 }
 let borrowerAutoCreateRunning=false;
 const borrowerAutoCreateAttempted=new Set();
@@ -1055,16 +1067,17 @@ async function shareAutoBorrowerLink(){
 async function autoShareBorrowerLink(accountId){
  const loan=(state.loans||[]).find(x=>x.id===accountId);if(!loan)return toast('Borrower account not found');
  if(!window.fmBorrowerCloud?.ready)return toast('Owner အကောင့်နဲ့ Sign In ဝင်ပြီးမှ Share Link ဖန်တီးနိုင်ပါတယ်။');
- if(!recordCurrency(loan))return toast('ဒီအကောင့်ရဲ့ Currency ကို အရင်သတ်မှတ်ပါ။');
+ const snapshot=borrowerSnapshotForPerson(loan),ids=snapshot.accounts.map(a=>a.accountId);
+ if(snapshot.accounts.some(a=>!a.currency))return toast('ဒီလူရဲ့ ချေးငွေအကောင့်အားလုံးမှာ Currency သတ်မှတ်ပေးပါ။');
  try{
-  let sh=(window.fmBorrowerCloud.shares||[]).find(x=>x.accountId===accountId&&x.active);
+  let sh=(window.fmBorrowerCloud.shares||[]).find(x=>x.active&&Array.isArray(x.accountIds)&&ids.length===x.accountIds.length&&ids.every(id=>x.accountIds.includes(id)));
   let url;
-  if(sh){url=borrowerShareUrl(sh.id);}
-  else{url=await window.fmBorrowerCloud.createShare(accountId,borrowerSnapshotForLoan(loan),{silent:true});}
-  showBorrowerShareActions(url,loan.person);
+  if(sh){url=borrowerShareUrl(sh.id);await window.fmBorrowerCloud.updateShare(sh.id,snapshot);}
+  else{url=await window.fmBorrowerCloud.createShare(loan.id,snapshot,{silent:true});}
+  showBorrowerShareActions(url,loan.person+' · '+ids.length+' loan account(s)');
  }catch(e){toast('Auto Share Link မဖန်တီးနိုင်ပါ: '+String(e?.message||e));}
 }
-async function createBorrowerShareFromSelection(){const id=document.getElementById('borrowerAccountSelect')?.value;if(!id)return toast('Choose a borrower account');const l=state.loans.find(x=>x.id===id);if(!l)return toast('Borrower account not found');if(!recordCurrency(l))return toast('Assign a currency before sharing');try{await window.fmBorrowerCloud.createShare(l.id,borrowerSnapshotForLoan(l));}catch(e){toast('Could not create link: '+String(e?.message||e));}}
+async function createBorrowerShareFromSelection(){const id=document.getElementById('borrowerAccountSelect')?.value;if(!id)return toast('Choose a borrower account');const l=state.loans.find(x=>x.id===id);if(!l)return toast('Borrower account not found');const snapshot=borrowerSnapshotForPerson(l);if(snapshot.accounts.some(a=>!a.currency))return toast('Assign currency to every loan account for this borrower first');try{await window.fmBorrowerCloud.createShare(l.id,snapshot);}catch(e){toast('Could not create link: '+String(e?.message||e));}}
 async function updateBorrowerShare(id){const sh=(window.fmBorrowerCloud?.shares||[]).find(x=>x.id===id);const l=state.loans.find(x=>x.id===sh?.accountId);if(!l)return toast('Loan account not found');try{await window.fmBorrowerCloud.updateShare(id,borrowerSnapshotForLoan(l));toast('Borrower snapshot updated');}catch(e){toast('Update failed: '+String(e?.message||e));}}
 
 async function deleteRevokedBorrowerShare(id){const sh=(window.fmBorrowerCloud?.shares||[]).find(x=>x.id===id);if(!sh){toast('Link not found');return;}if(sh.active){toast('Close the link before deleting it');return;}if(!confirm('Permanently delete this closed borrower link? The link record will be removed. Loan and payment records will not be deleted.'))return;try{await window.fmBorrowerCloud.deleteRevokedShare(id);toast('Closed link deleted');if(window.fmBorrowerCloud?.refresh)window.fmBorrowerCloud.refresh();render();}catch(e){toast('Delete failed: '+String(e?.message||e));}}
@@ -1401,12 +1414,12 @@ window.fmBorrowerCloud={
  async createShare(accountId,snapshot,options={}){
   if(!currentUser)throw new Error('Sign in to Finance Master first.');
   const token=Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,'0')).join('');
-  await setDoc(doc(db,'borrowerShares',token),{ownerUid:currentUser.uid,accountId,borrowerName:String(snapshot.person||'Borrower'),currency:snapshot.currency||'THB',snapshot,ownerData:ownerDataSafe(),active:true,createdAt:serverTimestamp(),updatedAt:serverTimestamp(),schemaVersion:1});
+  await setDoc(doc(db,'borrowerShares',token),{ownerUid:currentUser.uid,accountId,accountIds:Array.isArray(snapshot.accounts)?snapshot.accounts.map(a=>a.accountId).filter(Boolean):[accountId],borrowerName:String(snapshot.person||'Borrower'),currency:snapshot.currency||'THB',snapshot,ownerData:ownerDataSafe(),active:true,createdAt:serverTimestamp(),updatedAt:serverTimestamp(),schemaVersion:1});
   const url=new URL('borrower.html?token='+encodeURIComponent(token),new URL('.',window.location.href)).href;
   if(!options.silent){try{await navigator.clipboard.writeText(url);status('Secure borrower link created and copied. Send it only to the intended borrower.');}catch(e){status('Secure borrower link created. Use Copy private link in Borrower Portal.');}}
   startBorrowerListeners(currentUser);return url;
  },
- async updateShare(token,snapshot){if(!currentUser)throw new Error('Sign in required.');await updateDoc(doc(db,'borrowerShares',token),{snapshot,ownerData:ownerDataSafe(),borrowerName:String(snapshot.person||'Borrower'),currency:snapshot.currency||'THB',updatedAt:serverTimestamp()});},
+ async updateShare(token,snapshot){if(!currentUser)throw new Error('Sign in required.');await updateDoc(doc(db,'borrowerShares',token),{snapshot,accountIds:Array.isArray(snapshot.accounts)?snapshot.accounts.map(a=>a.accountId).filter(Boolean):[snapshot.accountId||''].filter(Boolean),ownerData:ownerDataSafe(),borrowerName:String(snapshot.person||'Borrower'),currency:snapshot.currency||'THB',updatedAt:serverTimestamp()});},
  async revokeShare(token){if(!currentUser)throw new Error('Sign in required.');await updateDoc(doc(db,'borrowerShares',token),{active:false,revokedAt:serverTimestamp()});},
  async deleteRevokedShare(token){if(!currentUser)throw new Error('Sign in required.');const sh=borrowerShares.find(x=>x.id===token&&x.ownerUid===currentUser.uid);if(!sh)throw new Error('Link not found or not owned by this account.');if(sh.active)throw new Error('Close the link before deleting it.');await firestoreDeleteDoc(doc(db,'borrowerShares',token));},
  subscribeChat(token,onMessages){if(!currentUser)throw new Error('Sign in required.');const sh=borrowerShares.find(x=>x.id===token&&x.ownerUid===currentUser.uid&&x.active);if(!sh)throw new Error('Active borrower link not found.');return onSnapshot(collection(db,'borrowerShares',token,'messages'),snap=>{const messages=snap.docs.map(d=>{const x=d.data();return {id:d.id,...x,createdAtText:borrowerTime(x.createdAt)};}).sort((a,b)=>Number(a.createdAt?.seconds||0)-Number(b.createdAt?.seconds||0));onMessages(messages);},e=>status('Chat could not load: '+e.message,true));},
