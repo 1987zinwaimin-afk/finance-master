@@ -1191,6 +1191,9 @@ const db = getFirestore(app);
 // Only this verified Gmail may open the Owner finance workspace. Other accounts remain data-blind.
 const OWNER_EMAIL = '1987zinwaimin@gmail.com';
 const isOwnerUser = user => !!user?.email && user.email.trim().toLowerCase() === OWNER_EMAIL.toLowerCase();
+// Only this verified Gmail may open the Owner finance workspace. Other accounts remain data-blind.
+const OWNER_EMAIL = '1987zinwaimin@gmail.com';
+const isOwnerUser = user => !!user?.email && user.email.trim().toLowerCase() === OWNER_EMAIL.toLowerCase();
 let currentUser = null;
 window.fmSecurityState = 'checking';
 const status = (message, bad=false) => {
@@ -1371,6 +1374,7 @@ const startCloudListener = user => {
   if(stopCloudListener){stopCloudListener();stopCloudListener=null;}
   syncReady=false; syncConflict=false; initialSnapshotHandled=false; localDirty=false; lastCloudSignature='';
   if(!user) { window.fmSecurityState='signed-out'; if(window.fmApp?.render)window.fmApp.render(); return; }
+  if(!isOwnerUser(user)) { syncReady=false; localDirty=false; window.fmSecurityState='not-owner'; status('This Gmail is not the designated Owner account. Owner finance data is hidden; no data was changed.',true); if(window.fmApp?.render)window.fmApp.render(); return; }
   if(!isOwnerUser(user)) { syncReady=false; localDirty=false; window.fmSecurityState='not-owner'; status('This Gmail is not the designated Owner account. Owner finance data is hidden; no data was changed.',true); if(window.fmApp?.render)window.fmApp.render(); return; }
   window.fmSecurityState='checking';if(window.fmApp?.render)window.fmApp.render();
   stopCloudListener=onSnapshot(cloudRef(user.uid), async snap => {
