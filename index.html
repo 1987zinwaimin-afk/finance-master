@@ -1156,7 +1156,7 @@ window.fmApp={getState:()=>state,replaceState:(next)=>{state=next;save();render(
 </script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, deleteDoc as firestoreDeleteDoc, onSnapshot, serverTimestamp, collection, query, where, addDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 const firebaseConfig = {
   apiKey: "AIzaSyDCNyu8OFTZ2gAxq5lCbpTDd_bUTyO8Rr0",
@@ -1168,6 +1168,8 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+// Keep the owner signed in across page refreshes and browser restarts.
+await setPersistence(auth, browserLocalPersistence);
 const db = getFirestore(app);
 let currentUser = null;
 const status = (message, bad=false) => {
