@@ -669,6 +669,10 @@ button:disabled,[role="button"][aria-disabled="true"]{cursor:not-allowed;opacity
 .expense-page-slide .expense-group-manager{margin:0 0 12px}
 .expense-page-slide .expense-group-chips{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain}
 .expense-page-slide .expense-group-chip{flex:0 0 min(82%,300px)}
+/* Keep every expense-group total card inside the Overview slide as a compact horizontal strip. */
+.expense-page-slide:first-child .expense-group-summary{display:flex;flex-flow:row nowrap;gap:10px;overflow-x:auto;overflow-y:hidden;padding:4px 2px 12px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scrollbar-width:thin}
+.expense-page-slide:first-child .expense-group-summary .metric{flex:0 0 min(72%,220px);width:min(72%,220px);min-width:0;box-sizing:border-box;scroll-snap-align:start}
+.expense-page-slide:first-child .expense-group-summary .metric span{display:block;overflow-wrap:anywhere}
 @media(max-width:700px){.expense-page-track{gap:10px;scroll-snap-type:x proximity}.expense-page-slide{flex-basis:calc(100% - 4px);width:calc(100% - 4px)}.expense-page-slide .cards{grid-template-columns:repeat(2,minmax(0,1fr))}.expense-page-slide .expense-group-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.expense-page-slide .panel{padding:16px}}
 @media(min-width:701px){.expense-page-track{display:grid;grid-template-columns:1fr;overflow:visible}.expense-page-slide{width:100%}.expense-page-hint{display:none}}
 /* Keep modal actions visible above the fixed mobile navigation. */
