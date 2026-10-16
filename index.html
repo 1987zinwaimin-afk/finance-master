@@ -598,6 +598,41 @@ body.fm-dark:not(.fm-login-mode) .sidebar{background:linear-gradient(165deg,#0a1
 body.fm-dark:not(.fm-login-mode) .avatar{color:#172033}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}}
 
+
+/* UI refinement pass: clearer interaction states and complete dark surfaces */
+button:not(:disabled):hover,.pill:hover,.linkbtn:hover{filter:brightness(.98);transform:translateY(-1px)}
+button:disabled{opacity:.52;cursor:not-allowed;transform:none}
+.nav button.active,.sidebar nav button.active{border-color:#d8b56d66!important;background:linear-gradient(100deg,#d8b56d24,#d8b56d08)!important;color:#f0d28d!important}
+.metrichead{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.metric strong{overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.tablewrap{border-radius:16px;border:1px solid var(--line);overflow:auto}
+table{border-collapse:separate;border-spacing:0}
+th{font-size:12px;letter-spacing:.025em}
+td,th{padding:12px 13px}
+@media(max-width:700px){
+  td,th{padding:10px 11px}
+  .modalback{padding:12px!important;align-items:flex-end!important}
+  .modal{width:100%!important;max-width:100%!important;max-height:88dvh;overflow:auto;border-radius:22px 22px 16px 16px!important}
+  .modalhead{position:sticky;top:0;z-index:2;background:var(--card);padding-bottom:12px}
+  .topbar{gap:8px}
+  .crumb{min-width:0}
+  .crumb span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+}
+body.fm-dark:not(.fm-login-mode) .modal,
+body.fm-dark:not(.fm-login-mode) .modalhead,
+body.fm-dark:not(.fm-login-mode) .modalback{background:var(--card);color:var(--ink)}
+body.fm-dark:not(.fm-login-mode) .modal{border:1px solid var(--line);box-shadow:0 24px 70px #0008}
+body.fm-dark:not(.fm-login-mode) .modalback{background:rgba(2,7,16,.76)!important}
+body.fm-dark:not(.fm-login-mode) .empty{color:var(--muted);border-color:var(--line)}
+body.fm-dark:not(.fm-login-mode) .chart{background:var(--surface-soft);border-color:var(--line);border-radius:16px}
+body.fm-dark:not(.fm-login-mode) .chart svg text{fill:var(--muted)}
+body.fm-dark:not(.fm-login-mode) .chart svg line{stroke:var(--line)}
+body.fm-dark:not(.fm-login-mode) .linkbtn{color:#e5c47d}
+body.fm-dark:not(.fm-login-mode) .field label{color:var(--muted)}
+body.fm-dark:not(.fm-login-mode) input::placeholder,
+body.fm-dark:not(.fm-login-mode) textarea::placeholder{color:#8493aa}
+body.fm-dark:not(.fm-login-mode) .toast{background:#1a2940;color:var(--ink);border:1px solid var(--line);box-shadow:0 12px 32px #0005}
+
 </style></head>
 <body>
 <div class="app">
