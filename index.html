@@ -1128,8 +1128,8 @@ async function rejectBorrowerRequest(id){const req=(window.fmBorrowerCloud?.requ
 
 function securityGatePage(){
  const mode=window.fmSecurityState||'checking';
- const headline=mode==='checking'?'Checking account access…':mode==='no-cloud'?'No private cloud records for this account':mode==='error'?'Private cloud access unavailable':'Sign in to view private finance records';
- const message=mode==='checking'?'Finance Master is checking the signed-in account before showing any finance data.':mode==='no-cloud'?'This account has no cloud backup yet. For privacy, records saved on this device are hidden and will not be uploaded automatically. Sign in with the account that owns the existing cloud records.':mode==='error'?'The account could not be verified against its private cloud record. Finance data remains hidden until access is restored.':'You are signed out. Sign in with the owner account to view its private records. Other accounts cannot view records stored in a different account’s cloud.';
+  const headline=mode==='checking'?'Checking account access…':mode==='not-owner'?'Owner data is hidden for this account':mode==='no-cloud'?'No private cloud records for this account':mode==='error'?'Private cloud access unavailable':'Sign in to view private finance records';
+  const message=mode==='checking'?'Finance Master is checking the signed-in account before showing any finance data.':mode==='not-owner'?'You are signed in, but this Gmail is not authorized as the Finance Master Owner. All Owner-related finance records remain blank and hidden. Sign out and use the designated Owner Gmail to view them.':mode==='no-cloud'?'This account has no cloud backup yet. For privacy, records saved on this device are hidden and will not be uploaded automatically. Sign in with the account that owns the existing cloud records.':mode==='error'?'The account could not be verified against its private cloud record. Finance data remains hidden until access is restored.':'You are signed out. Sign in with the owner account to view its private records. Other accounts cannot view records stored in a different account’s cloud.';
  return '<div class="pagehead"><div><h1>Private Finance Workspace</h1><p>Account-protected finance data</p></div></div><section class="panel" style="max-width:760px;margin:20px auto"><div style="font-size:34px;margin-bottom:12px">🔐</div><h2 style="margin-top:0">'+escapeHtml(headline)+'</h2><p class="sub">'+escapeHtml(message)+'</p><div class="notice" style="margin:16px 0">Use the same Gmail/password account that owns your Finance Master cloud backup. Signing in with another account will not import or reveal the owner’s records.</div><div id="fmAuthStatus" class="notice">Firebase connection status will appear here.</div><div class="formgrid"><div class="field"><label>Email</label><input id="fmEmail" type="email" autocomplete="username" placeholder="Owner Gmail address"></div><div class="field"><label>Password</label><input id="fmPassword" type="password" autocomplete="current-password" placeholder="Account password"></div></div><div class="formactions" style="justify-content:flex-start;flex-wrap:wrap"><button class="primary" onclick="window.fmSignIn()">Sign in</button><button class="pill" onclick="window.fmSignUp()">Create account</button><button class="pill" onclick="window.fmSignOut()">Sign out</button></div><p class="sub" style="margin-top:14px">Existing device data has not been deleted. It stays hidden until the correct cloud account is available.</p></section>';
 }
 function render(){
@@ -1188,6 +1188,9 @@ let authPersistenceReady = true;
 try { await setPersistence(auth, browserLocalPersistence); }
 catch (e) { authPersistenceReady = false; console.warn("Firebase persistent login unavailable:", e?.code || e?.message || e); }
 const db = getFirestore(app);
+// Only this verified Gmail may open the Owner finance workspace. Other accounts remain data-blind.
+const OWNER_EMAIL = '1987zinwaimin@gmail.com';
+const isOwnerUser = user => !!user?.email && user.email.trim().toLowerCase() === OWNER_EMAIL.toLowerCase();
 let currentUser = null;
 window.fmSecurityState = 'checking';
 const status = (message, bad=false) => {
@@ -1368,6 +1371,7 @@ const startCloudListener = user => {
   if(stopCloudListener){stopCloudListener();stopCloudListener=null;}
   syncReady=false; syncConflict=false; initialSnapshotHandled=false; localDirty=false; lastCloudSignature='';
   if(!user) { window.fmSecurityState='signed-out'; if(window.fmApp?.render)window.fmApp.render(); return; }
+  if(!isOwnerUser(user)) { syncReady=false; localDirty=false; window.fmSecurityState='not-owner'; status('This Gmail is not the designated Owner account. Owner finance data is hidden; no data was changed.',true); if(window.fmApp?.render)window.fmApp.render(); return; }
   window.fmSecurityState='checking';if(window.fmApp?.render)window.fmApp.render();
   stopCloudListener=onSnapshot(cloudRef(user.uid), async snap => {
     if(!currentUser || currentUser.uid!==user.uid) return;
@@ -1492,8 +1496,9 @@ onAuthStateChanged(auth, user => {
   if(syncTimer){clearTimeout(syncTimer);syncTimer=null;}
   localDirty=false;
   startCloudListener(user);
-  startBorrowerListeners(user);
-  if(user) status('Signed in as '+user.email+'. Connecting live cloud sync…'+(authPersistenceReady?'':' Persistent login is blocked by this browser; avoid closing this browser tab.'));
+  startBorrowerListeners(isOwnerUser(user)?user:null);
+  if(user && isOwnerUser(user)) status('Signed in as Owner '+user.email+'. Connecting private cloud sync…'+(authPersistenceReady?'':' Persistent login is blocked by this browser; avoid closing this browser tab.'));
+   else if(user) status('Signed in as '+user.email+', but this is not the Owner Gmail. Owner finance data is hidden and unchanged.',true);
   else status('Not signed in. Create an account or sign in to enable cloud sync.'+(authPersistenceReady?'':' Persistent login is blocked by this browser. Open the site in Chrome and allow site storage.'));
   if(!user){window.fmSecurityState='signed-out';if(window.fmApp?.render)window.fmApp.render();}
   if(user){setTimeout(()=>{if(currentUser&&document.getElementById('crumbPage')?.textContent==='Borrower Portal'){ensureBorrowerLinksForAll();}},900);}
