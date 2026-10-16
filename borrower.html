@@ -217,6 +217,29 @@ boot();;
  Object.assign(dict.th,{
  'PRIVATE BORROWER PORTAL':'พอร์ทัลผู้กู้ส่วนตัว','Loading your private account…':'กำลังโหลดบัญชีส่วนตัวของคุณ…','Read-only account access · Payment requests require owner approval':'ดูได้อย่างเดียว · คำขอชำระเงินต้องได้รับอนุมัติจากเจ้าของ','Read only':'ดูได้อย่างเดียว','Your personal loan account ·':'บัญชีเงินกู้ส่วนตัวของคุณ ·','Due date:':'วันครบกำหนด:','Not set':'ยังไม่ได้กำหนด','Loan summary':'สรุปเงินกู้','Original principal':'เงินต้นเริ่มต้น','Principal remaining':'เงินต้นคงเหลือ','Interest remaining':'ดอกเบี้ยคงเหลือ','Monthly interest':'ดอกเบี้ยรายเดือน','Interest rate':'อัตราดอกเบี้ย','yearly':'รายปี','monthly':'รายเดือน','no interest':'ไม่มีดอกเบี้ย','Unpaid months':'เดือนที่ค้างชำระ','Monthly statement':'รายการรายเดือน','Choose a month to inspect interest and payments.':'เลือกเดือนเพื่อตรวจสอบดอกเบี้ยและการชำระเงิน','Month':'เดือน','Interest ledger':'บัญชีดอกเบี้ย','Month due':'เดือนที่ครบกำหนด','Interest':'ดอกเบี้ย','Remaining':'คงเหลือ','Status':'สถานะ','Unpaid':'ค้างชำระ','Paid':'ชำระแล้ว','No interest ledger entries for this month.':'ไม่มีรายการดอกเบี้ยในเดือนนี้','Payments this month':'การชำระเงินเดือนนี้','Date':'วันที่','Details':'รายละเอียด','Amount':'จำนวนเงิน','Payment':'การชำระเงิน','No recorded payments for this month.':'ไม่มีรายการชำระเงินในเดือนนี้','Send payment request':'ส่งคำขอชำระเงิน','This sends a notification to the owner. It does not immediately change your loan balance or payment history.':'ระบบจะแจ้งเจ้าของ คำขอนี้จะไม่เปลี่ยนยอดเงินกู้หรือประวัติการชำระทันที','Expected payment date':'วันที่คาดว่าจะชำระ','Payment type requested':'ประเภทการชำระที่ขอ','Automatic — interest first, then principal':'อัตโนมัติ — ดอกเบี้ยก่อน แล้วจึงเงินต้น','Interest only':'ดอกเบี้ยเท่านั้น','Principal only':'เงินต้นเท่านั้น','Note (optional)':'หมายเหตุ (ไม่บังคับ)','Transfer reference or message':'เลขอ้างอิงการโอนหรือข้อความ','Send request to owner':'ส่งคำขอให้เจ้าของ','Enter a valid amount and date.':'กรุณากรอกจำนวนเงินและวันที่ให้ถูกต้อง','Request sent to the owner. Your official loan balance will change only after approval.':'ส่งคำขอถึงเจ้าของแล้ว ยอดเงินกู้จะเปลี่ยนหลังอนุมัติเท่านั้น','Could not send the request. The link may have been revoked or database security rules may not be configured yet.':'ส่งคำขอไม่ได้ ลิงก์อาจถูกยกเลิกหรือกฎความปลอดภัยของฐานข้อมูลยังไม่พร้อม','This borrower link is missing its access token.':'ลิงก์ผู้กู้ไม่มีโทเคนเข้าใช้งาน','This link is invalid, unavailable, or has been revoked.':'ลิงก์ไม่ถูกต้อง ใช้งานไม่ได้ หรือถูกยกเลิกแล้ว','This borrower link has been revoked. Contact the owner.':'ลิงก์นี้ถูกยกเลิกแล้ว โปรดติดต่อเจ้าของ','This account link is incomplete. Please contact the owner.':'ข้อมูลลิงก์บัญชีไม่ครบ โปรดติดต่อเจ้าของ','Private account loaded. Read-only access is active.':'โหลดบัญชีส่วนตัวแล้ว เปิดใช้งานโหมดดูอย่างเดียว','Could not load this account. Firestore share-link rules may need to be configured.':'โหลดบัญชีไม่ได้ อาจต้องตรวจสอบกฎแชร์ลิงก์ Firestore'
  });
+ Object.assign(dict.my,{
+ 'Monthly payment target':'လစဉ်ပေးချေရမည့် သတ်မှတ်ငွေ',
+ 'Monthly target:':'လစဉ်သတ်မှတ်ငွေ:',
+ 'Please pay at least the agreed amount each month.':'သဘောတူထားသော လစဉ်သတ်မှတ်ငွေကို အနည်းဆုံး ပေးချေပါ။',
+ '3-month underpayment notice':'၃ လဆက်တိုက် သတ်မှတ်ငွေမပြည့်သည့် သတိပေးချက်',
+ 'The agreed monthly amount was not paid for 3 consecutive months. Interest will be reassessed.':'သဘောတူထားသော လစဉ်သတ်မှတ်ငွေကို ၃ လဆက်တိုက် မပြည့်မီပါ။ အတိုးကို ပြန်လည်သတ်မှတ်မည်။',
+ 'Agreed amount:':'သဘောတူထားသော သတ်မှတ်ငွေ:',
+ 'Paid this month:':'ယခုလ ပေးပြီးငွေ:',
+ 'Remaining this month:':'ယခုလ ကျန်ငွေ:',
+ 'Months below target':'သတ်မှတ်ငွေ မပြည့်သောလများ',
+ 'Warning: The monthly target was missed for 3 consecutive months. Interest will be reassessed.':'သတိပေးချက်။ လစဉ်သတ်မှတ်ငွေ ၃ လဆက်တိုက် မပြည့်ပါ။ အတိုးကို ပြန်လည်သတ်မှတ်မည်။',
+ 'The monthly target has not been met for ':'လစဉ်သတ်မှတ်ငွေ မပြည့်သည်မှာ ',
+ ' consecutive months. Interest will be reassessed after 3 months.':' လဆက်တိုက် ရှိနေပါသည်။ ၃ လပြည့်ပါက အတိုးကို ပြန်လည်သတ်မှတ်မည်။',
+ 'All months are shown by default. Choose a month to filter interest and payments.':'မူလအားဖြင့် လအားလုံးကို ပြထားသည်။ အတိုးနှင့် ငွေပေးချေမှုမှတ်တမ်းများကို လအလိုက်ကြည့်ရန် လကိုရွေးပါ။',
+ 'Live account loaded · changes from the owner update automatically.':'အကောင့်ကို ချိတ်ဆက်ပြီးပါပြီ။ ပိုင်ရှင်၏ ပြောင်းလဲမှုများကို အလိုအလျောက် ပြသပါမည်။',
+ 'Loan account':'ချေးငွေအကောင့်',
+ 'How will you pay?':'မည်သို့ ပေးချေမည်နည်း။',
+ 'Bank transfer':'ဘဏ်မှ ငွေလွှဲခြင်း',
+ 'Cash':'ငွေသား',
+ 'Cancel':'မလုပ်တော့ပါ',
+ 'No interest':'အတိုးမရှိ',
+ 'All loan accounts · ':'ချေးငွေအကောင့်အားလုံး · '
+ });
  const reverse={};for(const l of Object.keys(dict)){reverse[l]={};for(const k of Object.keys(dict[l]))reverse[l][dict[l][k]]=k;}
  const getLang=()=>localStorage.getItem(key)||'en';
  function tr(text,lang){const t=text.replace(/\s+/g,' ').trim();if(!t)return text;let base=t;for(const l of Object.keys(reverse)){if(reverse[l][base]){base=reverse[l][base];break;}}const out=(dict[lang]&&dict[lang][base])||base;return text===t?out:text.replace(t,out);}
