@@ -1067,8 +1067,8 @@ async function shareAutoBorrowerLink(){
 async function autoShareBorrowerLink(accountId){
  const loan=(state.loans||[]).find(x=>x.id===accountId);if(!loan)return toast('Borrower account not found');
  if(!window.fmBorrowerCloud?.ready)return toast('Owner အကောင့်နဲ့ Sign In ဝင်ပြီးမှ Share Link ဖန်တီးနိုင်ပါတယ်။');
- const snapshot=borrowerSnapshotForPerson(loan),ids=snapshot.accounts.map(a=>a.accountId);
- if(snapshot.accounts.some(a=>!a.currency))return toast('ဒီလူရဲ့ ချေးငွေအကောင့်အားလုံးမှာ Currency သတ်မှတ်ပေးပါ။');
+ const snapshot=borrowerSnapshotForPerson(loan),ids=snapshot.accounts.map(a=>a.accountId),samePersonLoans=(state.loans||[]).filter(x=>String(x.person||'').trim().toLocaleLowerCase()===String(loan.person||'').trim().toLocaleLowerCase());
+ if(samePersonLoans.some(a=>!recordCurrency(a)))return toast('ဒီလူရဲ့ ချေးငွေအကောင့်အားလုံးမှာ Currency သတ်မှတ်ပေးပါ။');
  try{
   let sh=(window.fmBorrowerCloud.shares||[]).find(x=>x.active&&Array.isArray(x.accountIds)&&ids.length===x.accountIds.length&&ids.every(id=>x.accountIds.includes(id)));
   let url;
@@ -1077,7 +1077,7 @@ async function autoShareBorrowerLink(accountId){
   showBorrowerShareActions(url,loan.person+' · '+ids.length+' loan account(s)');
  }catch(e){toast('Auto Share Link မဖန်တီးနိုင်ပါ: '+String(e?.message||e));}
 }
-async function createBorrowerShareFromSelection(){const id=document.getElementById('borrowerAccountSelect')?.value;if(!id)return toast('Choose a borrower account');const l=state.loans.find(x=>x.id===id);if(!l)return toast('Borrower account not found');const snapshot=borrowerSnapshotForPerson(l);if(snapshot.accounts.some(a=>!a.currency))return toast('Assign currency to every loan account for this borrower first');try{await window.fmBorrowerCloud.createShare(l.id,snapshot);}catch(e){toast('Could not create link: '+String(e?.message||e));}}
+async function createBorrowerShareFromSelection(){const id=document.getElementById('borrowerAccountSelect')?.value;if(!id)return toast('Choose a borrower account');const l=state.loans.find(x=>x.id===id);if(!l)return toast('Borrower account not found');const snapshot=borrowerSnapshotForPerson(l);if((state.loans||[]).filter(x=>String(x.person||'').trim().toLocaleLowerCase()===String(l.person||'').trim().toLocaleLowerCase()).some(a=>!recordCurrency(a)))return toast('Assign currency to every loan account for this borrower first');try{await window.fmBorrowerCloud.createShare(l.id,snapshot);}catch(e){toast('Could not create link: '+String(e?.message||e));}}
 async function updateBorrowerShare(id){const sh=(window.fmBorrowerCloud?.shares||[]).find(x=>x.id===id);if(!sh)return toast('Loan account not found');const snapshot=borrowerSnapshotForShare(sh);if(!snapshot)return toast('Loan account not found');try{await window.fmBorrowerCloud.updateShare(id,snapshot);toast('Borrower snapshot updated');}catch(e){toast('Update failed: '+String(e?.message||e));}}
 
 async function deleteRevokedBorrowerShare(id){const sh=(window.fmBorrowerCloud?.shares||[]).find(x=>x.id===id);if(!sh){toast('Link not found');return;}if(sh.active){toast('Close the link before deleting it');return;}if(!confirm('Permanently delete this closed borrower link? The link record will be removed. Loan and payment records will not be deleted.'))return;try{await window.fmBorrowerCloud.deleteRevokedShare(id);toast('Closed link deleted');if(window.fmBorrowerCloud?.refresh)window.fmBorrowerCloud.refresh();render();}catch(e){toast('Delete failed: '+String(e?.message||e));}}
