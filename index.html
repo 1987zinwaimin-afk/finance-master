@@ -633,6 +633,16 @@ body.fm-dark:not(.fm-login-mode) input::placeholder,
 body.fm-dark:not(.fm-login-mode) textarea::placeholder{color:#8493aa}
 body.fm-dark:not(.fm-login-mode) .toast{background:#1a2940;color:var(--ink);border:1px solid var(--line);box-shadow:0 12px 32px #0005}
 
+
+/* Dashboard analytics controls */
+.trend-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.trend-currency{min-width:105px;padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font-weight:700}
+.chart{min-height:180px;padding:18px 14px 12px}
+.barcol{min-width:0}
+.barcol small{font-variant-numeric:tabular-nums}
+@media(max-width:700px){.trend-actions{justify-content:flex-start}.trend-currency{min-width:95px}}
+body.fm-dark:not(.fm-login-mode) .trend-currency{background:#101a2b;color:var(--ink);border-color:var(--line)}
+
 </style></head>
 <body>
 <div class="app">
@@ -847,6 +857,8 @@ function interest(l){const kind=state.loans.some(x=>x.id===l.id)?'loan':'debt';r
 function pageHead(title,desc,button='',action=''){return `<div class="pagehead"><div><h1>${title}</h1><p>${desc}</p></div>${button?`<button class="primary" onclick="${action}">＋ ${button}</button>`:''}</div>`}
 function metric(label,value,ico,sub=''){return `<div class="metric"><div class="metrichead"><span>${label}</span><span class="ico">${ico}</span></div><strong>${value}</strong><div class="sub">${sub}</div></div>`}
 function txRows(arr){if(!arr.length)return `<tr><td colspan="5" class="empty">No records yet. Add your first transaction to get started.</td></tr>`;return arr.slice(0,8).map(t=>`<tr><td><div class="txname"><div class="txico">${t.type==='income'?'↗':'↘'}</div><div><b>${escapeHtml(t.title)}</b><small>${escapeHtml(t.category||'Other')} · ${currencyLabel(recordCurrency(t)||'Unclassified')}</small></div></div></td><td>${escapeHtml(t.date)}</td><td><span class="tag ${t.type==='expense'?'out':''}">${t.type}</span></td><td style="text-align:right" class="${t.type==='income'?'positive':'negative'}">${t.type==='income'?'+':'−'}${moneyFor(t.amount,t)}</td><td><button class="linkbtn" onclick="editTx('${t.id}')">Edit</button> <button class="linkbtn" onclick="deleteTx('${t.id}')">Delete</button></td></tr>`).join('')}
+let dashboardTrendCurrency='THB';
+function setDashboardTrendCurrency(value){if(!['THB','MMK'].includes(value))return;dashboardTrendCurrency=value;render();}
 function dashboard(){
  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
  const monthKey=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
@@ -856,8 +868,8 @@ function dashboard(){
  for(let i=5;i>=0;i--){
   const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-i);
   const key=monthKey(d);
-  const inc=state.transactions.filter(t=>t.type==='income'&&recordCurrency(t)===(state.currency||'THB')&&String(t.date||'').startsWith(key)).reduce((n,t)=>n+Number(t.amount||0),0);
-  const exp=state.transactions.filter(t=>t.type==='expense'&&recordCurrency(t)===(state.currency||'THB')&&String(t.date||'').startsWith(key)).reduce((n,t)=>n+Number(t.amount||0),0);
+  const inc=state.transactions.filter(t=>t.type==='income'&&recordCurrency(t)===dashboardTrendCurrency&&String(t.date||'').startsWith(key)).reduce((n,t)=>n+Number(t.amount||0),0);
+  const exp=state.transactions.filter(t=>t.type==='expense'&&recordCurrency(t)===dashboardTrendCurrency&&String(t.date||'').startsWith(key)).reduce((n,t)=>n+Number(t.amount||0),0);
   const max=Math.max(inc,exp,1);
   bars+='<div class="barcol"><div class="bars"><div class="bar" style="height:'+Math.max(4,inc/max*100)+'%"></div><div class="bar exp" style="height:'+Math.max(4,exp/max*100)+'%"></div></div><small>'+months[d.getMonth()]+'</small></div>';
  }
@@ -879,7 +891,7 @@ function dashboard(){
  const recent=[...state.transactions].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
  return '<div class="welcome"><div class="welcome-copy"></div><button class="primary goldbtn" onclick="addTransaction(\'expense\')">＋ Quick entry</button></div>'+
  currencyPanel('THB')+currencyPanel('MMK')+
- '<div class="layout"><section class="panel"><div class="panelhead"><div><h2>Cash flow trend</h2><p>Last 6 months · '+currencyLabel(state.currency||'THB')+'</p></div><button class="linkbtn" onclick="go(\'Reports\')">View reports ↗</button></div><div class="chart">'+bars+'</div><div class="legend"><span><i class="dot"></i>Income</span><span><i class="dot grey"></i>Expenses</span></div><p class="sub">Trend follows the default currency setting; THB and MMK totals above are kept separate.</p></section>'+
+ '<div class="layout"><section class="panel"><div class="panelhead"><div><h2>Cash flow trend</h2><p>Last 6 months · Income vs expenses</p></div><div class="trend-actions"><select class="trend-currency" aria-label="Cash flow currency" onchange="setDashboardTrendCurrency(this.value)"><option value="THB" '+(dashboardTrendCurrency==='THB'?'selected':'')+'>THB ฿</option><option value="MMK" '+(dashboardTrendCurrency==='MMK'?'selected':'')+'>MMK K</option></select><button class="linkbtn" onclick="go(\'Reports\')">View reports ↗</button></div></div><div class="chart">'+bars+'</div><div class="legend"><span><i class="dot"></i>Income</span><span><i class="dot grey"></i>Expenses</span></div><p class="sub">Choose THB or MMK to view its trend. Currency totals are never combined.</p></section>'+
  '<section class="panel"><div class="panelhead"><div><h2>Quick actions</h2><p>Record it while it is fresh</p></div></div><div class="quick"><button onclick="addTransaction(\'income\')"><span class="qico">↗</span><span><b>Add income</b><small>Money received</small></span></button><button onclick="addTransaction(\'expense\')"><span class="qico">↘</span><span><b>Add expense</b><small>Money spent</small></span></button><button onclick="addLoan(\'loan\')"><span class="qico">⇄</span><span><b>Loan given</b><small>Track interest</small></span></button><button onclick="addPayment()"><span class="qico">✓</span><span><b>Record payment</b><small>Update a balance</small></span></button><button onclick="go(\'Payroll\')"><span class="qico">▦</span><span><b>Payroll</b><small>Salary records</small></span></button><button onclick="go(\'Reports\')"><span class="qico">▥</span><span><b>Reports</b><small>Monthly / yearly</small></span></button></div></section></div>'+
  '<section class="panel" style="margin-bottom:18px"><div class="panelhead"><div><h2>Recent transactions</h2><p>Latest recorded activity · amounts retain their original currency</p></div><button class="linkbtn" onclick="go(\'Income\')">View all ↗</button></div><div class="tablewrap"><table><thead><tr><th>Description</th><th>Date</th><th>Type</th><th style="text-align:right">Amount</th><th></th></tr></thead><tbody>'+txRows(recent)+'</tbody></table></div></section>';
 }
