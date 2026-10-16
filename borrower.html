@@ -74,7 +74,7 @@ const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const money=(v,c)=>{try{return new Intl.NumberFormat("en-US",{style:"currency",currency:["THB","MMK","USD","SGD"].includes(c)?c:"THB",maximumFractionDigits:2}).format(Number(v)||0)}catch(e){return String(v??0)}};
 const today=()=>new Date().toISOString().slice(0,10);
-let share=null,stopChat=null,chatMessages=[];
+let share=null,stopChat=null,stopShareDoc=null,shareListenersStarted=false,chatMessages=[];
 function setStatus(text,type="muted"){ $("status").className="status "+type;$("status").textContent=text;}
 function selectedMonth(){return $("monthFilter")?.value||"";}
 function formatRequestTime(v){try{if(v&&typeof v.toDate==="function")return v.toDate().toLocaleString();if(v)return new Date(v).toLocaleString();}catch(e){}return "";}
@@ -170,15 +170,21 @@ async function submitRequest(e){
 async function boot(){
  if(!token){setStatus("This borrower link is missing its access token.","error");return;}
  try{
-  const snap=await getDoc(doc(db,"borrowerShares",token));
-  if(!snap.exists()){setStatus("This link is invalid, unavailable, or has been revoked.","error");return;}
-  share={id:snap.id,...snap.data()};
-  if(!share.active){setStatus("This borrower link has been revoked. Contact the owner.","error");return;}
-  if(!share.snapshot||!share.accountId||!share.ownerUid){setStatus("This account link is incomplete. Please contact the owner.","error");return;}if(Array.isArray(share.snapshot.accounts)&&share.snapshot.accounts.length>1&&!Array.isArray(share.accountIds)){share.accountIds=share.snapshot.accounts.map(a=>a.accountId);}
-  setStatus("Private account loaded. Read-only access is active.","success");render();startChat();startBorrowerRequestListener();
+  if(stopShareDoc)stopShareDoc();
+  stopShareDoc=onSnapshot(doc(db,"borrowerShares",token),snap=>{
+   if(!snap.exists()){setStatus("This link is invalid, unavailable, or has been revoked.","error");return;}
+   const next={id:snap.id,...snap.data()};
+   if(!next.active){share=next;setStatus("This borrower link has been revoked. Contact the owner.","error");return;}
+   if(!next.snapshot||!next.accountId||!next.ownerUid){setStatus("This account link is incomplete. Please contact the owner.","error");return;}
+   if(Array.isArray(next.snapshot.accounts)&&next.snapshot.accounts.length>1&&!Array.isArray(next.accountIds))next.accountIds=next.snapshot.accounts.map(a=>a.accountId);
+   share=next;
+   setStatus("Live account loaded · changes from the owner update automatically.","success");
+   render();
+   if(!shareListenersStarted){shareListenersStarted=true;startChat();startBorrowerRequestListener();}
+  },err=>setStatus("Could not sync the latest owner records. "+(err.message||""),"error"));
  }catch(err){setStatus("Could not load this account. Firestore share-link rules may need to be configured. "+(err.message||""),"error");}
 }
-boot();
+boot();;
 </script>
 <script>
 (function(){
