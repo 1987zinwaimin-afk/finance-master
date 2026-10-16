@@ -399,6 +399,29 @@ body.payroll-page #content .payroll-period .notice,
 body.payroll-page #content .payroll-period .payroll-tip,
 body.payroll-page #content .payroll-period .helper-text,
 body.payroll-page #content .payroll-period .subtext{display:none!important}
+/* Neumorphic account gate inspired by the supplied login reference */
+body.fm-login-mode{background:#e0e5ec!important}
+body.fm-login-mode .app{display:block;min-height:100vh;background:#e0e5ec}
+body.fm-login-mode .sidebar,body.fm-login-mode .topbar,body.fm-login-mode .mobile-nav,body.fm-login-mode .mobile-more-panel{display:none!important}
+body.fm-login-mode .main{width:100%;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px 16px}
+body.fm-login-mode .content{width:100%;max-width:470px;padding:0;margin:auto}
+.fm-login-card{background:#e0e5ec;border-radius:24px;padding:clamp(25px,7vw,42px);box-shadow:12px 12px 24px #b8b9be,-12px -12px 24px #fff}
+.fm-login-brand{text-align:center;color:#31344b;font-size:12px;letter-spacing:3px;font-weight:700;margin-bottom:26px}
+.fm-login-title{text-align:center;margin:0 0 30px;color:#31344b;font-size:28px;letter-spacing:2px;text-transform:uppercase;font-weight:700}
+.fm-login-intro{text-align:center;color:#737b89;font-size:13px;line-height:1.5;margin:-15px 0 28px}
+.fm-login-input{position:relative;margin-bottom:24px}
+.fm-login-input .fm-login-icon{position:absolute;left:18px;top:50%;transform:translateY(-50%);font-size:20px;color:#31344b;pointer-events:none}
+.fm-login-input input{width:100%;padding:16px 16px 16px 52px;border:0;outline:none;border-radius:15px;background:#e0e5ec;color:#31344b;font-size:16px;box-shadow:inset 5px 5px 10px #b8b9be,inset -5px -5px 10px #fff;min-height:58px}
+.fm-login-input input::placeholder{color:#9a9fa8}
+.fm-login-btn{width:100%;padding:16px;border:0;border-radius:15px;background:#e0e5ec;color:#31344b;font-weight:700;font-size:16px;letter-spacing:1px;box-shadow:5px 5px 10px #b8b9be,-5px -5px 10px #fff;transition:all .2s ease}
+.fm-login-btn:active{box-shadow:inset 5px 5px 10px #b8b9be,inset -5px -5px 10px #fff}
+.fm-login-actions{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:25px}
+.fm-login-actions button{border:0;background:transparent;color:#555c6b;font-size:13px;padding:8px 0;text-decoration:none}
+.fm-login-actions button:hover{text-decoration:underline}
+.fm-login-status{border-radius:12px;padding:12px 14px;margin:0 0 18px;font-size:12px;line-height:1.5;color:#6c5a30;background:#fff8e8;border:1px solid #eadbb3}
+.fm-login-status:empty{display:none}
+.fm-login-foot{color:#818895;font-size:11px;line-height:1.5;text-align:center;margin:24px 0 0}
+@media(max-width:420px){body.fm-login-mode .main{padding:18px 14px}.fm-login-card{padding:28px 23px;border-radius:22px}.fm-login-title{font-size:25px}.fm-login-input{margin-bottom:20px}}
 </style></head>
 <body>
 <div class="app">
@@ -1127,11 +1150,27 @@ async function deleteBorrowerRequest(id){const req=(window.fmBorrowerCloud?.requ
 async function rejectBorrowerRequest(id){const req=(window.fmBorrowerCloud?.requests||[]).find(x=>x.id===id);if(!req||req.status!=='pending')return toast('Request is no longer pending');if(rejectingBorrowerRequests.has(id)||approvingBorrowerRequests.has(id))return toast('This request is already being processed.');const reason=prompt('Optional: tell the borrower why this request is being rejected. Leave blank if no explanation is needed.','');if(reason===null)return;if(!confirm('Reject this request? Loan data will not change.'))return;rejectingBorrowerRequests.add(id);render();try{await window.fmBorrowerCloud.setRequestStatus(id,'rejected',reason);if(req.token)await window.fmBorrowerCloud.sendPaymentDecisionMessage(req.token,req,'rejected',reason);toast('Request rejected. Borrower notified in Chat.');}catch(e){toast('Request status saved or notification failed: '+String(e?.message||e));}finally{rejectingBorrowerRequests.delete(id);render();}}
 
 function securityGatePage(){
- const mode=window.fmSecurityState||'checking';
-  const headline=mode==='checking'?'Checking account access…':mode==='not-owner'?'Owner data is hidden for this account':mode==='no-cloud'?'No private cloud records for this account':mode==='error'?'Private cloud access unavailable':'Sign in to view private finance records';
-  const message=mode==='checking'?'Finance Master is checking the signed-in account before showing any finance data.':mode==='not-owner'?'You are signed in, but this Gmail is not authorized as the Finance Master Owner. All Owner-related finance records remain blank and hidden. Sign out and use the designated Owner Gmail to view them.':mode==='no-cloud'?'This account has no cloud backup yet. For privacy, records saved on this device are hidden and will not be uploaded automatically. Sign in with the account that owns the existing cloud records.':mode==='error'?'The account could not be verified against its private cloud record. Finance data remains hidden until access is restored.':'You are signed out. Sign in with the owner account to view its private records. Other accounts cannot view records stored in a different account’s cloud.';
- return '<div class="pagehead"><div><h1>Private Finance Workspace</h1><p>Account-protected finance data</p></div></div><section class="panel" style="max-width:760px;margin:20px auto"><div style="font-size:34px;margin-bottom:12px">🔐</div><h2 style="margin-top:0">'+escapeHtml(headline)+'</h2><p class="sub">'+escapeHtml(message)+'</p><div class="notice" style="margin:16px 0">Use the same Gmail/password account that owns your Finance Master cloud backup. Signing in with another account will not import or reveal the owner’s records.</div><div id="fmAuthStatus" class="notice">Firebase connection status will appear here.</div><div class="formgrid"><div class="field"><label>Email</label><input id="fmEmail" type="email" autocomplete="username" placeholder="Owner Gmail address"></div><div class="field"><label>Password</label><input id="fmPassword" type="password" autocomplete="current-password" placeholder="Account password"></div></div><div class="formactions" style="justify-content:flex-start;flex-wrap:wrap"><button class="primary" onclick="window.fmSignIn()">Sign in</button><button class="pill" onclick="window.fmSignUp()">Create account</button><button class="pill" onclick="window.fmSignOut()">Sign out</button></div><p class="sub" style="margin-top:14px">Existing device data has not been deleted. It stays hidden until the correct cloud account is available.</p></section>';
+  const mode=window.fmSecurityState||'checking';
+  const headline=mode==='checking'?'CHECKING ACCOUNT':mode==='not-owner'?'OWNER ACCESS DENIED':mode==='no-cloud'?'CLOUD BACKUP NOT FOUND':mode==='error'?'CONNECTION ERROR':'LOGIN';
+  const message=mode==='checking'?'Checking your secure Finance Master account…':mode==='not-owner'?'This Gmail is not the authorized Owner account. Sign out and use the designated Owner Gmail.':mode==='no-cloud'?'This Owner account has no cloud backup yet. Existing device data has not been deleted or uploaded.':mode==='error'?'Firebase could not verify access. Your finance data remains hidden.':'Sign in with the Owner Gmail to access your private finance workspace.';
+  const signedIn=!!window.fmSecurityState && ['not-owner','no-cloud','error'].includes(mode);
+  document.body.classList.add('fm-login-mode');
+  return '<section class="fm-login-card" aria-label="Finance Master secure login">'+
+    '<div class="fm-login-brand">FINANCE MASTER</div>'+
+    '<h1 class="fm-login-title">'+escapeHtml(headline)+'</h1>'+
+    '<p class="fm-login-intro">'+escapeHtml(message)+'</p>'+
+    '<div id="fmAuthStatus" class="fm-login-status" role="status" aria-live="polite"></div>'+
+    '<form onsubmit="event.preventDefault();window.fmSignIn();">'+
+      '<div class="fm-login-input"><span class="fm-login-icon" aria-hidden="true">♙</span><input id="fmEmail" type="email" autocomplete="username" placeholder="Owner Gmail address" aria-label="Owner Gmail address" required></div>'+
+      '<div class="fm-login-input"><span class="fm-login-icon" aria-hidden="true">♙</span><input id="fmPassword" type="password" autocomplete="current-password" placeholder="Password" aria-label="Password" required></div>'+
+      '<button class="fm-login-btn" type="submit">LOGIN</button>'+
+      '<div class="fm-login-actions"><button type="button" onclick="window.fmResetPassword()">Forgot password?</button><button type="button" onclick="window.fmSignUp()">Create account</button></div>'+
+      (signedIn?'<div class="fm-login-actions" style="justify-content:center"><button type="button" onclick="window.fmSignOut()">Sign out</button></div>':'')+
+    '</form>'+
+    '<p class="fm-login-foot">🔒 Your financial records stay private. Sign in before entering the application.</p>'+
+  '</section>';
 }
+
 function render(){
  if(window.fmSecurityState!=='ready'){
   document.body.classList.remove('messages-fullscreen','payroll-page');
