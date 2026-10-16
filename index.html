@@ -1172,6 +1172,7 @@ function securityGatePage(){
 }
 
 function render(){
+ if(window.fmSecurityState==='ready')document.body.classList.remove('fm-login-mode');
  if(window.fmSecurityState!=='ready'){
   document.body.classList.remove('messages-fullscreen','payroll-page');
   const protectedContent=document.getElementById('content');
