@@ -1445,3 +1445,9 @@ onAuthStateChanged(auth, user => {
 <script src="payroll.js"></script>
 <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));}</script>
 </body></html>
+/* Hide the explanatory copy requested on the Payroll screen only. */
+.payroll-period .panelhead p,
+.payroll-period .notice,
+.payroll-period .payroll-tip,
+.payroll-period .helper-text,
+.payroll-period .subtext{display:none!important}
