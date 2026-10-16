@@ -1118,6 +1118,29 @@ function reviewOrphanPayments(kind,oldAccount){
   save();closeModal();render();toast('Linked '+current.length+' historical payment records');
  };
 }
+function recalculateAccountPrincipalPaid(kind,accountId){
+ const account=(kind==='loan'?state.loans:state.debts).find(a=>a.id===accountId);if(!account)return;
+ const paid=(state.payments||[]).filter(p=>p.kind===kind&&p.account===accountId).reduce((sum,p)=>sum+Math.max(0,Number(p.principalApplied!==undefined?p.principalApplied:(p.apply==='principal'?p.amount:0))||0),0);
+ account.principalPaid=Math.min(Math.max(0,Number(account.principal)||0),paid);
+}
+function editPaymentRecord(paymentId){
+ const p=(state.payments||[]).find(x=>String(x.id)===String(paymentId));if(!p){toast('Payment record not found');return}
+ const accounts=p.kind==='loan'?state.loans:state.debts,account=accounts.find(a=>a.id===p.account);
+ if(!account){editOrphanPayment((state.payments||[]).indexOf(p));return}
+ openModal('Edit payment record',`<form id="editPaymentRecordForm"><div class="formgrid">${field('Payment date','date','date',p.date||today())}${field('Amount ('+(recordCurrency(p)||recordCurrency(account)||'THB')+')','amount','number',String(p.amount||0))}<div class="field"><label>Apply to</label><select name="apply"><option value="auto" ${p.apply==='auto'?'selected':''}>Automatic — interest first, then principal</option><option value="interest" ${p.apply==='interest'?'selected':''}>Interest only</option><option value="principal" ${p.apply==='principal'?'selected':''}>Principal only</option><option value="other" ${p.apply==='other'?'selected':''}>Other / mixed (record only)</option></select></div><div class="field full"><label>Note</label><input name="note" value="${escapeHtml(p.note||'')}"></div></div><div class="notice">Only this payment record will be changed. The payment ID and account remain the same. The balance and interest ledger will be recalculated from the saved payment history.</div><div class="formactions"><button type="button" class="pill" onclick="closeModal()">Cancel</button><button class="primary">Save changes</button></div></form>`);
+ document.getElementById('editPaymentRecordForm').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target),date=String(f.get('date')||''),amount=Number(f.get('amount')),apply=String(f.get('apply')||'auto'),start=String(account.start||account.created||'').slice(0,10);if(!date||!Number.isFinite(amount)||amount<=0){toast('Enter a valid date and amount');return}if(start&&date<start){toast('Payment date cannot be earlier than account start date');return}
+ const original={...p};state.payments=state.payments.filter(x=>x!==p);let allocation={interestApplied:0,principalApplied:0,unallocated:0};if(apply!=='other'){allocation=allocatePayment(p.kind,account,amount,date,apply);if(allocation.error){state.payments.push(p);state.payments.sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));toast(allocation.error);return}}
+ Object.assign(p,{date,amount,apply,note:String(f.get('note')||'').trim(),interestApplied:Number(allocation.interestApplied||0),principalApplied:Number(allocation.principalApplied||0)});if(Number(allocation.unallocated||0)>0)p.unallocated=Number(allocation.unallocated);else delete p.unallocated;if(apply==='other'){delete p.interestApplied;delete p.principalApplied}
+ state.payments.push(p);state.payments.sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));recalculateAccountPrincipalPaid(p.kind,p.account);save();if(p.kind==='loan')refreshBorrowerShareForLoan(account);closeModal();render();toast('Payment record updated');};
+}
+function deletePaymentRecord(paymentId){
+ const p=(state.payments||[]).find(x=>String(x.id)===String(paymentId));if(!p){toast('Payment record not found');return}
+ const account=(p.kind==='loan'?state.loans:state.debts).find(a=>a.id===p.account);
+ openModal('Confirm delete payment record',`<div class="notice" style="border-color:#d9a5a5"><b>This will permanently remove this payment entry.</b> The loan/debt balance and interest history will be recalculated from the remaining payment records.</div><p><b>Date:</b> ${escapeHtml(p.date||'—')}</p><p><b>Amount:</b> ${moneyFor(p.amount,p)}</p><p><b>Applied to:</b> ${escapeHtml(p.apply||'—')}</p><p><b>Note:</b> ${escapeHtml(p.note||'—')}</p><div class="formactions"><button type="button" class="pill" onclick="closeModal()">Cancel</button><button type="button" class="primary" style="background:#9f3030" onclick="confirmDeletePaymentRecord('${escapeHtml(p.id)}')">Delete this payment</button></div>`);
+}
+function confirmDeletePaymentRecord(paymentId){
+ const p=(state.payments||[]).find(x=>String(x.id)===String(paymentId));if(!p)return closeModal();const account=(p.kind==='loan'?state.loans:state.debts).find(a=>a.id===p.account);state.payments=state.payments.filter(x=>x!==p);if(account){recalculateAccountPrincipalPaid(p.kind,p.account);if(p.kind==='loan')refreshBorrowerShareForLoan(account)}save();closeModal();render();toast('Payment record deleted');
+}
 function paymentsPage(){
  const grouped=new Map(),orphanGroups=new Map();
  (state.payments||[]).forEach(p=>{
@@ -1134,9 +1157,9 @@ function paymentsPage(){
   }
  });
  const accountPanels=Array.from(grouped.values()).map(g=>{
-  const rows=g.items.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))).map(p=>'<tr><td>'+escapeHtml(p.date||'—')+'</td><td>'+escapeHtml(p.apply==='auto'?'Interest '+moneyFor(p.interestApplied||0,p)+' + Principal '+moneyFor(p.principalApplied||0,p):p.apply||'—')+'</td><td>'+escapeHtml(p.note||'—')+'</td><td style="text-align:right">'+moneyFor(p.amount,p)+'</td></tr>').join('');
+  const rows=g.items.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))).map(p=>'<tr><td>'+escapeHtml(p.date||'—')+'</td><td>'+escapeHtml(p.apply==='auto'?'Interest '+moneyFor(p.interestApplied||0,p)+' + Principal '+moneyFor(p.principalApplied||0,p):p.apply||'—')+'</td><td>'+escapeHtml(p.note||'—')+'</td><td style="text-align:right">'+moneyFor(p.amount,p)+'</td><td><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="linkbtn" onclick="editPaymentRecord(\''+escapeHtml(p.id)+\'\')">Edit</button><button class="linkbtn danger-action" onclick="deletePaymentRecord(\''+escapeHtml(p.id)+\'\')">Delete</button></div></td></tr>').join('');
   const total=g.items.reduce((sum,p)=>sum+Number(p.amount||0),0);
-  return '<section class="panel" style="margin-bottom:14px"><div class="panelhead"><div><h2>'+escapeHtml(g.account.person||'Unnamed account')+'</h2><p>'+(g.kind==='loan'?'Loan given · Borrower payment records':'My debt · Payment records')+' · '+g.items.length+' record(s)</p></div><button class="pill" onclick="openPerson(\''+g.kind+'\',\''+g.account.id+'\')">Open account</button></div><p><b>Total payments recorded: '+moneyFor(total,g.account)+'</b></p><div class="tablewrap"><table><thead><tr><th>Date</th><th>Applied to</th><th>Note</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+rows+'</tbody></table></div></section>';
+  return '<section class="panel" style="margin-bottom:14px"><div class="panelhead"><div><h2>'+escapeHtml(g.account.person||'Unnamed account')+'</h2><p>'+(g.kind==='loan'?'Loan given · Borrower payment records':'My debt · Payment records')+' · '+g.items.length+' record(s)</p></div><button class="pill" onclick="openPerson(\''+g.kind+'\',\''+g.account.id+'\')">Open account</button></div><p><b>Total payments recorded: '+moneyFor(total,g.account)+'</b></p><div class="tablewrap"><table><thead><tr><th>Date</th><th>Applied to</th><th>Note</th><th style="text-align:right">Amount</th><th>Actions</th></tr></thead><tbody>'+rows+'</tbody></table></div></section>';
  }).join('');
  const orphanPanel=Array.from(orphanGroups.values()).map(g=>{
   const total=g.items.reduce((sum,p)=>sum+Number(p.amount||0),0);
