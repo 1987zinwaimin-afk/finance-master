@@ -88,7 +88,7 @@ function renderBorrowerRequestStatus(items){
 function startBorrowerRequestListener(){
  if(stopBorrowerRequests){stopBorrowerRequests();stopBorrowerRequests=null;}
  if(!token||!share?.active)return;
- const q=query(collection(db,"borrowerPaymentRequests"),where("token","==",token));
+ const statusAccountId=share.accountId||share.snapshot?.accountId;if(!statusAccountId){const el=$("borrowerRequestStatus");if(el)el.innerHTML="";return;}const q=query(collection(db,"borrowerPaymentRequests"),where("token","==",token),where("accountId","==",statusAccountId));
  stopBorrowerRequests=onSnapshot(q,snap=>{
   const items=snap.docs.map(d=>{const x=d.data();return {id:d.id,...x,createdAtText:formatRequestTime(x.createdAt),reviewedAtText:formatRequestTime(x.reviewedAt)}}).sort((x,y)=>String(y.date||"").localeCompare(String(x.date||"")));
   renderBorrowerRequestStatus(items);
@@ -173,8 +173,9 @@ function showBankQr(){const form=$("requestForm");if(!form){return;}if(!form.rep
 async function handleBankReceiptChange(event){const file=event.target.files?.[0];paymentReceiptImage="";const preview=$("bankReceiptPreview");if(!file||!preview)return;preview.innerHTML='<p class="muted">Compressing receipt image…</p>';try{const data=await compressChatImage(file);if(data.length>400000)throw new Error("Receipt image is too large. Please choose a smaller photo.");paymentReceiptImage=data;preview.innerHTML='<img src="'+data+'" alt="Transfer receipt preview"><p class="muted">Receipt ready to send.</p>';}catch(err){event.target.value="";preview.innerHTML='<div class="bank-transfer-error">'+esc(err.message||"Could not read the receipt image.")+'</div>';}}
 async function submitRequest(e){
  e.preventDefault();const paymentMethod=$("paymentMethod").value,button=paymentMethod==="bank"?$("sendBankReceipt"):$("sendRequest");if(button)button.disabled=true;const resultTarget=paymentMethod==="bank"?$("bankReceiptStatus"):$("requestResult");if(resultTarget&&paymentMethod!=="bank")resultTarget.innerHTML="";
- const amount=Number($("amount").value),date=$("payDate").value,apply=$("apply").value,note=$("note").value.trim(),s=share.snapshot||{};
- if(!Number.isFinite(amount)||amount<=0||!date){resultTarget.innerHTML='<div class="error">Enter a valid amount and date.</div>';if(button)button.disabled=false;return;}
+ const amountInput=$("amount"),dateInput=$("payDate");const amount=Number(amountInput?.value),date=String(dateInput?.value||"").trim(),apply=$("apply").value,note=$("note").value.trim(),s=share.snapshot||{};
+ const validDate=/^\\d{4}-\\d{2}-\\d{2}$/.test(date)&&!Number.isNaN(Date.parse(date+"T00:00:00"));
+ if(!Number.isFinite(amount)||amount<=0||!validDate){resultTarget.innerHTML='<div class="error">Enter a valid amount and date.</div>';if(button)button.disabled=false;return;}
  if(paymentMethod==="bank"&&!bankQrShown){resultTarget.innerHTML='<div class="error">Tap Get Bank QR first and complete the bank transfer.</div>';if(button)button.disabled=false;return;}
  if(paymentMethod==="bank"&&!paymentReceiptImage){resultTarget.innerHTML='<div class="error">Please upload the transfer receipt before sending it to the owner.</div>';if(button)button.disabled=false;return;}
  try{
