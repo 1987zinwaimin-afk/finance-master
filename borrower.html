@@ -207,13 +207,26 @@ boot();;
 </script>
 <script>
 (function(){
- let loaded=false;
  const status=document.getElementById('status');
- const observer=new MutationObserver(()=>{if(status&&!/Loading your private account|သင့်သီးသန့်အကောင့်ကို ဖွင့်နေသည်|กำลังโหลดบัญชีส่วนตัว/.test(status.textContent||'')){loaded=true;observer.disconnect();}});
- if(status)observer.observe(status,{childList:true,characterData:true,subtree:true});
- window.addEventListener('error',function(e){if(status&&!loaded&&/module|firebase|script/i.test(String(e.message||''))){status.className='status error';status.textContent='စာမျက်နှာဖွင့်ရာတွင် JavaScript/Firebase ပြဿနာရှိနေသည်။ Internet connection နှင့် browser ကို စစ်ပြီး ပြန်ဖွင့်ပါ။';}});
- window.addEventListener('unhandledrejection',function(e){if(status&&!loaded){status.className='status error';status.textContent='အကောင့်ချိတ်ဆက်မှု မအောင်မြင်ပါ: '+String(e.reason&&e.reason.message||e.reason||'Unknown error');}});
- setTimeout(function(){if(status&&!loaded&&/Loading your private account|သင့်သီးသန့်အကောင့်ကို ဖွင့်နေသည်|กำลังโหลดบัญชีส่วนตัว/.test(status.textContent||'')){status.className='status error';status.textContent='အကောင့်ဖွင့်ရန် အချိန်ကြာနေပါသည်။ Internet/Firebase ချိတ်ဆက်မှုကို စစ်ပါ။ စာမျက်နှာကို တစ်ကြိမ် Refresh လုပ်ပါ။';}},15000);
+ const isStillLoading=()=>!!status&&/Loading your private account|သင့်သီးသန့်အကောင့်ကို ဖွင့်နေသည်|กำลังโหลดบัญชีส่วนตัว/.test(status.textContent||'');
+ window.addEventListener('error',function(e){
+  if(status&&isStillLoading()){
+   status.className='status error';
+   status.textContent='စာမျက်နှာဖွင့်ရာတွင် JavaScript/Firebase အမှားရှိနေသည်။ Internet ချိတ်ဆက်မှုကို စစ်ပြီး Refresh လုပ်ပါ။';
+  }
+ });
+ window.addEventListener('unhandledrejection',function(e){
+  if(status&&isStillLoading()){
+   status.className='status error';
+   status.textContent='အကောင့်ချိတ်ဆက်မှု မအောင်မြင်ပါ: '+String(e.reason&&e.reason.message||e.reason||'Unknown error');
+  }
+ });
+ setTimeout(function(){
+  if(isStillLoading()){
+   status.className='status error';
+   status.textContent='အကောင့်ဖွင့်ရန် အချိန်ကြာနေပါသည်။ Internet/Firebase ချိတ်ဆက်မှုကို စစ်ပါ။ အကောင့်ဒေတာကို မပြင်ဆင်ထားပါ။';
+  }
+ },12000);
 })();
 </script>
 <script>
