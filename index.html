@@ -1473,7 +1473,7 @@ async function deleteBorrowerSharePermanently(id){
   await window.fmBorrowerCloud.deleteSharePermanently(id);
   // Refresh only the borrower-share data; do not reload the entire Finance Master app.
   if(window.fmBorrowerCloud?.refresh)window.fmBorrowerCloud.refresh();
-  const card=document.querySelector('[onclick*="deleteBorrowerSharePermanently(\\''+id+'\\')"]')?.closest('.borrower-link-card');
+  const card=[...document.querySelectorAll('.borrower-link-card')].find(el=>el.innerHTML.includes(id));
   if(card)card.remove();
   toast('Share link and chat messages deleted permanently.');
  }catch(e){toast('Share link delete failed: '+String(e?.code||e?.message||e));}
