@@ -1467,22 +1467,13 @@ async function toggleBorrowerShare(id,active){
 async function deleteBorrowerSharePermanently(id){
  const sh=(window.fmBorrowerCloud?.shares||[]).find(x=>x.id===id);
  if(!sh){toast('Share link not found. Refresh the page and try again.');return;}
- if(!confirm('Permanently delete this share link? Its borrower URL will stop working. Chat messages will also be deleted where permissions allow. Loan accounts and Payment History will NOT be deleted. This cannot be undone.'))return;
- let messageDeleteError='';
+ if(!confirm('Permanently delete this share link and its chat messages? Loan accounts and Payment History will NOT be deleted. This cannot be undone.'))return;
  try{
-  const messages=await getDocs(collection(db,'borrowerShares',id,'messages'));
-  for(const msg of messages.docs){
-   try{await firestoreDeleteDoc(doc(db,'borrowerShares',id,'messages',msg.id));}
-   catch(e){messageDeleteError=String(e?.code||e?.message||e);break;}
-  }
- }catch(e){messageDeleteError=String(e?.code||e?.message||e);}
- try{
-  await firestoreDeleteDoc(doc(db,'borrowerShares',id));
-  toast(messageDeleteError?'Share link deleted. Some old chat messages could not be removed: '+messageDeleteError:'Share link deleted permanently.');
-  setTimeout(()=>window.location.reload(),900);
- }catch(e){
-  toast('Share link delete failed: '+String(e?.code||e?.message||e));
- }
+  if(typeof window.fmBorrowerCloud?.deleteSharePermanently!=='function')throw new Error('Delete service is not loaded. Refresh the page and try again.');
+  await window.fmBorrowerCloud.deleteSharePermanently(id);
+  toast('Share link and chat messages deleted permanently.');
+  setTimeout(()=>window.location.reload(),700);
+ }catch(e){toast('Share link delete failed: '+String(e?.code||e?.message||e));}
 }
 window.toggleBorrowerShare=toggleBorrowerShare;
 window.deleteBorrowerSharePermanently=deleteBorrowerSharePermanently;
@@ -1893,6 +1884,7 @@ window.fmBorrowerCloud={
  scheduleSnapshotSync(){if(!currentUser)return;clearTimeout(window.__fmBorrowerSnapshotSyncTimer);window.__fmBorrowerSnapshotSyncTimer=setTimeout(async()=>{const active=(borrowerShares||[]).filter(sh=>sh.active&&sh.ownerUid===currentUser?.uid);for(let i=0;i<active.length;i+=4){await Promise.all(active.slice(i,i+4).map(async sh=>{try{const snapshot=borrowerSnapshotForShare(sh);if(snapshot)await window.fmBorrowerCloud.updateShare(sh.id,snapshot);}catch(e){console.warn('Borrower share sync failed',sh.id,e);}}));}},700);},
  async revokeShare(token){if(!currentUser)throw new Error('Sign in required.');await updateDoc(doc(db,'borrowerShares',token),{active:false,revokedAt:serverTimestamp()});},
  async deleteRevokedShare(token){if(!currentUser)throw new Error('Sign in required.');const sh=borrowerShares.find(x=>x.id===token&&x.ownerUid===currentUser.uid);if(!sh)throw new Error('Link not found or not owned by this account.');if(sh.active)throw new Error('Close the link before deleting it.');await firestoreDeleteDoc(doc(db,'borrowerShares',token));},
+ async deleteSharePermanently(token){if(!currentUser)throw new Error('Sign in required.');const sh=borrowerShares.find(x=>x.id===token&&x.ownerUid===currentUser.uid);if(!sh)throw new Error('Link not found or not owned by this account.');const messages=await getDocs(collection(db,'borrowerShares',token,'messages'));for(const msg of messages.docs){await firestoreDeleteDoc(doc(db,'borrowerShares',token,'messages',msg.id));}await firestoreDeleteDoc(doc(db,'borrowerShares',token));},
  subscribeChat(token,onMessages){if(!currentUser)throw new Error('Sign in required.');const sh=borrowerShares.find(x=>x.id===token&&x.ownerUid===currentUser.uid&&x.active);if(!sh)throw new Error('Active borrower link not found.');return onSnapshot(collection(db,'borrowerShares',token,'messages'),snap=>{const messages=snap.docs.map(d=>{const x=d.data();return {id:d.id,...x,createdAtText:borrowerTime(x.createdAt)};}).sort((a,b)=>Number(a.createdAt?.seconds||0)-Number(b.createdAt?.seconds||0));onMessages(messages);},e=>status('Chat could not load: '+e.message,true));},
  async sendChatMessage(token,{text='',imageData=''}){if(!currentUser)throw new Error('Sign in required.');const sh=borrowerShares.find(x=>x.id===token&&x.ownerUid===currentUser.uid&&x.active);if(!sh)throw new Error('Active borrower link not found.');if(!String(text).trim()&&!imageData)throw new Error('Message is empty.');await addDoc(collection(db,'borrowerShares',token,'messages'),{token,senderRole:'owner',senderName:'Owner',text:String(text).trim().slice(0,3000),imageData:imageData||'',createdAt:serverTimestamp()});},
  async editChatMessage(token,messageId,textValue){if(!currentUser)throw new Error('Sign in required.');const sh=borrowerShares.find(x=>x.id===token&&x.ownerUid===currentUser.uid&&x.active);if(!sh)throw new Error('Active borrower link not found.');await updateDoc(doc(db,'borrowerShares',token,'messages',messageId),{text:String(textValue).slice(0,3000)});},
