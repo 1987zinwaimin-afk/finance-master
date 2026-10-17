@@ -73,12 +73,13 @@ service cloud.firestore {
           );
         // Delete removes the shared document, so both sides see it disappear.
         // Owner can remove either side's message; borrower can remove their own.
-        allow delete: if parentShare().active == true
-          && (
-            (request.auth != null && request.auth.uid == parentShare().ownerUid)
-            ||
-            (request.auth == null && resource.data.senderRole == 'borrower')
-          );
+        // Owners may permanently delete messages even after closing the share link.
+        // Borrowers may delete only their own messages while the link is active.
+        allow delete: if
+          (request.auth != null && request.auth.uid == parentShare().ownerUid)
+          || (parentShare().active == true
+              && request.auth == null
+              && resource.data.senderRole == 'borrower');
       }
     }
 
