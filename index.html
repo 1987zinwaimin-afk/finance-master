@@ -1472,16 +1472,23 @@ async function toggleBorrowerShare(id,active){
 }
 async function deleteBorrowerSharePermanently(id){
  const sh=(window.fmBorrowerCloud?.shares||[]).find(x=>x.id===id);
- if(!sh)return toast('Share link not found');
- if(!confirm('Permanently delete this share link and all chat messages under it? This cannot be undone. Loan and payment records will not be deleted.'))return;
+ if(!sh){toast('Share link not found. Refresh the page and try again.');return;}
+ if(!confirm('Permanently delete this share link? Its borrower URL will stop working. Chat messages will also be deleted where permissions allow. Loan accounts and Payment History will NOT be deleted. This cannot be undone.'))return;
+ let messageDeleteError='';
  try{
   const messages=await getDocs(collection(db,'borrowerShares',id,'messages'));
-  for(const msg of messages.docs){await firestoreDeleteDoc(doc(db,'borrowerShares',id,'messages',msg.id));}
+  for(const msg of messages.docs){
+   try{await firestoreDeleteDoc(doc(db,'borrowerShares',id,'messages',msg.id));}
+   catch(e){messageDeleteError=String(e?.code||e?.message||e);break;}
+  }
+ }catch(e){messageDeleteError=String(e?.code||e?.message||e);}
+ try{
   await firestoreDeleteDoc(doc(db,'borrowerShares',id));
-  toast('Share link and its chat messages permanently deleted');
-  if(window.fmBorrowerCloud?.refresh)window.fmBorrowerCloud.refresh();
-  render();
- }catch(e){toast('Delete failed: '+String(e?.message||e));}
+  toast(messageDeleteError?'Share link deleted. Some old chat messages could not be removed: '+messageDeleteError:'Share link deleted permanently.');
+  setTimeout(()=>window.location.reload(),900);
+ }catch(e){
+  toast('Share link delete failed: '+String(e?.code||e?.message||e));
+ }
 }
 window.toggleBorrowerShare=toggleBorrowerShare;
 window.deleteBorrowerSharePermanently=deleteBorrowerSharePermanently;
