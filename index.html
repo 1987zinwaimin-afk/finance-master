@@ -1346,10 +1346,7 @@ function borrowerPortalPage(){
  const shares=window.fmBorrowerCloud?window.fmBorrowerCloud.shares:[];
  const requests=window.fmBorrowerCloud?window.fmBorrowerCloud.requests:[];
  const loans=state.loans||[];
- const normName=v=>String(v||'').trim().replace(/\\s+/g,' ').toLocaleLowerCase();
- const activeByName=new Map();
- for(const sh of shares.filter(x=>x.active)){const k=normName(sh.borrowerName);if(!k)continue;const prev=activeByName.get(k);const count=x=>Array.isArray(x.accountIds)?x.accountIds.length:(x.accountId?1:0);if(!prev||count(sh)>count(prev))activeByName.set(k,sh);}
- const displayShares=[...activeByName.values(),...shares.filter(x=>!x.active)];
+ const displayShares=shares.slice().sort((a,b)=>String(a.borrowerName||'').localeCompare(String(b.borrowerName||''))||String(a.createdAt?.seconds||0)-String(b.createdAt?.seconds||0));
  let html=pageHead('Borrower Portal','');
 
  html+='<section class="panel">';
@@ -1359,7 +1356,7 @@ function borrowerPortalPage(){
  html+='</section><section class="panel" style="margin-top:16px"><div class="panelhead"><div><h2>Borrower links by name</h2></div></div>';
  if(!window.fmBorrowerCloud||!window.fmBorrowerCloud.ready){html+='<div class="empty">Sign in to Finance Master to manage borrower links.</div>';}
  else if(!shares.length){html+='<div class="empty">No borrower links yet.</div>';}
- else{html+=displayShares.map(sh=>'<article class="borrower-link-card"><h3>'+escapeHtml(sh.borrowerName||'Borrower')+'</h3><p>Account: '+escapeHtml(sh.accountId)+' · '+(sh.active?'Active':'Revoked')+'</p><p>Snapshot remaining: '+escapeHtml(fmt(sh.snapshot&&sh.snapshot.principalOutstanding,sh.currency||'THB'))+' principal · '+escapeHtml(fmt(sh.snapshot&&sh.snapshot.interestOutstanding,sh.currency||'THB'))+' interest</p><div class="borrower-link-actions">'+(sh.active?'<button class="primary" onclick="copyBorrowerLink(\''+escapeHtml(sh.id)+'\')">Copy private link</button><button class="pill" onclick="updateBorrowerShare(\''+escapeHtml(sh.id)+'\')">Update snapshot</button><button class="pill" onclick="revokeBorrowerShare(\''+escapeHtml(sh.id)+'\')">Revoke link</button>':'<span class="tag out">Revoked</span><button class="pill danger" onclick="deleteRevokedBorrowerShare(this.dataset.id)" data-id="'+escapeHtml(sh.id)+'">Delete closed link</button>')+'</div></article>').join('');}
+ else{html+=displayShares.map(sh=>'<article class="borrower-link-card"><h3>'+escapeHtml(sh.borrowerName||'Borrower')+'</h3><p>Account: '+escapeHtml(sh.accountId||'—')+' · '+((Array.isArray(sh.accountIds)&&sh.accountIds.length>1)?escapeHtml(sh.accountIds.length+' linked loans')+' · ':'')+(sh.active?'<span class="tag approved">Active</span>':'<span class="tag out">Closed</span>')+'</p><p>Snapshot remaining: '+escapeHtml(fmt(sh.snapshot&&sh.snapshot.principalOutstanding,sh.currency||'THB'))+' principal · '+escapeHtml(fmt(sh.snapshot&&sh.snapshot.interestOutstanding,sh.currency||'THB'))+' interest</p><div class="borrower-link-actions">'+(sh.active?'<button class="primary" onclick="copyBorrowerLink(\\''+escapeHtml(sh.id)+'\\')">Copy private link</button><button class="pill" onclick="updateBorrowerShare(\\''+escapeHtml(sh.id)+'\\')">Update snapshot</button><button class="pill danger" onclick="toggleBorrowerShare(\\''+escapeHtml(sh.id)+'\\',false)">Close link</button>':'<button class="primary" onclick="toggleBorrowerShare(\\''+escapeHtml(sh.id)+'\\',true)">Open link</button>')+'<button class="pill danger" onclick="deleteBorrowerSharePermanently(\\''+escapeHtml(sh.id)+'\\')">Delete permanently</button></div></article>').join('');}
  html+='</section><section class="panel" style="margin-top:16px"><div class="panelhead"><div><h2>Payment requests & notifications</h2><p>Payment History changes only after owner approval.</p></div><span class="tag">'+requests.filter(r=>r.status==='pending').length+' pending</span></div>';
  if(!window.fmBorrowerCloud||!window.fmBorrowerCloud.ready){html+='<div class="empty">Sign in to receive notifications.</div>';}
  else if(!requests.length){html+='<div class="empty">No payment requests yet.</div>';}
@@ -1462,6 +1459,30 @@ async function createSelectedBorrowerShare(accountId){
 async function createBorrowerShareFromSelection(){const id=document.getElementById('borrowerAccountSelect')?.value;if(!id)return toast('Choose a borrower account');const l=state.loans.find(x=>x.id===id);if(!l)return toast('Borrower account not found');const snapshot=borrowerSnapshotForPerson(l);if((state.loans||[]).filter(x=>String(x.person||'').trim().toLocaleLowerCase()===String(l.person||'').trim().toLocaleLowerCase()).some(a=>!recordCurrency(a)))return toast('Assign currency to every loan account for this borrower first');try{await window.fmBorrowerCloud.createShare(l.id,snapshot);}catch(e){toast('Could not create link: '+String(e?.message||e));}}
 async function updateBorrowerShare(id){const sh=(window.fmBorrowerCloud?.shares||[]).find(x=>x.id===id);const l=state.loans.find(x=>x.id===sh?.accountId);if(!l)return toast('Loan account not found');const snapshot=borrowerSnapshotForPerson(l,sh.accountIds||[sh.accountId]);if(snapshot.accounts.some(a=>!a.currency))return toast('Assign currency to every selected loan account first');try{await window.fmBorrowerCloud.updateShare(id,snapshot);toast('Selected borrower accounts updated');}catch(e){toast('Update failed: '+String(e?.message||e));}}
 
+async function toggleBorrowerShare(id,active){
+ const sh=(window.fmBorrowerCloud?.shares||[]).find(x=>x.id===id);
+ if(!sh)return toast('Share link not found');
+ const action=active?'reopen':'close';
+ if(!confirm(active?'Reopen this borrower link? The old private URL will work again.':'Close this borrower link? The borrower will no longer be able to open it.'))return;
+ try{
+  if(active){await updateDoc(doc(db,'borrowerShares',id),{active:true,revokedAt:null,updatedAt:serverTimestamp()});}
+  else{await window.fmBorrowerCloud.revokeShare(id);}
+  toast(active?'Borrower link reopened':'Borrower link closed');
+ }catch(e){toast('Could not '+action+' link: '+String(e?.message||e));}
+}
+async function deleteBorrowerSharePermanently(id){
+ const sh=(window.fmBorrowerCloud?.shares||[]).find(x=>x.id===id);
+ if(!sh)return toast('Share link not found');
+ if(!confirm('Permanently delete this share link and all chat messages under it? This cannot be undone. Loan and payment records will not be deleted.'))return;
+ try{
+  const messages=await getDocs(collection(db,'borrowerShares',id,'messages'));
+  for(const msg of messages.docs){await firestoreDeleteDoc(doc(db,'borrowerShares',id,'messages',msg.id));}
+  await firestoreDeleteDoc(doc(db,'borrowerShares',id));
+  toast('Share link and its chat messages permanently deleted');
+  if(window.fmBorrowerCloud?.refresh)window.fmBorrowerCloud.refresh();
+  render();
+ }catch(e){toast('Delete failed: '+String(e?.message||e));}
+}
 async function deleteRevokedBorrowerShare(id){const sh=(window.fmBorrowerCloud?.shares||[]).find(x=>x.id===id);if(!sh){toast('Link not found');return;}if(sh.active){toast('Close the link before deleting it');return;}if(!confirm('Permanently delete this closed borrower link? The link record will be removed. Loan and payment records will not be deleted.'))return;try{await window.fmBorrowerCloud.deleteRevokedShare(id);toast('Closed link deleted');if(window.fmBorrowerCloud?.refresh)window.fmBorrowerCloud.refresh();render();}catch(e){toast('Delete failed: '+String(e?.message||e));}}
 async function revokeBorrowerShare(id){if(!confirm('Revoke this borrower link?'))return;try{await window.fmBorrowerCloud.revokeShare(id);toast('Share link revoked');}catch(e){toast('Revoke failed: '+String(e?.message||e));}}
 async function copyBorrowerLink(id){const sh=(window.fmBorrowerCloud?.shares||[]).find(x=>x.id===id);if(!sh)return;const l=state.loans.find(x=>x.id===sh.accountId);if(!l)return toast('Loan account not found');const ids=sh.accountIds||[sh.accountId],snapshot=borrowerSnapshotForPerson(l,ids);if(snapshot.accounts.some(a=>!a.currency))return toast('Assign currency to every selected loan account first');try{await window.fmBorrowerCloud.updateShare(id,snapshot);const url=new URL('borrower.html?token='+encodeURIComponent(id),new URL('.',window.location.href)).href;try{await navigator.clipboard.writeText(url);toast('Private link copied · '+snapshot.accounts.length+' selected loan account(s) included');}catch(e){openModal('Copy borrower link','<p>One private link includes '+snapshot.accounts.length+' selected loan account(s) for '+escapeHtml(l.person||'this borrower')+'. Send it only to this borrower.</p><textarea readonly style="width:100%;min-height:90px;padding:10px">'+escapeHtml(url)+'</textarea>');}}catch(e){toast('Could not update borrower link: '+String(e?.message||e));}}
@@ -1540,7 +1561,7 @@ window.fmApp={render:()=>render(),getState:()=>state,replaceState:(next)=>{state
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, deleteDoc as firestoreDeleteDoc, onSnapshot, serverTimestamp, collection, query, where, addDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, deleteDoc as firestoreDeleteDoc, onSnapshot, serverTimestamp, collection, query, where, addDoc, updateDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 const firebaseConfig = {
   apiKey: "AIzaSyDCNyu8OFTZ2gAxq5lCbpTDd_bUTyO8Rr0",
   authDomain: "finance-master-8d227.firebaseapp.com",
