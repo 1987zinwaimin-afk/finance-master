@@ -1471,8 +1471,11 @@ async function deleteBorrowerSharePermanently(id){
  try{
   if(typeof window.fmBorrowerCloud?.deleteSharePermanently!=='function')throw new Error('Delete service is not loaded. Refresh the page and try again.');
   await window.fmBorrowerCloud.deleteSharePermanently(id);
+  // Refresh only the borrower-share data; do not reload the entire Finance Master app.
+  if(window.fmBorrowerCloud?.refresh)window.fmBorrowerCloud.refresh();
+  const card=document.querySelector('[onclick*="deleteBorrowerSharePermanently(\\''+id+'\\')"]')?.closest('.borrower-link-card');
+  if(card)card.remove();
   toast('Share link and chat messages deleted permanently.');
-  setTimeout(()=>window.location.reload(),700);
  }catch(e){toast('Share link delete failed: '+String(e?.code||e?.message||e));}
 }
 window.toggleBorrowerShare=toggleBorrowerShare;
