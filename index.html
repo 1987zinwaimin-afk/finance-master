@@ -1346,6 +1346,10 @@ function borrowerPortalPage(){
  const shares=window.fmBorrowerCloud?window.fmBorrowerCloud.shares:[];
  const requests=window.fmBorrowerCloud?window.fmBorrowerCloud.requests:[];
  const loans=state.loans||[];
+ const normName=v=>String(v||'').trim().replace(/\\s+/g,' ').toLocaleLowerCase();
+ const activeByName=new Map();
+ for(const sh of shares.filter(x=>x.active)){const k=normName(sh.borrowerName);if(!k)continue;const prev=activeByName.get(k);const count=x=>Array.isArray(x.accountIds)?x.accountIds.length:(x.accountId?1:0);if(!prev||count(sh)>count(prev))activeByName.set(k,sh);}
+ const displayShares=[...activeByName.values(),...shares.filter(x=>!x.active)];
  let html=pageHead('Borrower Portal','');
 
  html+='<section class="panel">';
@@ -1355,7 +1359,7 @@ function borrowerPortalPage(){
  html+='</section><section class="panel" style="margin-top:16px"><div class="panelhead"><div><h2>Borrower links by name</h2></div></div>';
  if(!window.fmBorrowerCloud||!window.fmBorrowerCloud.ready){html+='<div class="empty">Sign in to Finance Master to manage borrower links.</div>';}
  else if(!shares.length){html+='<div class="empty">No borrower links yet.</div>';}
- else{html+=shares.map(sh=>'<article class="borrower-link-card"><h3>'+escapeHtml(sh.borrowerName||'Borrower')+'</h3><p>Account: '+escapeHtml(sh.accountId)+' · '+(sh.active?'Active':'Revoked')+'</p><p>Snapshot remaining: '+escapeHtml(fmt(sh.snapshot&&sh.snapshot.principalOutstanding,sh.currency||'THB'))+' principal · '+escapeHtml(fmt(sh.snapshot&&sh.snapshot.interestOutstanding,sh.currency||'THB'))+' interest</p><div class="borrower-link-actions">'+(sh.active?'<button class="primary" onclick="copyBorrowerLink(\''+escapeHtml(sh.id)+'\')">Copy private link</button><button class="pill" onclick="updateBorrowerShare(\''+escapeHtml(sh.id)+'\')">Update snapshot</button><button class="pill" onclick="revokeBorrowerShare(\''+escapeHtml(sh.id)+'\')">Revoke link</button>':'<span class="tag out">Revoked</span><button class="pill danger" onclick="deleteRevokedBorrowerShare(this.dataset.id)" data-id="'+escapeHtml(sh.id)+'">Delete closed link</button>')+'</div></article>').join('');}
+ else{html+=displayShares.map(sh=>'<article class="borrower-link-card"><h3>'+escapeHtml(sh.borrowerName||'Borrower')+'</h3><p>Account: '+escapeHtml(sh.accountId)+' · '+(sh.active?'Active':'Revoked')+'</p><p>Snapshot remaining: '+escapeHtml(fmt(sh.snapshot&&sh.snapshot.principalOutstanding,sh.currency||'THB'))+' principal · '+escapeHtml(fmt(sh.snapshot&&sh.snapshot.interestOutstanding,sh.currency||'THB'))+' interest</p><div class="borrower-link-actions">'+(sh.active?'<button class="primary" onclick="copyBorrowerLink(\''+escapeHtml(sh.id)+'\')">Copy private link</button><button class="pill" onclick="updateBorrowerShare(\''+escapeHtml(sh.id)+'\')">Update snapshot</button><button class="pill" onclick="revokeBorrowerShare(\''+escapeHtml(sh.id)+'\')">Revoke link</button>':'<span class="tag out">Revoked</span><button class="pill danger" onclick="deleteRevokedBorrowerShare(this.dataset.id)" data-id="'+escapeHtml(sh.id)+'">Delete closed link</button>')+'</div></article>').join('');}
  html+='</section><section class="panel" style="margin-top:16px"><div class="panelhead"><div><h2>Payment requests & notifications</h2><p>Payment History changes only after owner approval.</p></div><span class="tag">'+requests.filter(r=>r.status==='pending').length+' pending</span></div>';
  if(!window.fmBorrowerCloud||!window.fmBorrowerCloud.ready){html+='<div class="empty">Sign in to receive notifications.</div>';}
  else if(!requests.length){html+='<div class="empty">No payment requests yet.</div>';}
@@ -1386,18 +1390,29 @@ const borrowerAutoCreateAttempted=new Set();
 async function ensureBorrowerLinksForAll(){
  if(borrowerAutoCreateRunning||!window.fmBorrowerCloud?.ready)return;
  borrowerAutoCreateRunning=true;
- let created=0,skipped=0;
+ let created=0,updated=0,skipped=0;
  try{
-  const existing=window.fmBorrowerCloud.shares||[];
-  for(const loan of (state.loans||[])){
-   if(existing.some(sh=>sh.accountId===loan.id||(Array.isArray(sh.accountIds)&&sh.accountIds.includes(loan.id))))continue;
-   if(borrowerAutoCreateAttempted.has(loan.id))continue;
-   if(!recordCurrency(loan)){skipped++;continue;}
-   borrowerAutoCreateAttempted.add(loan.id);
-   try{await window.fmBorrowerCloud.createShare(loan.id,borrowerSnapshotForLoan(loan),{silent:true});created++;}
-   catch(e){borrowerAutoCreateAttempted.delete(loan.id);console.error('Auto borrower link failed',loan.person,e);}
+  const loans=state.loans||[],allShares=window.fmBorrowerCloud.shares||[];
+  const key=v=>String(v||'').trim().replace(/\\s+/g,' ').toLocaleLowerCase();
+  const groups=new Map();
+  for(const loan of loans){const k=key(loan.person);if(!k)continue;if(!groups.has(k))groups.set(k,[]);groups.get(k).push(loan);}
+  for(const group of groups.values()){
+   if(group.some(l=>!recordCurrency(l))){skipped++;continue;}
+   const ids=group.map(l=>l.id);
+   const related=allShares.filter(sh=>sh.active&&key(sh.borrowerName)===key(group[0].person));
+   const chosen=related.slice().sort((a,b)=>(Array.isArray(b.accountIds)?b.accountIds.length:1)-(Array.isArray(a.accountIds)?a.accountIds.length:1))[0];
+   const snapshot=borrowerSnapshotForPerson(group[0],ids);
+   if(chosen){
+    const already=Array.isArray(chosen.accountIds)&&ids.every(id=>chosen.accountIds.includes(id))&&ids.length===chosen.accountIds.length;
+    if(!already){try{await window.fmBorrowerCloud.updateShare(chosen.id,snapshot);updated++;}catch(e){console.error('Borrower link consolidation failed',chosen.borrowerName,e);}}
+   }else{
+    const attemptKey='person:'+key(group[0].person);if(borrowerAutoCreateAttempted.has(attemptKey))continue;
+    borrowerAutoCreateAttempted.add(attemptKey);
+    try{await window.fmBorrowerCloud.createShare(group[0].id,snapshot,{silent:true});created++;}
+    catch(e){borrowerAutoCreateAttempted.delete(attemptKey);console.error('Auto borrower link failed',group[0].person,e);}
+   }
   }
-  if(created||skipped)status('Automatic borrower links: '+created+' created'+(skipped?', '+skipped+' skipped (assign currency first)':'')+'.');
+  if(created||updated||skipped)status('Borrower links: '+created+' created, '+updated+' consolidated'+(skipped?', '+skipped+' borrower(s) skipped (assign currency first)':'')+'.');
  }finally{borrowerAutoCreateRunning=false;}
 }
 function borrowerShareUrl(token){return new URL('borrower.html?token='+encodeURIComponent(token),new URL('.',window.location.href)).href;}
