@@ -88,7 +88,7 @@ function renderBorrowerRequestStatus(items){
 function startBorrowerRequestListener(){
  if(stopBorrowerRequests){stopBorrowerRequests();stopBorrowerRequests=null;}
  if(!token||!share?.active)return;
- const statusAccountId=share.accountId||share.snapshot?.accountId;if(!statusAccountId){const el=$("borrowerRequestStatus");if(el)el.innerHTML="";return;}const q=query(collection(db,"borrowerPaymentRequests"),where("token","==",token),where("accountId","==",statusAccountId));
+ const q=query(collection(db,"borrowerPaymentRequests"),where("token","==",token));
  stopBorrowerRequests=onSnapshot(q,snap=>{
   const items=snap.docs.map(d=>{const x=d.data();return {id:d.id,...x,createdAtText:formatRequestTime(x.createdAt),reviewedAtText:formatRequestTime(x.reviewedAt)}}).sort((x,y)=>String(y.date||"").localeCompare(String(x.date||"")));
   renderBorrowerRequestStatus(items);
