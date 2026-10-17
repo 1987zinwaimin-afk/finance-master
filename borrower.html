@@ -88,7 +88,7 @@ function renderBorrowerRequestStatus(items){
 function startBorrowerRequestListener(){
  if(stopBorrowerRequests){stopBorrowerRequests();stopBorrowerRequests=null;}
  if(!token||!share?.active)return;
- const q=query(collection(db,"borrowerPaymentRequests"),where("token","==",token));
+ const statusAccountIds=Array.isArray(share.accountIds)&&share.accountIds.length?share.accountIds:[share.accountId||share.snapshot?.accountId].filter(Boolean);if(!statusAccountIds.length){const el=$("borrowerRequestStatus");if(el)el.innerHTML="";return;}const q=query(collection(db,"borrowerPaymentRequests"),where("token","==",token),where("accountId","in",statusAccountIds.slice(0,30)));
  stopBorrowerRequests=onSnapshot(q,snap=>{
   const items=snap.docs.map(d=>{const x=d.data();return {id:d.id,...x,createdAtText:formatRequestTime(x.createdAt),reviewedAtText:formatRequestTime(x.reviewedAt)}}).sort((x,y)=>String(y.date||"").localeCompare(String(x.date||"")));
   renderBorrowerRequestStatus(items);
@@ -179,7 +179,7 @@ async function submitRequest(e){
  if(paymentMethod==="bank"&&!bankQrShown){resultTarget.innerHTML='<div class="error">Tap Get Bank QR first and complete the bank transfer.</div>';if(button)button.disabled=false;return;}
  if(paymentMethod==="bank"&&!paymentReceiptImage){resultTarget.innerHTML='<div class="error">Please upload the transfer receipt before sending it to the owner.</div>';if(button)button.disabled=false;return;}
  try{
-  const selectedAccountId=$("requestAccountId")?.value||share.accountId;const selectedAccount=accounts.find(a=>a.accountId===selectedAccountId)||s;await addDoc(collection(db,"borrowerPaymentRequests"),{token,ownerUid:share.ownerUid,accountId:selectedAccountId,borrowerName:share.borrowerName||s.person||"Borrower",currency:selectedAccount.currency||share.currency||s.currency||"THB",amount,date,apply,note,paymentMethod,receiptImage:paymentMethod==="bank"?paymentReceiptImage:"",status:"pending",createdAt:serverTimestamp(),schemaVersion:1});
+  const selectedAccountId=$("requestAccountId")?.value||share.accountId;const requestAccounts=Array.isArray(s.accounts)&&s.accounts.length?s.accounts:[s];const selectedAccount=requestAccounts.find(a=>a.accountId===selectedAccountId)||s;await addDoc(collection(db,"borrowerPaymentRequests"),{token,ownerUid:share.ownerUid,accountId:selectedAccountId,borrowerName:share.borrowerName||s.person||"Borrower",currency:selectedAccount.currency||share.currency||s.currency||"THB",amount,date,apply,note,paymentMethod,receiptImage:paymentMethod==="bank"?paymentReceiptImage:"",status:"pending",createdAt:serverTimestamp(),schemaVersion:1});
   if(paymentMethod==="bank"){const modal=$("bankQrModal");if(modal)modal.hidden=true;resultTarget.innerHTML="";$("requestForm").reset();$("payDate").value=today();setPaymentMethodUI();const target=$("borrowerRequestStatus");if(target)target.innerHTML='<div class="success">ငွေလွှဲပြေစာ ပို့ပြီးပါပြီ။ ခေတ္တခဏစောင့်ပေးပါ။<br>Transfer receipt sent. Please wait for the owner to review it.</div>';}else{resultTarget.innerHTML='<div class="success">Payment request sent. Please wait for the owner to review it.</div>';$("requestForm").reset();$("payDate").value=today();setPaymentMethodUI();}
  }catch(err){resultTarget.innerHTML='<div class="error">Could not send the request. The link may have been revoked or database security rules may need updating. '+esc(err.message||"")+'</div>';}
  if(button)button.disabled=false;
