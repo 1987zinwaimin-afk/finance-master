@@ -1387,7 +1387,7 @@ const borrowerAutoCreateAttempted=new Set();
 async function ensureBorrowerLinksForAll(){
  if(borrowerAutoCreateRunning||!window.fmBorrowerCloud?.ready)return;
  borrowerAutoCreateRunning=true;
- let created=0,updated=0,skipped=0;
+ let updated=0,skipped=0;
  try{
   const loans=state.loans||[],allShares=window.fmBorrowerCloud.shares||[];
   const key=v=>String(v||'').trim().replace(/\\s+/g,' ').toLocaleLowerCase();
@@ -1397,19 +1397,13 @@ async function ensureBorrowerLinksForAll(){
    if(group.some(l=>!recordCurrency(l))){skipped++;continue;}
    const ids=group.map(l=>l.id);
    const related=allShares.filter(sh=>sh.active&&key(sh.borrowerName)===key(group[0].person));
+   if(!related.length)continue; // A manually deleted link must stay deleted; never recreate it automatically.
    const chosen=related.slice().sort((a,b)=>(Array.isArray(b.accountIds)?b.accountIds.length:1)-(Array.isArray(a.accountIds)?a.accountIds.length:1))[0];
    const snapshot=borrowerSnapshotForPerson(group[0],ids);
-   if(chosen){
-    const already=Array.isArray(chosen.accountIds)&&ids.every(id=>chosen.accountIds.includes(id))&&ids.length===chosen.accountIds.length;
-    if(!already){try{await window.fmBorrowerCloud.updateShare(chosen.id,snapshot);updated++;}catch(e){console.error('Borrower link consolidation failed',chosen.borrowerName,e);}}
-   }else{
-    const attemptKey='person:'+key(group[0].person);if(borrowerAutoCreateAttempted.has(attemptKey))continue;
-    borrowerAutoCreateAttempted.add(attemptKey);
-    try{await window.fmBorrowerCloud.createShare(group[0].id,snapshot,{silent:true});created++;}
-    catch(e){borrowerAutoCreateAttempted.delete(attemptKey);console.error('Auto borrower link failed',group[0].person,e);}
-   }
+   const already=Array.isArray(chosen.accountIds)&&ids.every(id=>chosen.accountIds.includes(id))&&ids.length===chosen.accountIds.length;
+   if(!already){try{await window.fmBorrowerCloud.updateShare(chosen.id,snapshot);updated++;}catch(e){console.error('Borrower link consolidation failed',chosen.borrowerName,e);}}
   }
-  if(created||updated||skipped)status('Borrower links: '+created+' created, '+updated+' consolidated'+(skipped?', '+skipped+' borrower(s) skipped (assign currency first)':'')+'.');
+  if(updated||skipped)status('Borrower links: '+updated+' updated'+(skipped?', '+skipped+' borrower(s) skipped (assign currency first)':'')+'.');
  }finally{borrowerAutoCreateRunning=false;}
 }
 function borrowerShareUrl(token){return new URL('borrower.html?token='+encodeURIComponent(token),new URL('.',window.location.href)).href;}
