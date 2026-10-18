@@ -1808,8 +1808,18 @@ const startCloudListener = user => {
     }
     if(!snap.exists()){
       if(!initialSnapshotHandled){
-        initialSnapshotHandled=true;syncReady=false;window.fmSecurityState='no-cloud';
-        status('This account has no cloud backup. Device records are hidden for privacy and will not be uploaded automatically.',true);
+        initialSnapshotHandled=true;
+        // The verified Owner may continue using this device's existing records when no
+        // cloud document exists. Keep sync disabled until the Owner explicitly uploads
+        // or downloads data; never create/overwrite a cloud copy automatically.
+        syncReady=false;localDirty=false;syncConflict=false;
+        if(isOwnerUser(user) && window.fmApp.hasLocalRecords()){
+          window.fmSecurityState='ready';
+          status('Owner verified. No cloud backup exists yet; existing device records are available and have not been uploaded. Use Settings to review and explicitly upload after making a backup.',true);
+        }else{
+          window.fmSecurityState='no-cloud';
+          status('This account has no cloud backup. Device records remain hidden for privacy and will not be uploaded automatically.',true);
+        }
         if(window.fmApp?.render)window.fmApp.render();
       }
       return;
