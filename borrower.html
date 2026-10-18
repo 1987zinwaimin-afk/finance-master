@@ -210,15 +210,21 @@ boot();;
  const status=document.getElementById('status');
  const isStillLoading=()=>!!status&&/Loading your private account|သင့်သီးသန့်အကောင့်ကို ဖွင့်နေသည်|กำลังโหลดบัญชีส่วนตัว/.test(status.textContent||'');
  window.addEventListener('error',function(e){
+  // Ignore failed images/fonts and other resource errors; they must not mask a
+  // borrower-link loading state. Only report actual uncaught JavaScript errors.
+  if(e.target && e.target !== window)return;
   if(status&&isStillLoading()){
    status.className='status error';
-   status.textContent='စာမျက်နှာဖွင့်ရာတွင် JavaScript/Firebase အမှားရှိနေသည်။ Internet ချိတ်ဆက်မှုကို စစ်ပြီး Refresh လုပ်ပါ။';
+   var detail=String(e.message||'Unknown JavaScript error');
+   var location=e.filename?(' ('+e.filename.split('/').pop()+':'+(e.lineno||'?')+')'):'';
+   status.textContent='JavaScript အမှား: '+detail+location+'. Internet ချိတ်ဆက်မှုကို စစ်ပြီး Refresh လုပ်ပါ။';
   }
  });
  window.addEventListener('unhandledrejection',function(e){
   if(status&&isStillLoading()){
    status.className='status error';
-   status.textContent='အကောင့်ချိတ်ဆက်မှု မအောင်မြင်ပါ: '+String(e.reason&&e.reason.message||e.reason||'Unknown error');
+   var reason=e.reason;
+   status.textContent='Firebase/အကောင့်ချိတ်ဆက်မှု အမှား: '+String(reason&&reason.message||reason||'Unknown error');
   }
  });
  setTimeout(function(){
