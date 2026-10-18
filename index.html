@@ -1343,25 +1343,46 @@ document.addEventListener('submit',e=>{if(e.target?.id==='ownerChatForm')submitO
 document.addEventListener('click',async e=>{const edit=e.target.closest('[data-chat-edit]'),del=e.target.closest('[data-chat-delete]');if(!edit&&!del)return;const token=selectedBorrowerChatToken,id=(edit||del).dataset[edit?'chatEdit':'chatDelete'],message=activeBorrowerChatMessages.find(m=>m.id===id);if(!token||!id||!message)return;try{if(edit){const value=prompt('Edit your message:',message.text||'');if(value===null)return;if(!value.trim()&&!message.imageData){toast('Message cannot be empty.');return;}await window.fmBorrowerCloud.editChatMessage(token,id,value.trim());toast('Message updated for both sides.');}else{if(!confirm('Delete this message for both Owner and Borrower? This cannot be undone.'))return;await window.fmBorrowerCloud.deleteChatMessage(token,id);toast('Message deleted for both sides.');}}catch(err){toast('Could not change message: '+String(err?.message||err));}});
 
 function borrowerPortalPage(){
- const shares=window.fmBorrowerCloud?window.fmBorrowerCloud.shares:[];
- const requests=window.fmBorrowerCloud?window.fmBorrowerCloud.requests:[];
- const loans=state.loans||[];
- const displayShares=shares.slice().sort((a,b)=>String(a.borrowerName||'').localeCompare(String(b.borrowerName||''))||String(a.createdAt?.seconds||0)-String(b.createdAt?.seconds||0));
- let html=pageHead('Borrower Portal','');
-
- html+='<section class="panel">';
- if(!window.fmBorrowerCloud||!window.fmBorrowerCloud.ready){html+='<div class="empty">Sign in to Finance Master to generate private links automatically.</div>';}
- else if(!loans.length){html+='<div class="empty">Add a loan account first.</div>';}
- else{}
- html+='</section><section class="panel" style="margin-top:16px"><div class="panelhead"><div><h2>Borrower links by name</h2></div></div>';
- if(!window.fmBorrowerCloud||!window.fmBorrowerCloud.ready){html+='<div class="empty">Sign in to Finance Master to manage borrower links.</div>';}
- else if(!shares.length){html+='<div class="empty">No borrower links yet.</div>';}
- else{html+=displayShares.map(sh=>'<article class="borrower-link-card"><h3>'+escapeHtml(sh.borrowerName||'Borrower')+'</h3><p>Account: '+escapeHtml(sh.accountId||'—')+' · '+((Array.isArray(sh.accountIds)&&sh.accountIds.length>1)?escapeHtml(sh.accountIds.length+' linked loans')+' · ':'')+(sh.active?'<span class="tag approved">Active</span>':'<span class="tag out">Closed</span>')+'</p><p>Snapshot remaining: '+escapeHtml(fmt(sh.snapshot&&sh.snapshot.principalOutstanding,sh.currency||'THB'))+' principal · '+escapeHtml(fmt(sh.snapshot&&sh.snapshot.interestOutstanding,sh.currency||'THB'))+' interest</p><div class="borrower-link-actions">'+(sh.active?'<button class="primary" onclick="copyBorrowerLink(\''+escapeHtml(sh.id)+'\')">Copy private link</button><button class="pill" onclick="updateBorrowerShare(\''+escapeHtml(sh.id)+'\')">Update snapshot</button><button class="pill danger" onclick="toggleBorrowerShare(\''+escapeHtml(sh.id)+'\',false)">Close link</button>':'<button class="primary" onclick="toggleBorrowerShare(\''+escapeHtml(sh.id)+'\',true)">Open link</button>')+'<button class="pill danger" onclick="deleteBorrowerSharePermanently(\''+escapeHtml(sh.id)+'\')">Delete permanently</button></div></article>').join('');}
- html+='</section><section class="panel" style="margin-top:16px"><div class="panelhead"><div><h2>Payment requests & notifications</h2><p>Payment History changes only after owner approval.</p></div><span class="tag">'+requests.filter(r=>r.status==='pending').length+' pending</span></div>';
- if(!window.fmBorrowerCloud||!window.fmBorrowerCloud.ready){html+='<div class="empty">Sign in to receive notifications.</div>';}
- else if(!requests.length){html+='<div class="empty">No payment requests yet.</div>';}
- else{html+=requests.map(r=>'<article class="borrower-request '+(r.status==='pending'?'pending':r.status==='approved'?'approved':'rejected')+'"><div class="request-top"><b>'+escapeHtml(r.borrowerName||'Borrower')+' · '+escapeHtml(fmt(r.amount,r.currency||'THB'))+'</b><span class="tag '+(r.status==='pending'?'out':r.status==='approved'?'approved':'rejected')+'">'+escapeHtml(r.status||'pending')+'</span></div><p class="sub">Payment date: '+escapeHtml(r.date||'—')+'</p><p>Method: '+escapeHtml(r.paymentMethod==='bank'?'Bank transfer':'Cash')+' · Apply to: '+escapeHtml(r.apply||'auto')+' · Note: '+escapeHtml(r.note||'—')+'</p>'+(r.receiptImage?'<div class="borrower-receipt-review"><b>Transfer receipt</b><a href="'+escapeHtml(r.receiptImage)+'" target="_blank" rel="noopener"><img src="'+escapeHtml(r.receiptImage)+'" alt="Borrower transfer receipt" loading="lazy" style="display:block;max-width:100%;max-height:320px;object-fit:contain;border-radius:12px;margin-top:8px"></a></div>':'')+(r.status==='pending'&&!approvingBorrowerRequests.has(r.id)&&!rejectingBorrowerRequests.has(r.id)?'<div class="request-actions"><button class="primary" onclick="approveBorrowerRequest(\''+escapeHtml(r.id)+'\')">Approve & record payment</button><button class="pill" onclick="rejectBorrowerRequest(\''+escapeHtml(r.id)+'\')">Reject request</button></div>':'')+((approvingBorrowerRequests.has(r.id)||rejectingBorrowerRequests.has(r.id))?'<div class="request-actions"><span class="tag">Processing…</span></div>':'<div class="request-actions"><button class="pill" onclick="deleteBorrowerRequest(\''+escapeHtml(r.id)+'\')">Delete request</button></div>')+'</article>').join('');}
- html+='</section>';return html;
+  const shares=window.fmBorrowerCloud?window.fmBorrowerCloud.shares:[];
+  const requests=window.fmBorrowerCloud?window.fmBorrowerCloud.requests:[];
+  const loans=state.loans||[];
+  const borrowerKey=v=>String(v||'').trim().replace(/\\s+/g,' ').toLocaleLowerCase();
+  // Display one Owner Portal card per borrower name. Prefer the existing active link
+  // that already contains the most loan accounts; do not delete legacy links or data.
+  const grouped=new Map();
+  shares.slice().sort((a,b)=>Number(!!b.active)-Number(!!a.active)||
+    ((Array.isArray(b.accountIds)?b.accountIds.length:1)-(Array.isArray(a.accountIds)?a.accountIds.length:1))||
+    String(a.createdAt?.seconds||0).localeCompare(String(b.createdAt?.seconds||0))
+  ).forEach(sh=>{
+    const key=borrowerKey(sh.borrowerName);
+    if(!key)return;
+    const old=grouped.get(key);
+    const count=x=>Array.isArray(x.accountIds)&&x.accountIds.length?x.accountIds.length:(Array.isArray(x.snapshot?.accounts)&&x.snapshot.accounts.length?x.snapshot.accounts.length:(x.accountId?1:0));
+    if(!old || (sh.active&&!old.active) || (sh.active===old.active&&count(sh)>count(old)))grouped.set(key,sh);
+  });
+  const displayShares=[...grouped.values()].sort((a,b)=>String(a.borrowerName||'').localeCompare(String(b.borrowerName||'')));
+  let html=pageHead('Borrower Portal','');
+  html+='<section class="panel">';
+  if(!window.fmBorrowerCloud||!window.fmBorrowerCloud.ready){html+='<div class="empty">Sign in to Finance Master to generate private links automatically.</div>';}
+  else if(!loans.length){html+='<div class="empty">Add a loan account first.</div>';}
+  html+='</section><section class="panel" style="margin-top:16px"><div class="panelhead"><div><h2>Borrower links by name</h2><p>One Share Link entry per borrower. Existing duplicate records are kept safely in the background.</p></div></div>';
+  if(!window.fmBorrowerCloud||!window.fmBorrowerCloud.ready){html+='<div class="empty">Sign in to Finance Master to manage borrower links.</div>';}
+  else if(!displayShares.length){html+='<div class="empty">No borrower links yet.</div>';}
+  else{html+=displayShares.map(sh=>{
+    const personLoans=loans.filter(l=>borrowerKey(l.person)===borrowerKey(sh.borrowerName));
+    const chosenIds=Array.isArray(sh.accountIds)&&sh.accountIds.length?sh.accountIds:(Array.isArray(sh.snapshot?.accounts)?sh.snapshot.accounts.map(a=>a.accountId):[sh.accountId]);
+    const linkedCount=personLoans.length?personLoans.length:chosenIds.filter(Boolean).length;
+    const snapshot=sh.snapshot||{};
+    const principal=personLoans.length?personLoans.reduce((sum,l)=>sum+Number(loanLedger('loan',l).principalOutstanding||0),0):Number(snapshot.principalOutstanding)||0;
+    const interest=personLoans.length?personLoans.reduce((sum,l)=>sum+Number(loanLedger('loan',l).interestOutstanding||0),0):Number(snapshot.interestOutstanding)||0;
+    const currency=sh.currency||(personLoans[0]&&recordCurrency(personLoans[0]))||'THB';
+    return '<article class="borrower-link-card"><h3>'+escapeHtml(sh.borrowerName||'Borrower')+'</h3><p>'+escapeHtml(linkedCount+' linked loan(s)')+' · '+(sh.active?'<span class="tag approved">Active</span>':'<span class="tag out">Closed</span>')+'</p><p>Snapshot remaining: '+escapeHtml(fmt(principal,currency))+' principal · '+escapeHtml(fmt(interest,currency))+' interest</p><div class="borrower-link-actions">'+(sh.active?'<button class="primary" onclick="copyBorrowerLink(\\''+escapeHtml(sh.id)+'\\')">Copy private link</button><button class="pill" onclick="updateBorrowerShare(\\''+escapeHtml(sh.id)+'\\')">Update snapshot</button><button class="pill danger" onclick="toggleBorrowerShare(\\''+escapeHtml(sh.id)+'\\',false)">Close link</button>':'<button class="primary" onclick="toggleBorrowerShare(\\''+escapeHtml(sh.id)+'\\',true)">Open link</button>')+'<button class="pill danger" onclick="deleteBorrowerSharePermanently(\\''+escapeHtml(sh.id)+'\\')">Delete permanently</button></div></article>';
+  }).join('');}
+  html+='</section><section class="panel" style="margin-top:16px"><div class="panelhead"><div><h2>Payment requests & notifications</h2><p>Payment History changes only after owner approval.</p></div><span class="tag">'+requests.filter(r=>r.status==='pending').length+' pending</span></div>';
+  if(!window.fmBorrowerCloud||!window.fmBorrowerCloud.ready){html+='<div class="empty">Sign in to receive notifications.</div>';}
+  else if(!requests.length){html+='<div class="empty">No payment requests yet.</div>';}
+  else{html+=requests.map(r=>'<article class="borrower-request '+(r.status==='pending'?'pending':r.status==='approved'?'approved':'rejected')+'"><div class="request-top"><b>'+escapeHtml(r.borrowerName||'Borrower')+' · '+escapeHtml(fmt(r.amount,r.currency||'THB'))+'</b><span class="tag '+(r.status==='pending'?'out':r.status==='approved'?'approved':'rejected')+'">'+escapeHtml(r.status||'pending')+'</span></div><p class="sub">Payment date: '+escapeHtml(r.date||'—')+'</p><p>Method: '+escapeHtml(r.paymentMethod==='bank'?'Bank transfer':'Cash')+' · Apply to: '+escapeHtml(r.apply||'auto')+' · Note: '+escapeHtml(r.note||'—')+'</p>'+(r.receiptImage?'<div class="borrower-receipt-review"><b>Transfer receipt</b><a href="'+escapeHtml(r.receiptImage)+'" target="_blank" rel="noopener"><img src="'+escapeHtml(r.receiptImage)+'" alt="Borrower transfer receipt" loading="lazy" style="display:block;max-width:100%;max-height:320px;object-fit:contain;border-radius:12px;margin-top:8px"></a></div>':'')+(r.status==='pending'&&!approvingBorrowerRequests.has(r.id)&&!rejectingBorrowerRequests.has(r.id)?'<div class="request-actions"><button class="primary" onclick="approveBorrowerRequest(\\''+escapeHtml(r.id)+'\\')">Approve & record payment</button><button class="pill" onclick="rejectBorrowerRequest(\\''+escapeHtml(r.id)+'\\')">Reject request</button></div>':'')+((approvingBorrowerRequests.has(r.id)||rejectingBorrowerRequests.has(r.id))?'<div class="request-actions"><span class="tag">Processing…</span></div>':'<div class="request-actions"><button class="pill" onclick="deleteBorrowerRequest(\\''+escapeHtml(r.id)+'\\')">Delete request</button></div>')+'</article>').join('');}
+  html+='</section>';return html;
 }
 function refreshBorrowerShareForLoan(l){if(!l||!window.fmBorrowerCloud?.ready)return;const shares=(window.fmBorrowerCloud.shares||[]).filter(x=>x.active&&(x.accountId===l.id||(Array.isArray(x.accountIds)&&x.accountIds.includes(l.id))));for(const sh of shares){const snapshot=borrowerSnapshotForShare(sh);if(snapshot)window.fmBorrowerCloud.updateShare(sh.id,snapshot).catch(e=>toast('Payment saved; borrower snapshot refresh failed: '+String(e?.message||e)));}}
 function borrowerSnapshotForLoan(l){
