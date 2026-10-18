@@ -1346,7 +1346,7 @@ function borrowerPortalPage(){
   const shares=window.fmBorrowerCloud?window.fmBorrowerCloud.shares:[];
   const requests=window.fmBorrowerCloud?window.fmBorrowerCloud.requests:[];
   const loans=state.loans||[];
-  const borrowerKey=v=>String(v||'').trim().replace(/\\s+/g,' ').toLocaleLowerCase();
+  const borrowerKey=v=>String(v||'').trim().replace(/\s+/g,' ').toLocaleLowerCase();
   // Display one Owner Portal card per borrower name. Prefer the existing active link
   // that already contains the most loan accounts; do not delete legacy links or data.
   const grouped=new Map();
