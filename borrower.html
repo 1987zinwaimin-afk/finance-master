@@ -102,7 +102,10 @@ function activateSharePage(page=activeSharePage){
  if(!allowed.includes(page))page="summary";
  activeSharePage=page;
  document.body.classList.toggle("chat-mode",page==="chat");
- document.querySelectorAll(".share-page").forEach(el=>el.hidden=el.dataset.sharePage!==page);
+ document.querySelectorAll(".share-page").forEach(el=>{const show=el.dataset.sharePage===page;el.hidden=!show;el.style.display=show?"block":"none";});
+ const requestedPage=document.querySelector('.share-page[data-share-page="'+page+'"]');
+ if(page==="request"&&requestedPage&&!document.querySelector("#requestForm")){setStatus("Payment form could not be created. Please reload this borrower link and try again.","error");}
+ if(page==="request"&&requestedPage){requestedPage.hidden=false;requestedPage.style.display="block";}
  document.querySelectorAll("[data-share-tab]").forEach(el=>{const active=el.dataset.shareTab===page;el.classList.toggle("active",active);el.setAttribute("aria-current",active?"page":"false");});
  const active=document.querySelector('.share-page[data-share-page="'+page+'"]');
  if(active)active.scrollTop=0;
