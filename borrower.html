@@ -201,6 +201,16 @@ body{background:radial-gradient(ellipse at 8% 0%,#d8f8ef 0,transparent 34%),radi
  #app .share-page[data-share-page="summary"] article.panel .metric b.metric-value-money{font-size:9px!important}
 }
 
+
+/* Each loan type is its own horizontally swipeable card, not a vertical stack */
+#app .share-page[data-share-page="summary"] .horizontal-loan-list{display:flex!important;flex-flow:row nowrap!important;gap:12px!important;overflow-x:auto!important;overflow-y:hidden!important;padding:7px 3px 16px!important;margin:0 -2px 8px!important;scroll-snap-type:x mandatory;scroll-padding-left:3px;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;touch-action:pan-x pan-y}
+#app .share-page[data-share-page="summary"] .horizontal-loan-list>article.panel{flex:0 0 min(86%,360px)!important;width:min(86%,360px)!important;max-width:none!important;min-width:0!important;scroll-snap-align:start;align-self:stretch}
+#app .share-page[data-share-page="summary"] .horizontal-loan-list>article.panel .grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+#app .share-page[data-share-page="summary"] .horizontal-loan-list>article.panel .metric{min-width:0!important}
+#app .share-page[data-share-page="summary"] .horizontal-loan-list::-webkit-scrollbar{height:5px}
+#app .share-page[data-share-page="summary"] .horizontal-loan-list::-webkit-scrollbar-thumb{background:linear-gradient(90deg,#15c69b,#438cff,#f5c96b);border-radius:99px}
+@media(min-width:700px){#app .share-page[data-share-page="summary"] .horizontal-loan-list>article.panel{flex-basis:340px!important;width:340px!important}}
+
 </style>
 </head>
 <body><main class="wrap">
@@ -317,7 +327,7 @@ function render(){
  const summaryMarkup=(()=>{
   const active=accounts.filter(a=>!isPaused(a)),paused=accounts.filter(isPaused);
   if(!multi)return '<section class="panel share-page" data-share-page="summary"><h2 style="font-size:17px;margin-top:0">ချေးငွေအကျဉ်းချုပ်</h2><p class="muted">ချေးငွေနှင့် လက်ကျန်ငွေ၊ အတိုးနှင့် လစဉ်ပေးချေရမည့်ငွေများကို အောက်တွင် ရှင်းလင်းစွာ ဖော်ပြထားပါသည်။</p>'+summaryCard(s,0)+'</section>';
-  return '<section class="panel share-page" data-share-page="summary"><h2 style="font-size:17px;margin-top:0">ချေးငွေအကျဉ်းချုပ်</h2><p class="muted">ချေးငွေတစ်ခုချင်းစီကို အတိုးရှိ/အတိုးရပ်ထားသည့် အခြေအနေအလိုက် ခွဲပြထားပါသည်။</p>'+(active.length?'<div class="loan-category-banner active-banner"><span class="banner-orb">🌱</span><div class="banner-copy"><b>အတိုးရှိသောချေးငွေ</b><small>ပုံမှန်အတိုး · လစဉ်ပေးချေမှု</small></div><span class="banner-art" aria-hidden="true">📈 🪙🪙</span></div><div style="display:grid;gap:12px">'+active.map((a,i)=>summaryCard(a,i)).join('')+'</div>':'')+(paused.length?'<div class="loan-category-banner paused-banner"><span class="banner-orb">⏸️</span><div class="banner-copy"><b>အတိုးရပ်ထားသောချေးငွေ</b><small>အတိုးရပ်ထားသည့်အခြေအနေ</small></div><span class="banner-art" aria-hidden="true">🪙 🚫</span></div><div style="display:grid;gap:12px">'+paused.map((a,i)=>summaryCard(a,i)).join('')+'</div>':'')+'</section>';
+  return '<section class="panel share-page" data-share-page="summary"><h2 style="font-size:17px;margin-top:0">ချေးငွေအကျဉ်းချုပ်</h2><p class="muted">ချေးငွေတစ်ခုချင်းစီကို အတိုးရှိ/အတိုးရပ်ထားသည့် အခြေအနေအလိုက် ခွဲပြထားပါသည်။</p>'+(active.length?'<div class="loan-category-banner active-banner"><span class="banner-orb">🌱</span><div class="banner-copy"><b>အတိုးရှိသောချေးငွေ</b><small>ပုံမှန်အတိုး · လစဉ်ပေးချေမှု</small></div><span class="banner-art" aria-hidden="true">📈 🪙🪙</span></div><div class="horizontal-loan-list">'+active.map((a,i)=>summaryCard(a,i)).join('')+'</div>':'')+(paused.length?'<div class="loan-category-banner paused-banner"><span class="banner-orb">⏸️</span><div class="banner-copy"><b>အတိုးရပ်ထားသောချေးငွေ</b><small>အတိုးရပ်ထားသည့်အခြေအနေ</small></div><span class="banner-art" aria-hidden="true">🪙 🚫</span></div><div class="horizontal-loan-list">'+paused.map((a,i)=>summaryCard(a,i)).join('')+'</div>':'')+'</section>';
  })();
  $("app").innerHTML='<section class="panel share-page" data-share-page="summary"><div class="head"><div><span class="tag">Read only</span><h1>'+esc(share.borrowerName||s.person||"Borrower")+'</h1><p class="muted">Your personal loan account · '+esc(c)+'</p></div><div class="muted">Due date: <b>'+dueDate+'</b></div></div><div class="notice">You can view and check this account, filter records by month, and send a payment request to the owner. You cannot edit or delete loan records. Payments change the official balance only after the owner approves the request.</div></section>'+
  summaryMarkup+
