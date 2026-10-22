@@ -85,12 +85,25 @@ function renderBorrowerRequestStatus(items){
  const statusHint=s=>s==="approved"?"The owner approved this payment request. The loan summary and payment history should reflect the approved payment.":s==="rejected"?"The owner declined this request. Your loan balance was not changed. Please contact the owner if you need clarification.":"Your request was sent successfully. The official balance will change only after the owner approves it.";
  target.innerHTML='<h3>Payment request status</h3>'+items.map(r=>{const st=["approved","rejected"].includes(r.status)?r.status:"pending";return '<article class="request-status-card '+st+'"><div class="request-status-title"><span>'+esc(money(r.amount,r.currency||share.currency||"THB"))+' · '+esc(r.date||"")+'</span><span class="tag '+(st==="pending"?"out":"")+'">'+esc(statusText(st))+'</span></div><p>'+esc(statusHint(st))+'</p><p class="muted">Method: '+esc(r.paymentMethod==="bank"?"Bank transfer":"Cash")+' · Sent: '+esc(r.createdAtText||"Recently")+'</p>'+(r.reviewedAtText?'<p class="muted">Owner reviewed: '+esc(r.reviewedAtText)+'</p>':"")+(r.note?'<p>Note: '+esc(r.note)+'</p>':"")+(st==="rejected"&&r.rejectionReason?'<p><strong>Owner note:</strong> '+esc(r.rejectionReason)+'</p>':"")+(r.receiptImage?'<a href="'+esc(r.receiptImage)+'" target="_blank" rel="noopener"><img src="'+esc(r.receiptImage)+'" alt="Submitted transfer receipt"></a>':"")+'</article>';}).join('');
 }
+let borrowerRequestStatusBaselineReady=false;
+const borrowerRequestPreviousStatuses=new Map();
+function showBorrowerDecisionNotice(r){
+ const approved=r.status==="approved",title=approved?"Payment request approved":"Payment request rejected";
+ const detail=approved?"The owner accepted your payment request. Check your loan summary and payment history.":"The owner rejected your payment request. Your loan balance was not changed.";
+ let notice=document.getElementById("borrowerDecisionNotice");
+ if(!notice){notice=document.createElement("section");notice.id="borrowerDecisionNotice";notice.setAttribute("role","status");notice.setAttribute("aria-live","polite");notice.style.cssText="position:sticky;top:8px;z-index:1000;margin:10px auto;padding:14px 16px;max-width:760px;border:2px solid #c9a45c;border-radius:14px;background:#10243d;color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.2);font-weight:600";const root=document.getElementById("app")||document.body;root.prepend(notice);}
+ notice.innerHTML='<div style="display:flex;align-items:flex-start;gap:10px"><span style="font-size:22px">'+(approved?'✓':'!')+'</span><div><strong>'+esc(title)+'</strong><div style="font-weight:400;margin-top:5px">'+esc(money(r.amount,r.currency||share.currency||"THB"))+' · '+esc(r.date||"")+'</div><div style="font-weight:400;margin-top:5px">'+esc(detail)+'</div>'+(r.rejectionReason?'<div style="margin-top:6px">Owner note: '+esc(r.rejectionReason)+'</div>':'')+'</div><button type="button" aria-label="Dismiss notification" style="margin-left:auto;background:transparent;border:0;color:#fff;font-size:22px;cursor:pointer" onclick="this.closest(\'#borrowerDecisionNotice\').remove()">×</button></div>';
+}
 function startBorrowerRequestListener(){
  if(stopBorrowerRequests){stopBorrowerRequests();stopBorrowerRequests=null;}
+ borrowerRequestStatusBaselineReady=false;borrowerRequestPreviousStatuses.clear();
  if(!token||!share?.active)return;
  const statusAccountIds=Array.isArray(share.accountIds)&&share.accountIds.length?share.accountIds:[share.accountId||share.snapshot?.accountId].filter(Boolean);if(!statusAccountIds.length){const el=$("borrowerRequestStatus");if(el)el.innerHTML="";return;}const q=query(collection(db,"borrowerPaymentRequests"),where("token","==",token),where("accountId","in",statusAccountIds.slice(0,30)));
  stopBorrowerRequests=onSnapshot(q,snap=>{
   const items=snap.docs.map(d=>{const x=d.data();return {id:d.id,...x,createdAtText:formatRequestTime(x.createdAt),reviewedAtText:formatRequestTime(x.reviewedAt)}}).sort((x,y)=>String(y.date||"").localeCompare(String(x.date||"")));
+  if(borrowerRequestStatusBaselineReady){for(const item of items){const previous=borrowerRequestPreviousStatuses.get(item.id);if(previous==="pending"&&(item.status==="approved"||item.status==="rejected"))showBorrowerDecisionNotice(item);}}
+  for(const item of items)borrowerRequestPreviousStatuses.set(item.id,item.status||"pending");
+  borrowerRequestStatusBaselineReady=true;
   renderBorrowerRequestStatus(items);
  },err=>{const el=$("borrowerRequestStatus");if(el)el.innerHTML='<div class="bank-transfer-error">Could not load payment request status. Refresh the link or contact the owner.</div>';});
 }
