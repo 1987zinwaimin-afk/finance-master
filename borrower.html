@@ -2,6 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101c33">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%23101c33'/%3E%3Ctext x='50%25' y='58%25' font-size='320' font-family='Arial,sans-serif' font-weight='700' text-anchor='middle' fill='%23d8b56d'%3EF%3C/text%3E%3C/svg%3E">
+<script>
+(function(){
+ try{
+  const icon='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#101c33"/><text x="50%" y="58%" font-size="320" font-family="Arial,sans-serif" font-weight="700" text-anchor="middle" fill="#d8b56d">F</text></svg>');
+  const start=location.href;
+  const manifest={id:start,start_url:start,scope:location.origin+'/',name:'Finance Master · Borrower',short_name:'Finance Master',description:'Your private borrower account',display:'standalone',background_color:'#f4f6fa',theme_color:'#101c33',icons:[{src:icon,sizes:'any',type:'image/svg+xml',purpose:'any maskable'}]};
+  const blob=new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'});
+  const link=document.createElement('link');link.rel='manifest';link.href=URL.createObjectURL(blob);document.head.appendChild(link);
+ }catch(e){}
+ if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/borrower-service-worker.js',{scope:'/'}).catch(()=>{}));}
+})();
+</script>
 <title>Borrower Account · Finance Master</title>
 <style>
 :root{--navy:#101c33;--gold:#d8b56d;--bg:#f4f6fa;--ink:#172033;--muted:#788398;--line:#e6eaf1;--green:#16866a;--red:#d94c4c}
