@@ -125,6 +125,22 @@ body{background:radial-gradient(ellipse at 8% 0%,#d8f8ef 0,transparent 34%),radi
 #app .share-page[data-share-page="summary"] article.panel .notice{background:linear-gradient(135deg,#fff4bf,#ffe38b);border-color:#ffd45b;color:#72500c}
 @media(max-width:390px){.metric{grid-template-columns:30px minmax(0,1fr);column-gap:7px;padding:10px 8px}.metric-icon{width:29px;height:29px;font-size:17px}.metric b.metric-value-money{font-size:12px;letter-spacing:-.55px}}
 
+
+/* Reference-inspired category hero banners */
+.loan-category-banner{position:relative;isolation:isolate;display:flex;align-items:center;gap:12px;min-height:104px;padding:17px 16px;margin:18px 0 13px;border-radius:25px;overflow:hidden;color:#fff;border:1px solid #ffffffa8;box-shadow:0 8px 0 rgba(7,90,65,.45),0 15px 24px rgba(14,95,80,.18),inset 0 2px 0 rgba(255,255,255,.55)}
+.loan-category-banner:after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(115deg,transparent 0%,rgba(255,255,255,.16) 48%,transparent 70%);pointer-events:none}
+.active-banner{background:linear-gradient(115deg,#08b76c 0%,#00d79a 48%,#4be9bd 100%)}
+.paused-banner{background:linear-gradient(115deg,#ff6a52 0%,#ff3f64 52%,#ff9855 100%);box-shadow:0 8px 0 rgba(160,43,40,.42),0 15px 24px rgba(210,70,70,.16),inset 0 2px 0 rgba(255,255,255,.55)}
+.banner-orb{flex:0 0 57px;width:57px;height:57px;display:grid;place-items:center;border-radius:50%;font-size:29px;background:linear-gradient(145deg,#fff,#dffaf0);box-shadow:0 5px 0 rgba(0,92,63,.28),0 9px 15px #004d3b35,inset 0 2px 2px #fff;color:#0c865d}
+.paused-banner .banner-orb{background:linear-gradient(145deg,#fff7d8,#ffd47a);box-shadow:0 5px 0 #bc4b414d,0 9px 15px #6f25253b,inset 0 2px 2px #fff}
+.banner-copy{display:flex;flex-direction:column;gap:6px;min-width:0;position:relative;z-index:1}
+.banner-copy b{font-size:clamp(16px,4.2vw,22px);line-height:1.35;font-weight:900;text-shadow:0 2px 4px #004c3835}
+.banner-copy small{font-size:11px;font-weight:800;line-height:1.4;color:#14563f;background:linear-gradient(135deg,#fff3b8,#ffda77);border:1px solid #fff4c5;border-radius:999px;padding:6px 10px;width:max-content;max-width:100%;box-shadow:0 4px 8px #005d3e25}
+.paused-banner .banner-copy small{color:#9b2733;background:linear-gradient(135deg,#fff,#ffe3ed);border-color:#fff}
+.banner-art{margin-left:auto;flex:0 0 auto;font-size:clamp(23px,6vw,36px);letter-spacing:-8px;white-space:nowrap;filter:drop-shadow(0 5px 3px #004a3a36);transform:translateY(3px)}
+#app .share-page[data-share-page="summary"] article.panel>div:first-child{min-height:100px}
+@media(max-width:420px){.loan-category-banner{min-height:94px;padding:13px 11px;gap:9px;border-radius:21px}.banner-orb{width:45px;height:45px;flex-basis:45px;font-size:23px}.banner-copy b{font-size:15px}.banner-copy small{font-size:10px;padding:5px 7px}.banner-art{font-size:23px;letter-spacing:-7px}}
+
 </style>
 </head>
 <body><main class="wrap">
@@ -241,7 +257,7 @@ function render(){
  const summaryMarkup=(()=>{
   const active=accounts.filter(a=>!isPaused(a)),paused=accounts.filter(isPaused);
   if(!multi)return '<section class="panel share-page" data-share-page="summary"><h2 style="font-size:17px;margin-top:0">ချေးငွေအကျဉ်းချုပ်</h2><p class="muted">ချေးငွေနှင့် လက်ကျန်ငွေ၊ အတိုးနှင့် လစဉ်ပေးချေရမည့်ငွေများကို အောက်တွင် ရှင်းလင်းစွာ ဖော်ပြထားပါသည်။</p>'+summaryCard(s,0)+'</section>';
-  return '<section class="panel share-page" data-share-page="summary"><h2 style="font-size:17px;margin-top:0">ချေးငွေအကျဉ်းချုပ်</h2><p class="muted">ချေးငွေတစ်ခုချင်းစီကို အတိုးရှိ/အတိုးရပ်ထားသည့် အခြေအနေအလိုက် ခွဲပြထားပါသည်။</p>'+(active.length?'<h3 style="font-size:15px;margin:18px 0 10px">အတိုးရှိသောချေးငွေစာရင်းများ ('+active.length+')</h3><div style="display:grid;gap:12px">'+active.map((a,i)=>summaryCard(a,i)).join('')+'</div>':'')+(paused.length?'<h3 style="font-size:15px;margin:20px 0 10px;color:#925b00">အတိုးရပ်ထားသောချေးငွေစာရင်းများ ('+paused.length+')</h3><div style="display:grid;gap:12px">'+paused.map((a,i)=>summaryCard(a,i)).join('')+'</div>':'')+'</section>';
+  return '<section class="panel share-page" data-share-page="summary"><h2 style="font-size:17px;margin-top:0">ချေးငွေအကျဉ်းချုပ်</h2><p class="muted">ချေးငွေတစ်ခုချင်းစီကို အတိုးရှိ/အတိုးရပ်ထားသည့် အခြေအနေအလိုက် ခွဲပြထားပါသည်။</p>'+(active.length?'<div class="loan-category-banner active-banner"><span class="banner-orb">🌱</span><div class="banner-copy"><b>အတိုးရှိသောချေးငွေ</b><small>ပုံမှန်အတိုး · လစဉ်ပေးချေမှု</small></div><span class="banner-art" aria-hidden="true">📈 🪙🪙</span></div><div style="display:grid;gap:12px">'+active.map((a,i)=>summaryCard(a,i)).join('')+'</div>':'')+(paused.length?'<div class="loan-category-banner paused-banner"><span class="banner-orb">⏸️</span><div class="banner-copy"><b>အတိုးရပ်ထားသောချေးငွေ</b><small>အတိုးရပ်ထားသည့်အခြေအနေ</small></div><span class="banner-art" aria-hidden="true">🪙 🚫</span></div><div style="display:grid;gap:12px">'+paused.map((a,i)=>summaryCard(a,i)).join('')+'</div>':'')+'</section>';
  })();
  $("app").innerHTML='<section class="panel share-page" data-share-page="summary"><div class="head"><div><span class="tag">Read only</span><h1>'+esc(share.borrowerName||s.person||"Borrower")+'</h1><p class="muted">Your personal loan account · '+esc(c)+'</p></div><div class="muted">Due date: <b>'+dueDate+'</b></div></div><div class="notice">You can view and check this account, filter records by month, and send a payment request to the owner. You cannot edit or delete loan records. Payments change the official balance only after the owner approves the request.</div></section>'+
  summaryMarkup+
