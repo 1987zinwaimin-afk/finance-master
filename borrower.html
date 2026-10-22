@@ -141,6 +141,39 @@ body{background:radial-gradient(ellipse at 8% 0%,#d8f8ef 0,transparent 34%),radi
 #app .share-page[data-share-page="summary"] article.panel>div:first-child{min-height:100px}
 @media(max-width:420px){.loan-category-banner{min-height:94px;padding:13px 11px;gap:9px;border-radius:21px}.banner-orb{width:45px;height:45px;flex-basis:45px;font-size:23px}.banner-copy b{font-size:15px}.banner-copy small{font-size:10px;padding:5px 7px}.banner-art{font-size:23px;letter-spacing:-7px}}
 
+
+/* Compact landscape-style summary cards: reduce vertical stacking on phones */
+#app>.share-page[data-share-page="summary"]{padding:15px!important}
+#app>.share-page[data-share-page="summary"]>p{margin:6px 0 12px!important;font-size:13px;line-height:1.45}
+.loan-category-banner{min-height:70px!important;padding:10px 13px!important;margin:10px 0 9px!important;border-radius:19px!important;gap:9px!important;box-shadow:0 5px 0 rgba(7,90,65,.36),0 8px 14px rgba(14,95,80,.13),inset 0 2px 0 rgba(255,255,255,.55)!important}
+.paused-banner{box-shadow:0 5px 0 rgba(160,43,40,.32),0 8px 14px rgba(210,70,70,.12),inset 0 2px 0 rgba(255,255,255,.55)!important}
+.banner-orb{width:39px!important;height:39px!important;flex-basis:39px!important;font-size:20px!important}
+.banner-copy{gap:3px!important}
+.banner-copy b{font-size:14px!important;line-height:1.2!important}
+.banner-copy small{font-size:9px!important;padding:4px 7px!important;line-height:1.2!important}
+.banner-art{font-size:21px!important;letter-spacing:-7px!important}
+#app .share-page[data-share-page="summary"] article.panel{padding:11px!important;border-radius:19px!important}
+#app .share-page[data-share-page="summary"] article.panel>div:first-child{min-height:60px!important;padding:9px 10px!important;margin:0 0 10px!important;border-radius:15px!important;box-shadow:0 5px 0 #078c61,0 8px 13px #0aa87822,inset 0 2px 0 #ffffff70!important}
+#app .share-page[data-share-page="summary"] article.panel>div:first-child h3{font-size:15px!important;line-height:1.25!important}
+#app .share-page[data-share-page="summary"] article.panel>div:first-child .tag{font-size:10px;padding:6px 8px}
+#app .share-page[data-share-page="summary"] article.panel .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px!important}
+#app .share-page[data-share-page="summary"] article.panel .metric{grid-template-columns:27px minmax(0,1fr);grid-template-rows:auto auto;column-gap:7px;min-height:67px;padding:8px 7px;border-radius:14px;box-shadow:0 5px 10px #24457410,inset 0 1px 0 #fff}
+#app .share-page[data-share-page="summary"] article.panel .metric-icon{width:26px;height:26px;font-size:15px;border-radius:9px;box-shadow:0 3px 0 #bfd9ee,0 5px 8px #3569a518,inset 0 1px 1px #fff}
+#app .share-page[data-share-page="summary"] article.panel .metric small{font-size:10px;line-height:1.2}
+#app .share-page[data-share-page="summary"] article.panel .metric b{font-size:13px;line-height:1.15;margin-top:3px}
+#app .share-page[data-share-page="summary"] article.panel .metric b.metric-value-money{font-size:clamp(10px,2.9vw,13px)!important;letter-spacing:-.45px!important;white-space:nowrap!important}
+#app .share-page[data-share-page="summary"] article.panel>div:nth-child(3){margin-top:8px!important;padding:9px!important;border-radius:14px!important}
+#app .share-page[data-share-page="summary"] article.panel>div:nth-child(3)>b{font-size:12px!important}
+@media(max-width:380px){
+ #app>.share-page[data-share-page="summary"]{padding:11px!important}
+ #app .share-page[data-share-page="summary"] article.panel .metric{grid-template-columns:23px minmax(0,1fr);column-gap:5px;padding:7px 5px;min-height:62px}
+ #app .share-page[data-share-page="summary"] article.panel .metric-icon{width:22px;height:22px;font-size:13px}
+ #app .share-page[data-share-page="summary"] article.panel .metric small{font-size:9px}
+ #app .share-page[data-share-page="summary"] article.panel .metric b{font-size:12px}
+ #app .share-page[data-share-page="summary"] article.panel .metric b.metric-value-money{font-size:10px!important;letter-spacing:-.55px!important}
+ .banner-art{font-size:18px!important}
+}
+
 </style>
 </head>
 <body><main class="wrap">
