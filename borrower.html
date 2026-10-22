@@ -618,29 +618,31 @@ boot();;
 <script>
 (function(){
  const escHtml=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ function showPage(page){
+  document.querySelectorAll('.share-page').forEach(el=>{const on=el.dataset.sharePage===page;el.hidden=!on;el.style.display=on?'block':'none';});
+  document.querySelectorAll('[data-share-tab]').forEach(el=>{const on=el.dataset.shareTab===page;el.classList.toggle('active',on);el.setAttribute('aria-current',on?'page':'false');});
+  document.body.classList.toggle('chat-mode',page==='chat');window.scrollTo({top:0,behavior:'auto'});
+ }
  function accountMarkup(){
-  if(!share)return '<p class="muted">အကောင့်အချက်အလက်ကို မရရှိသေးပါ။</p>';
-  const name=share.borrowerName||s.person||'Borrower';
-  const curr=share.currency||'THB';
-  const rows=[['ချေးငွေသမားအမည်',name],['ငွေကြေးအမျိုးအစား',curr],['ချေးငွေအကောင့်အရေအတွက်',Array.isArray(share.accounts)?share.accounts.length:1]];
-  if(share.phone)rows.push(['ဖုန်းနံပါတ်',share.phone]);
-  if(share.email)rows.push(['အီးမေးလ်',share.email]);
-  if(share.due)rows.push(['ပေးဆပ်ရမည့်ရက်',share.due]);
+  const name=document.querySelector('#app [data-share-page="summary"] h1')?.textContent?.trim()||'Borrower';
+  const intro=document.querySelector('#app [data-share-page="summary"] .head .muted')?.textContent?.trim()||'';
+  const currency=(intro.split('·').pop()||'').trim()||'—';
+  const cards=[...document.querySelectorAll('#app [data-share-page="summary"] article.panel')];
+  const rows=[['ချေးငွေသမားအမည်',name],['ငွေကြေးအမျိုးအစား',currency],['ချေးငွေအကောင့်အရေအတွက်',String(cards.length||1)]];
   const rowHtml=rows.map(([k,v])=>'<div style="padding:12px;border-radius:13px;background:linear-gradient(135deg,#f5faff,#eaf8f5);border:1px solid #e0edf4"><div class="muted" style="font-size:12px;margin-bottom:5px">'+escHtml(k)+'</div><strong style="overflow-wrap:anywhere">'+escHtml(v)+'</strong></div>').join('');
-  const loans=(Array.isArray(share.accounts)?share.accounts:[]).map((a,i)=>'<div style="padding:12px;margin-top:8px;border-radius:13px;background:#f7faff;border:1px solid #e0eaf5"><strong>ချေးငွေ '+(i+1)+'</strong><div class="muted">ငွေကြေး: '+escHtml(a.currency||curr)+'</div><div>မူလချေးငွေ: '+escHtml(money(a.principal,a.currency||curr))+'</div><div>လက်ကျန်အရင်း: '+escHtml(money(a.principalOutstanding,a.currency||curr))+'</div></div>').join('');
-  return '<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px">'+rowHtml+'</div>'+ (loans?'<h3 style="margin-top:18px">ချိတ်ဆက်ထားသော ချေးငွေစာရင်းများ</h3>'+loans:'');
+  const loanCards=cards.map((card,i)=>'<div style="padding:12px;margin-top:8px;border-radius:13px;background:#f7faff;border:1px solid #e0eaf5"><strong>ချေးငွေစာရင်း '+(i+1)+'</strong><div style="margin-top:6px">'+escHtml((card.querySelector('h3')||card.querySelector('h2'))?.textContent||'ချေးငွေ')+'</div></div>').join('');
+  return '<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px">'+rowHtml+'</div>'+(loanCards?'<h3 style="margin-top:18px">ချိတ်ဆက်ထားသော ချေးငွေစာရင်းများ</h3>'+loanCards:'');
  }
  function refreshAccount(){const html=accountMarkup();const a=document.getElementById('borrowerMyAccountDetails');const b=document.getElementById('borrowerMyAccountFull');if(a)a.innerHTML=html;if(b)b.innerHTML=html;}
  document.addEventListener('click',async ev=>{
-  if(ev.target.closest('#copyBorrowerInstallLink')){const inp=document.getElementById('borrowerInstallLink');try{await navigator.clipboard.writeText(inp.value);ev.target.closest('button').textContent='✓ Link ကူးယူပြီးပါပြီ';}catch(e){inp.focus();inp.select();try{document.execCommand('copy');ev.target.closest('button').textContent='✓ Link ကူးယူပြီးပါပြီ';}catch(_){}}}
-  if(ev.target.closest('#openMyAccount'))activateSharePage('account');
+  const copy=ev.target.closest('#copyBorrowerInstallLink');
+  if(copy){const inp=document.getElementById('borrowerInstallLink');try{await navigator.clipboard.writeText(inp.value);copy.textContent='✓ Link ကူးယူပြီးပါပြီ';}catch(e){inp.focus();inp.select();try{document.execCommand('copy');copy.textContent='✓ Link ကူးယူပြီးပါပြီ';}catch(_){}}}
+  if(ev.target.closest('#openMyAccount')){refreshAccount();showPage('account');}
+  const tab=ev.target.closest('[data-share-tab]');if(tab&&['settings','account'].includes(tab.dataset.shareTab))showPage(tab.dataset.shareTab);
  });
- document.addEventListener('click',ev=>{const tab=ev.target.closest('[data-share-tab]');if(tab&&['settings','account'].includes(tab.dataset.shareTab))activateSharePage(tab.dataset.shareTab);});
- const oldRender=window.render;
- const obs=new MutationObserver(()=>refreshAccount());
- obs.observe(document.getElementById('app'),{childList:true,subtree:true});
- document.addEventListener('DOMContentLoaded',refreshAccount);
- setTimeout(refreshAccount,500);
+ const app=document.getElementById('app');
+ if(app)new MutationObserver(()=>refreshAccount()).observe(app,{childList:true,subtree:true});
+ setTimeout(refreshAccount,700);
 })();
 </script>
 </body></html>
