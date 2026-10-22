@@ -174,6 +174,33 @@ body{background:radial-gradient(ellipse at 8% 0%,#d8f8ef 0,transparent 34%),radi
  .banner-art{font-size:18px!important}
 }
 
+
+/* Final compact fix: category hero is the only large banner; loan card title stays inline */
+#app .share-page[data-share-page="summary"] article.panel>div:first-child{
+ min-height:0!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;flex-wrap:wrap!important;
+ padding:0 0 9px!important;margin:0 0 9px!important;border-radius:0!important;
+ background:transparent!important;box-shadow:none!important;color:#142746!important;
+ border-bottom:1px solid #dce9f5!important
+}
+#app .share-page[data-share-page="summary"] article.panel>div:first-child h3{color:#142746!important;text-shadow:none!important;font-size:14px!important;line-height:1.25!important}
+#app .share-page[data-share-page="summary"] article.panel>div:first-child .tag{font-size:10px!important;padding:5px 8px!important;box-shadow:none!important}
+#app .share-page[data-share-page="summary"] article.panel{padding:11px!important}
+#app .share-page[data-share-page="summary"] article.panel .grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important}
+#app .share-page[data-share-page="summary"] article.panel .metric{min-width:0!important;min-height:60px!important;padding:7px 6px!important;grid-template-columns:23px minmax(0,1fr)!important;column-gap:5px!important;border-radius:13px!important}
+#app .share-page[data-share-page="summary"] article.panel .metric-icon{width:22px!important;height:22px!important;font-size:13px!important}
+#app .share-page[data-share-page="summary"] article.panel .metric small{font-size:9px!important;line-height:1.15!important}
+#app .share-page[data-share-page="summary"] article.panel .metric b{font-size:12px!important;line-height:1.15!important}
+#app .share-page[data-share-page="summary"] article.panel .metric b.metric-value-money{font-size:clamp(10px,2.8vw,12px)!important;white-space:nowrap!important;letter-spacing:-.55px!important}
+#app .share-page[data-share-page="summary"] article.panel>div:nth-child(3){margin-top:8px!important;padding:8px!important}
+#app .share-page[data-share-page="summary"] article.panel>div:nth-child(3) .metric{min-height:54px!important}
+@media(max-width:380px){
+ #app .share-page[data-share-page="summary"] article.panel .metric{grid-template-columns:20px minmax(0,1fr)!important;min-height:56px!important;padding:6px 4px!important}
+ #app .share-page[data-share-page="summary"] article.panel .metric-icon{width:19px!important;height:19px!important;font-size:11px!important}
+ #app .share-page[data-share-page="summary"] article.panel .metric small{font-size:8px!important}
+ #app .share-page[data-share-page="summary"] article.panel .metric b{font-size:11px!important}
+ #app .share-page[data-share-page="summary"] article.panel .metric b.metric-value-money{font-size:9px!important}
+}
+
 </style>
 </head>
 <body><main class="wrap">
