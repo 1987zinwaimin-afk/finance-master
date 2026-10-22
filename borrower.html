@@ -640,8 +640,6 @@ boot();;
   if(ev.target.closest('#openMyAccount')){refreshAccount();showPage('account');}
   const tab=ev.target.closest('[data-share-tab]');if(tab&&['settings','account'].includes(tab.dataset.shareTab))showPage(tab.dataset.shareTab);
  });
- const app=document.getElementById('app');
- if(app)new MutationObserver(()=>refreshAccount()).observe(app,{childList:true,subtree:true});
  setTimeout(refreshAccount,700);
 })();
 </script>
