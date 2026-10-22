@@ -211,6 +211,46 @@ body{background:radial-gradient(ellipse at 8% 0%,#d8f8ef 0,transparent 34%),radi
 #app .share-page[data-share-page="summary"] .horizontal-loan-list::-webkit-scrollbar-thumb{background:linear-gradient(90deg,#15c69b,#438cff,#f5c96b);border-radius:99px}
 @media(min-width:700px){#app .share-page[data-share-page="summary"] .horizontal-loan-list>article.panel{flex-basis:340px!important;width:340px!important}}
 
+
+/* Hard override for compact landscape loan cards on mobile */
+@media(max-width:600px){
+ #app .share-page[data-share-page="summary"] article.panel>div:first-child{
+   display:flex!important;min-height:0!important;height:auto!important;padding:0 0 7px!important;margin:0 0 8px!important;
+   border:0!important;border-bottom:1px solid #dce9f5!important;border-radius:0!important;
+   background:transparent!important;box-shadow:none!important;color:#142746!important;
+ }
+ #app .share-page[data-share-page="summary"] article.panel>div:first-child h3{
+   color:#142746!important;text-shadow:none!important;font-size:13px!important;margin:0!important
+ }
+ #app .share-page[data-share-page="summary"] article.panel>div:first-child .tag{
+   background:linear-gradient(135deg,#d9fff0,#b7f2dc)!important;color:#08785a!important;
+   border:1px solid #a7e9d1!important;box-shadow:none!important;padding:4px 7px!important;font-size:9px!important
+ }
+ #app .share-page[data-share-page="summary"] article.panel{
+   padding:10px!important;margin:0!important;border-radius:17px!important
+ }
+ #app .share-page[data-share-page="summary"] article.panel .grid{
+   display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important
+ }
+ #app .share-page[data-share-page="summary"] article.panel .metric{
+   display:grid!important;grid-template-columns:22px minmax(0,1fr)!important;min-width:0!important;
+   min-height:56px!important;padding:6px!important;gap:4px!important;border-radius:12px!important
+ }
+ #app .share-page[data-share-page="summary"] article.panel .metric-icon{
+   width:21px!important;height:21px!important;font-size:12px!important;grid-column:1!important
+ }
+ #app .share-page[data-share-page="summary"] article.panel .metric small{font-size:9px!important;line-height:1.15!important}
+ #app .share-page[data-share-page="summary"] article.panel .metric b{font-size:11px!important;line-height:1.15!important;overflow-wrap:anywhere!important}
+ #app .share-page[data-share-page="summary"] article.panel .metric b.metric-value-money{
+   white-space:nowrap!important;font-size:clamp(9px,2.6vw,12px)!important;letter-spacing:-.5px!important
+ }
+ .loan-category-banner{min-height:64px!important;margin:8px 0!important;padding:8px 10px!important}
+ .banner-orb{width:34px!important;height:34px!important;flex-basis:34px!important;font-size:18px!important}
+ .banner-copy b{font-size:13px!important}
+ .banner-copy small{font-size:8px!important;padding:3px 6px!important}
+ .banner-art{font-size:18px!important}
+}
+
 </style>
 </head>
 <body><main class="wrap">
