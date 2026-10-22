@@ -102,6 +102,8 @@ function activateSharePage(page=activeSharePage){
  if(!allowed.includes(page))page="summary";
  activeSharePage=page;
  document.body.classList.toggle("chat-mode",page==="chat");
+ const appRoot=document.getElementById("app");
+ if(appRoot){document.querySelectorAll(".share-page").forEach(el=>{if(el.parentElement!==appRoot)appRoot.appendChild(el);});}
  document.querySelectorAll(".share-page").forEach(el=>{const show=el.dataset.sharePage===page;el.hidden=!show;el.style.display=show?"block":"none";});
  const requestedPage=document.querySelector('.share-page[data-share-page="'+page+'"]');
  if(page==="request"&&requestedPage&&!document.querySelector("#requestForm")){setStatus("Payment form could not be created. Please reload this borrower link and try again.","error");}
