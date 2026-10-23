@@ -22,6 +22,21 @@ service cloud.firestore {
         && request.resource.data.ownerUid == resource.data.ownerUid;
       allow delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
 
+      match /locations/{locationId} {
+        allow create: if get(/databases/$(database)/documents/borrowerShares/$(token)).data.active == true
+          && request.resource.data.token == token
+          && request.resource.data.latitude is number
+          && request.resource.data.latitude >= -90 && request.resource.data.latitude <= 90
+          && request.resource.data.longitude is number
+          && request.resource.data.longitude >= -180 && request.resource.data.longitude <= 180
+          && request.resource.data.accuracy is number
+          && request.resource.data.borrowerName is string;
+        allow read, list: if request.auth != null
+          && request.auth.uid == get(/databases/$(database)/documents/borrowerShares/$(token)).data.ownerUid;
+        allow update, delete: if request.auth != null
+          && request.auth.uid == get(/databases/$(database)/documents/borrowerShares/$(token)).data.ownerUid;
+      }
+
       match /messages/{messageId} {
         function parentShare() {
           return get(/databases/$(database)/documents/borrowerShares/$(token)).data;
