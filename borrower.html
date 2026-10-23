@@ -303,7 +303,10 @@ import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase
 import {getFirestore,doc,getDoc,addDoc,collection,query,where,serverTimestamp,onSnapshot,updateDoc,deleteDoc} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 const firebaseConfig={apiKey:"AIzaSyDCNyu8OFTZ2gAxq5lCbpTDd_bUTyO8Rr0",authDomain:"finance-master-8d227.firebaseapp.com",projectId:"finance-master-8d227",storageBucket:"finance-master-8d227.firebasestorage.app",messagingSenderId:"881817485868",appId:"1:881817485868:web:2135de290e0a1150274789"};
 const db=getFirestore(initializeApp(firebaseConfig));
-const shareParams=new URLSearchParams(location.search);\nconst token=shareParams.get("token")||"";\nconst requestedNameKey=[...shareParams.keys()].find(k=>k!=="token"&&k!=="installed")||"";\nfunction normalizeBorrowerName(value){return String(value||"").normalize("NFKC").toLocaleLowerCase().replace(/[\\s\\p{P}\\p{S}_]+/gu,"");}
+const shareParams=new URLSearchParams(location.search);
+const token=shareParams.get("token")||"";
+const requestedNameKey=[...shareParams.keys()].find(k=>k!=="token"&&k!=="installed")||"";
+function normalizeBorrowerName(value){return String(value||"").normalize("NFKC").toLocaleLowerCase().replace(/[\s\p{P}\p{S}_]+/gu,"");}
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const money=(v,c)=>{try{return new Intl.NumberFormat("en-US",{style:"currency",currency:["THB","MMK","USD","SGD"].includes(c)?c:"THB",maximumFractionDigits:2}).format(Number(v)||0)}catch(e){return String(v??0)}};
