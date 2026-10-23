@@ -7,7 +7,7 @@
 (function(){
  try{
   const icon='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#101c33"/><text x="50%" y="58%" font-size="320" font-family="Arial,sans-serif" font-weight="700" text-anchor="middle" fill="#d8b56d">F</text></svg>');
-  const start=location.href;
+  const start=location.pathname+location.search+location.hash;
   const manifest={id:location.origin+'/borrower-app/'+encodeURIComponent(new URL(location.href).searchParams.get('token')||'account'),start_url:start,scope:location.origin+'/',name:'Finance Master · Borrower',short_name:'Finance Master',description:'Your private borrower account',display:'standalone',display_override:['standalone','minimal-ui'],background_color:'#f4f6fa',theme_color:'#101c33',prefer_related_applications:false,icons:[{src:icon,sizes:'192x192',type:'image/svg+xml',purpose:'any'},{src:icon,sizes:'512x512',type:'image/svg+xml',purpose:'any'},{src:icon,sizes:'any',type:'image/svg+xml',purpose:'maskable'}]};
   const blob=new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'});
   const link=document.createElement('link');link.rel='manifest';link.href=URL.createObjectURL(blob);document.head.appendChild(link);
@@ -655,7 +655,7 @@ boot();;
   if(install){
    const help=document.getElementById('borrowerInstallHelp');
    if(borrowerInstallPrompt){
-    try{borrowerInstallPrompt.prompt();const choice=await borrowerInstallPrompt.userChoice;borrowerInstallPrompt=null;if(help)help.textContent=choice&&choice.outcome==='accepted'?'Home Screen မှာ Install လုပ်ရန် လက်ခံပြီးပါပြီ။':'Install ကို မပြီးသေးပါ။ ခလုတ်ကို ထပ်နှိပ်ပြီး စမ်းကြည့်နိုင်ပါသည်.';}catch(e){if(help)help.textContent='Install မလုပ်နိုင်သေးပါ။ Browser menu မှ Add to Home screen ကို ရွေးပါ။'}
+    try{borrowerInstallPrompt.prompt();const choice=await borrowerInstallPrompt.userChoice;borrowerInstallPrompt=null;if(help)help.textContent=choice&&choice.outcome==='accepted'?'Home Screen မှာ Install လုပ်ရန် လက်ခံပြီးပါပြီ။':'Install မလုပ်ရသေးပါ။ Install ခလုတ်ကို ထပ်နှိပ်နိုင်ပါသည်။';}catch(e){if(help)help.textContent='Install Prompt မရသေးပါ။ Chrome မီနူးမှ Install app ကို ရွေးပါ။'}
    }else{
     if(/iPhone|iPad|iPod/i.test(navigator.userAgent)){
      if(help)help.textContent='iPhone မှာ Safari → Share → Add to Home Screen ကို ရွေးပါ။ Browser က ခွင့်မပြုလို့ ဝဘ်ဆိုက်ကနေ အလိုအလျောက် Home Screen ထဲထည့်ပေးလို့ မရပါ။';
