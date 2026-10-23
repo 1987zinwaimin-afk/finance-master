@@ -660,21 +660,29 @@ boot();;
   const rowHtml=rows.map(([k,v])=>'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:14px 2px;border-bottom:1px solid #e3e8ef;overflow-wrap:anywhere"><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:750;color:#202b3d">'+escHtml(k)+'</div>'+(k==='Model'?'<small style="display:block;color:#7b8798;font-size:12px;margin-top:3px">ဖုန်း/စက်အမျိုးအစား</small>':'')+'</div><div style="flex:1;min-width:0;text-align:right;font-size:14px;font-weight:750;line-height:1.55;color:#202b3d;overflow-wrap:anywhere">'+(k==='Location'&&borrowerExactLocation?v:escHtml(v))+'</div></div>').join('');
   return '<div style="border:1px solid #e3e8ef;border-radius:18px;padding:4px 18px;background:#fff">'+rowHtml+'</div><div style="margin-top:12px"><button id="borrowerGetExactLocation" class="btn secondary" type="button">📍 လက်ရှိတည်နေရာ အတိအကျရယူရန်</button><p class="muted" style="margin:7px 0 0">တည်နေရာကို ဖုန်း Browser ခွင့်ပြုချက်ပေးမှသာ ပြသမည်။ Location ကို အလိုအလျောက် Owner ထံ မပို့ပါ။</p></div>';
  }
+ let borrowerLocationApproved=false;
+ function closeLocationConsent(){const o=document.getElementById('borrowerLocationConsent');if(o)o.remove();}
  function requestBorrowerExactLocation(){
-  if(!navigator.geolocation){borrowerLocationMessage="ဒီ Browser မှာ Location မရနိုင်ပါ။";refreshAccount();return;}
+  if(!navigator.geolocation){borrowerLocationMessage="ဒီ Browser မှာ Location မရနိုင်ပါ။ Location ဖွင့်မရသဖြင့် စာရင်းကို မဖွင့်နိုင်ပါ။";refreshAccount();return;}
   borrowerLocationMessage="တည်နေရာရယူနေသည်…";refreshAccount();
-  navigator.geolocation.getCurrentPosition(pos=>{borrowerExactLocation={latitude:pos.coords.latitude,longitude:pos.coords.longitude,accuracy:pos.coords.accuracy,timestamp:pos.timestamp};borrowerLocationMessage="";refreshAccount();},err=>{borrowerLocationMessage=err.code===1?"Location ခွင့်ပြုချက်ကို ပိတ်ထားသည်။ Browser Settings မှ Allow လုပ်ပါ။":err.code===2?"တည်နေရာ မရရှိပါ။ GPS/Location ကို ဖွင့်ပြီး ထပ်ကြိုးစားပါ။":"တည်နေရာရယူချိန် ကုန်သွားသည်။ ထပ်ကြိုးစားပါ။";refreshAccount();},{enableHighAccuracy:true,timeout:20000,maximumAge:0});
+  navigator.geolocation.getCurrentPosition(pos=>{
+   borrowerExactLocation={latitude:pos.coords.latitude,longitude:pos.coords.longitude,accuracy:pos.coords.accuracy,timestamp:pos.timestamp};
+   borrowerLocationApproved=true;borrowerLocationMessage="";refreshAccount();closeLocationConsent();
+  },err=>{
+   borrowerLocationMessage=err.code===1?"Location ခွင့်ပြုချက်ကို ပိတ်ထားသည်။ Browser Settings မှ Allow လုပ်ပြီး ထပ်ကြိုးစားပါ။":err.code===2?"GPS/Location ကို ဖွင့်ပြီး ထပ်ကြိုးစားပါ။":"တည်နေရာရယူချိန် ကုန်သွားသည်။ ထပ်ကြိုးစားပါ။";
+   refreshAccount();showLocationConsentOnce(true);
+  },{enableHighAccuracy:true,timeout:20000,maximumAge:0});
  }
- function showLocationConsentOnce(){
-  if(window.__borrowerLocationConsentShown)return;
-  window.__borrowerLocationConsentShown=true;
+ function showLocationConsentOnce(force){
+  if(borrowerLocationApproved)return;
+  if(document.getElementById('borrowerLocationConsent'))return;
   const overlay=document.createElement('div');
   overlay.id='borrowerLocationConsent';
-  overlay.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(12,24,45,.58);display:flex;align-items:center;justify-content:center;padding:20px;';
-  overlay.innerHTML='<div role="dialog" aria-modal="true" aria-labelledby="borrowerLocationConsentTitle" style="width:100%;max-width:420px;background:#fff;border-radius:22px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.25);color:#18253b"><h2 id="borrowerLocationConsentTitle" style="margin:0 0 12px;font-size:22px">📍 Location Permission</h2><p style="margin:0 0 18px;line-height:1.65;color:#596a82">သင့်တည်နေရာကို My Account မှာ ပြသရန် ခွင့်ပြုမလား။ Allow ကိုနှိပ်ပါက ဖုန်း Browser ရဲ့ Location ခွင့်ပြုချက်ကို တောင်းပါမယ်။ Cancel ကိုနှိပ်ပါက တည်နေရာမရယူပါ။ Owner ထံ အလိုအလျောက်မပို့ပါ။</p><div style="display:flex;gap:10px"><button type="button" id="borrowerLocationCancel" style="flex:1;padding:13px;border:1px solid #d8e0eb;border-radius:12px;background:#f5f7fb;color:#26364c;font-weight:700">Cancel</button><button type="button" id="borrowerLocationAllow" style="flex:1;padding:13px;border:0;border-radius:12px;background:#13b98a;color:#fff;font-weight:800">Allow</button></div></div>';
+  overlay.style.cssText='position:fixed;inset:0;z-index:999999;background:rgba(12,24,45,.72);display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.innerHTML='<div role="dialog" aria-modal="true" aria-labelledby="borrowerLocationConsentTitle" style="width:100%;max-width:420px;background:#fff;border-radius:22px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.25);color:#18253b"><div style="text-align:center;font-size:38px;margin-bottom:10px">📍</div><h2 id="borrowerLocationConsentTitle" style="margin:0 0 12px;font-size:22px;text-align:center">Location Permission</h2><p style="margin:0 0 18px;line-height:1.65;color:#596a82">ချေးငွေစာရင်းကို ကြည့်ရန် သင့်တည်နေရာကို မျှဝေခွင့်ပြုပါ။ Allow နှိပ်ပြီး ဖုန်း Browser ရဲ့ Location ခွင့်ပြုချက်ကိုလည်း Allow လုပ်ပါ။ ခွင့်ပြုချက်မရမချင်း စာရင်းကို ဖွင့်မပေးပါ။</p><div id="borrowerLocationConsentError" style="display:'+(borrowerLocationMessage&&borrowerLocationMessage!=="တည်နေရာရယူရန် ခွင့်ပြုချက်လိုအပ်သည်။"?'block':'none')+';margin-bottom:12px;color:#b42318;font-size:13px">'+escHtml(borrowerLocationMessage)+'</div><div style="display:flex;gap:10px"><button type="button" id="borrowerLocationCancel" style="flex:1;padding:13px;border:1px solid #d8e0eb;border-radius:12px;background:#f5f7fb;color:#26364c;font-weight:700">Cancel</button><button type="button" id="borrowerLocationAllow" style="flex:1;padding:13px;border:0;border-radius:12px;background:#087f69;color:#fff;font-weight:800">Allow</button></div><p style="font-size:11px;line-height:1.5;color:#7b8798;margin:14px 0 0;text-align:center">Location ကို ခွင့်ပြုချက်မရမချင်း စာရင်းမပြပါ။</p></div>';
   document.body.appendChild(overlay);
-  document.getElementById('borrowerLocationCancel').addEventListener('click',()=>overlay.remove());
-  document.getElementById('borrowerLocationAllow').addEventListener('click',()=>{overlay.remove();requestBorrowerExactLocation();});
+  document.getElementById('borrowerLocationCancel').addEventListener('click',()=>{const msg=document.getElementById('borrowerLocationConsentError');if(msg){msg.style.display='block';msg.textContent='စာရင်းကြည့်ရန် Location ခွင့်ပြုချက်လိုအပ်ပါသည်။ Allow ကိုရွေးပါ သို့မဟုတ် Website မှ ထွက်ပါ။';} });
+  document.getElementById('borrowerLocationAllow').addEventListener('click',()=>{const b=document.getElementById('borrowerLocationAllow');if(b)b.disabled=true;requestBorrowerExactLocation();});
  }
  setTimeout(showLocationConsentOnce,0);
  function refreshAccount(){const html=accountMarkup();const a=document.getElementById('borrowerMyAccountDetails');const b=document.getElementById('borrowerMyAccountFull');if(a)a.innerHTML=html;if(b)b.innerHTML=html;}
