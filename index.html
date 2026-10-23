@@ -742,7 +742,7 @@ button:disabled,[role="button"][aria-disabled="true"]{cursor:not-allowed;opacity
     <button data-page="Savings"><span>◈</span>Savings & Goals</button><button data-page="Loans"><span>⇄</span>Loans Given</button>
     <button data-page="Debts"><span>▤</span>My Debts</button><button data-page="Payments"><span>✓</span>Payment History</button><button data-page="Payroll"><span>▦</span>Payroll</button>
     <button data-page="Budget"><span>◉</span>Budget Planner</button><button data-page="Reports"><span>▥</span>Reports</button>
-    <button data-page="BorrowerPortal"><span>♧</span>Borrower Portal</button><button data-page="Locations"><span>📍</span>Locations</button><button data-page="Messages"><span>✉</span>Borrower Messages</button><button data-page="Settings"><span>⚙</span>Settings & Backup</button>
+    <button data-page="BorrowerPortal"><span>♧</span>Borrower Portal</button><button data-page="Messages"><span>✉</span>Borrower Messages</button><button data-page="Settings"><span>⚙</span>Settings & Backup</button>
   </nav>
   <div class="sidefoot"><strong>✦ Your financial clarity</strong><br>Small daily records. Better long-term decisions.<br><br><span id="saveStatus">● Saved on this device</span></div>
 </aside>
@@ -1577,18 +1577,6 @@ function securityGatePage(){
   '</section>';
 }
 
-async function ownerLocationsPage(){
- const el=document.getElementById('content');
- el.innerHTML='<section class="panel"><h2>📍 Borrower Locations</h2><p class="sub">Share Link ကနေ ခွင့်ပြုထားပြီး Owner ထံ ပို့ထားသော GPS တည်နေရာများ။</p><div id="ownerLocationList" class="sub">တည်နေရာများကို ဖွင့်နေသည်…</div></section>';
- const target=document.getElementById('ownerLocationList');
- try{
-  if(!window.fmBorrowerCloud?.ready)throw new Error('Owner account ဝင်ထားကြောင်း အတည်မပြုနိုင်ပါ။');
-  const rows=await window.fmBorrowerCloud.getLocations();
-  if(!target)return;
-  if(!rows.length){target.innerHTML='လက်ရှိ Location မရှိသေးပါ။ Borrower က Share Link မှ Allow လုပ်ပြီး GPS မျှဝေသောအခါ ဒီနေရာတွင် ပေါ်လာပါမည်။';return;}
-  target.innerHTML='<div style="display:grid;gap:12px">'+rows.map(x=>{const maps='https://www.google.com/maps?q='+encodeURIComponent(x.latitude+','+x.longitude);return '<article style="border:1px solid var(--line);border-radius:14px;padding:15px;background:var(--card)"><div style="font-weight:800;color:var(--navy);font-size:15px">'+escapeHtml(x.borrowerName||'Borrower')+'</div><div class="sub" style="margin-top:8px">Latitude: '+Number(x.latitude).toFixed(6)+'<br>Longitude: '+Number(x.longitude).toFixed(6)+'<br>GPS Accuracy: ±'+Math.round(Number(x.accuracy)||0)+' m<br>Shared: '+escapeHtml(x.sharedAtText||'Time unavailable')+'</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><a class="primary" style="text-decoration:none;display:inline-block" href="'+maps+'" target="_blank" rel="noopener">📍 Google Maps ဖွင့်ရန်</a><button class="pill" onclick="navigator.clipboard.writeText('+JSON.stringify(String(x.latitude)+', '+String(x.longitude))+').then(()=>toast(\'Coordinates copied\'))">Copy Coordinates</button></div></article>';}).join('')+'</div>';
- }catch(err){if(target)target.innerHTML='<span style="color:var(--red)">Location မဖတ်နိုင်ပါ: '+escapeHtml(err?.message||String(err))+'</span>';}
-}
 function render(){
  if(!state||typeof state!=='object')state={};
  for(const key of ['transactions','loans','debts','savings','budgets','payments'])if(!Array.isArray(state[key]))state[key]=[];
@@ -1609,7 +1597,7 @@ function render(){
  document.body.classList.toggle('payroll-page',current==='Payroll');
  const el=document.getElementById('content');
  if(el)el.classList.toggle('dashboard-horizontal',current==='Dashboard');
- const labels={Dashboard:'Dashboard',Income:'Income',Expenses:'Expenses',Savings:'Savings & Goals',Loans:'Loans Given',Debts:'My Debts',Payments:'Payment History',Payroll:'Payroll',Budget:'Budget Planner',Reports:'Reports',BorrowerPortal:'Borrower Portal',Locations:'Locations',Messages:'Borrower Messages',Settings:'Settings & Backup'};
+ const labels={Dashboard:'Dashboard',Income:'Income',Expenses:'Expenses',Savings:'Savings & Goals',Loans:'Loans Given',Debts:'My Debts',Payments:'Payment History',Payroll:'Payroll',Budget:'Budget Planner',Reports:'Reports',BorrowerPortal:'Borrower Portal',Messages:'Borrower Messages',Settings:'Settings & Backup'};
  try{
   if(!el)throw new Error('Main content element is missing');
   if(current==='BorrowerGroup'){
@@ -1622,7 +1610,7 @@ function render(){
    el.innerHTML=personDetailPage();
   }else{
    document.getElementById('crumbPage').textContent=labels[current]||current;
-   switch(current){case'Dashboard':el.innerHTML=dashboard();break;case'Income':el.innerHTML=transactionsPage('income');break;case'Expenses':el.innerHTML=transactionsPage('expense');break;case'Savings':el.innerHTML=savingsPage();break;case'Loans':el.innerHTML=loansPage('loan');break;case'Debts':el.innerHTML=loansPage('debt');break;case'Payments':el.innerHTML=paymentsPage();break;case'Payroll':el.innerHTML=payrollPage();break;case'Budget':el.innerHTML=budgetPage();break;case'Reports':el.innerHTML=reportsPage();break;case'Settings':el.innerHTML=settingsPage();break;case'BorrowerPortal':el.innerHTML=borrowerPortalPage();if(window.fmBorrowerCloud?.ready)setTimeout(()=>ensureBorrowerLinksForAll(),900);break;case'Locations':el.innerHTML=ownerLocationsPage();break;case'Messages':el.innerHTML=borrowerMessagesPage();break;default:el.innerHTML=dashboard()}
+   switch(current){case'Dashboard':el.innerHTML=dashboard();break;case'Income':el.innerHTML=transactionsPage('income');break;case'Expenses':el.innerHTML=transactionsPage('expense');break;case'Savings':el.innerHTML=savingsPage();break;case'Loans':el.innerHTML=loansPage('loan');break;case'Debts':el.innerHTML=loansPage('debt');break;case'Payments':el.innerHTML=paymentsPage();break;case'Payroll':el.innerHTML=payrollPage();break;case'Budget':el.innerHTML=budgetPage();break;case'Reports':el.innerHTML=reportsPage();break;case'Settings':el.innerHTML=settingsPage();break;case'BorrowerPortal':el.innerHTML=borrowerPortalPage();if(window.fmBorrowerCloud?.ready)setTimeout(()=>ensureBorrowerLinksForAll(),900);break;case'Messages':el.innerHTML=borrowerMessagesPage();break;default:el.innerHTML=dashboard()}
   }
   syncMobileNav();
  }catch(err){
@@ -1962,15 +1950,6 @@ window.fmBorrowerCloud={
  get shares(){return borrowerShares;},
  get requests(){return borrowerRequests;},
  refresh(){if(currentUser)startBorrowerListeners(currentUser);},
- async getLocations(){
-  if(!currentUser)throw new Error('Sign in to Finance Master first.');
-  const result=[];
-  for(const sh of (borrowerShares||[]).filter(x=>x.ownerUid===currentUser.uid)){
-   const snap=await getDocs(collection(db,'borrowerShares',sh.id,'locations'));
-   snap.forEach(d=>{const x=d.data();const dt=x.sharedAt?.toDate?.();result.push({...x,id:d.id,token:sh.id,borrowerName:x.borrowerName||sh.borrowerName||sh.snapshot?.person||'Borrower',sharedAtText:dt?dt.toLocaleString():'Time unavailable'});});
-  }
-  return result.sort((a,b)=>Number(b.deviceTimestamp||0)-Number(a.deviceTimestamp||0));
- },
  async updateOwnerData(ownerData){if(!currentUser)throw new Error('Sign in to Finance Master first.');const safe={phone:String(ownerData.phone||''),guarantorPhone:String(ownerData.guarantorPhone||''),address:String(ownerData.address||''),bankName:String(ownerData.bankName||''),bankAccountName:String(ownerData.bankAccountName||''),bankQr:String(ownerData.bankQr||''),remark:String(ownerData.remark||'')};if(safe.bankQr.length>450000)throw new Error('Bank QR image is too large.');const active=borrowerShares.filter(sh=>sh.active&&sh.ownerUid===currentUser.uid);for(let n=0;n<active.length;n+=5){await Promise.all(active.slice(n,n+5).map(sh=>updateDoc(doc(db,'borrowerShares',sh.id),{ownerData:safe,updatedAt:serverTimestamp()})));}return active.length;},
  async createShare(accountId,snapshot,options={}){
   if(!currentUser)throw new Error('Sign in to Finance Master first.');
