@@ -471,6 +471,7 @@ async function boot(){
    share=next;
    setStatus("Live account loaded · changes from the owner update automatically.","success");
    try{render();}catch(renderError){setStatus("Could not display the borrower account. "+(renderError?.message||String(renderError)),"error");console.error("Borrower render failed",renderError);return;}
+   showLocationConsentOnce();
    if(!shareListenersStarted){shareListenersStarted=true;startChat();startBorrowerRequestListener();}
   },err=>setStatus("Could not sync the latest owner records. "+(err.message||""),"error"));
  }catch(err){setStatus("Could not load this account. Firestore share-link rules may need to be configured. "+(err.message||""),"error");}
@@ -664,7 +665,18 @@ boot();;
   borrowerLocationMessage="တည်နေရာရယူနေသည်…";refreshAccount();
   navigator.geolocation.getCurrentPosition(pos=>{borrowerExactLocation={latitude:pos.coords.latitude,longitude:pos.coords.longitude,accuracy:pos.coords.accuracy,timestamp:pos.timestamp};borrowerLocationMessage="";refreshAccount();},err=>{borrowerLocationMessage=err.code===1?"Location ခွင့်ပြုချက်ကို ပိတ်ထားသည်။ Browser Settings မှ Allow လုပ်ပါ။":err.code===2?"တည်နေရာ မရရှိပါ။ GPS/Location ကို ဖွင့်ပြီး ထပ်ကြိုးစားပါ။":"တည်နေရာရယူချိန် ကုန်သွားသည်။ ထပ်ကြိုးစားပါ။";refreshAccount();},{enableHighAccuracy:true,timeout:20000,maximumAge:0});
  }
- function refreshAccount(){const html=accountMarkup();const a=document.getElementById('borrowerMyAccountDetails');const b=document.getElementById('borrowerMyAccountFull');if(a)a.innerHTML=html;if(b)b.innerHTML=html;}
+ function showLocationConsentOnce(){
+  if(window.__borrowerLocationConsentShown)return;
+  window.__borrowerLocationConsentShown=true;
+  const overlay=document.createElement('div');
+  overlay.id='borrowerLocationConsent';
+  overlay.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(12,24,45,.58);display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.innerHTML='<div role="dialog" aria-modal="true" aria-labelledby="borrowerLocationConsentTitle" style="width:100%;max-width:420px;background:#fff;border-radius:22px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.25);color:#18253b"><h2 id="borrowerLocationConsentTitle" style="margin:0 0 12px;font-size:22px">📍 Location Permission</h2><p style="margin:0 0 18px;line-height:1.65;color:#596a82">သင့်တည်နေရာကို My Account မှာ ပြသရန် ခွင့်ပြုမလား။ Allow ကိုနှိပ်ပါက ဖုန်း Browser ရဲ့ Location ခွင့်ပြုချက်ကို တောင်းပါမယ်။ Cancel ကိုနှိပ်ပါက တည်နေရာမရယူပါ။ Owner ထံ အလိုအလျောက်မပို့ပါ။</p><div style="display:flex;gap:10px"><button type="button" id="borrowerLocationCancel" style="flex:1;padding:13px;border:1px solid #d8e0eb;border-radius:12px;background:#f5f7fb;color:#26364c;font-weight:700">Cancel</button><button type="button" id="borrowerLocationAllow" style="flex:1;padding:13px;border:0;border-radius:12px;background:#13b98a;color:#fff;font-weight:800">Allow</button></div></div>';
+  document.body.appendChild(overlay);
+  document.getElementById('borrowerLocationCancel').addEventListener('click',()=>overlay.remove());
+  document.getElementById('borrowerLocationAllow').addEventListener('click',()=>{overlay.remove();requestBorrowerExactLocation();});
+ }
+  function refreshAccount(){const html=accountMarkup();const a=document.getElementById('borrowerMyAccountDetails');const b=document.getElementById('borrowerMyAccountFull');if(a)a.innerHTML=html;if(b)b.innerHTML=html;}
  document.addEventListener('click',async ev=>{
   if(ev.target.closest('#borrowerGetExactLocation')){requestBorrowerExactLocation();return;}
   const install=ev.target.closest('#installBorrowerApp');
