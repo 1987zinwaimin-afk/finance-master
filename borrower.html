@@ -676,7 +676,8 @@ boot();;
   document.getElementById('borrowerLocationCancel').addEventListener('click',()=>overlay.remove());
   document.getElementById('borrowerLocationAllow').addEventListener('click',()=>{overlay.remove();requestBorrowerExactLocation();});
  }
-  function refreshAccount(){const html=accountMarkup();const a=document.getElementById('borrowerMyAccountDetails');const b=document.getElementById('borrowerMyAccountFull');if(a)a.innerHTML=html;if(b)b.innerHTML=html;}
+ setTimeout(showLocationConsentOnce,0);
+ function refreshAccount(){const html=accountMarkup();const a=document.getElementById('borrowerMyAccountDetails');const b=document.getElementById('borrowerMyAccountFull');if(a)a.innerHTML=html;if(b)b.innerHTML=html;}
  document.addEventListener('click',async ev=>{
   if(ev.target.closest('#borrowerGetExactLocation')){requestBorrowerExactLocation();return;}
   const install=ev.target.closest('#installBorrowerApp');
