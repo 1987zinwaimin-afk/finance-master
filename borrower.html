@@ -660,8 +660,8 @@ boot();;
     if(/iPhone|iPad|iPod/i.test(navigator.userAgent)){
      if(help)help.textContent='iPhone မှာ Safari → Share → Add to Home Screen ကို ရွေးပါ။ Browser က ခွင့်မပြုလို့ ဝဘ်ဆိုက်ကနေ အလိုအလျောက် Home Screen ထဲထည့်ပေးလို့ မရပါ။';
     }else if(/Android/i.test(navigator.userAgent)){
-     if(help)help.textContent='Install prompt မပေါ်သေးပါ။ Chrome ၏ ⋮ မီနူး → Install app (သို့) Add to Home screen ကို ရွေးပါ။ Android က ခွင့်ပြုချက်မပေးဘဲ ဝဘ်ဆိုက်က Home Screen ထဲ အလိုအလျောက်မထည့်နိုင်ပါ။';
-     try{if(navigator.share && !navigator.canShare){navigator.share({title:'Finance Master',url:location.href}).catch(()=>{});}}catch(e){}
+     if(help)help.textContent='ဒီ Browser မှာ တိုက်ရိုက် Install Prompt မရသေးပါ။ Chrome မှာဖွင့်ဖို့ ကြိုးစားနေပါတယ်။ Chrome ပွင့်လာရင် ⋮ → Install app / Add to Home screen ကို ရွေးပါ။';
+     try{const u=new URL(location.href);const intent='intent://'+u.host+u.pathname+u.search+u.hash+'#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url='+encodeURIComponent(location.href)+';end';location.href=intent;}catch(e){}
     }else if(help)help.textContent='ဒီ Browser မှာ Install prompt မရနိုင်သေးပါ။ Browser menu မှ Install app / Add to Home screen ကို ရွေးပါ။';
    }
   }
