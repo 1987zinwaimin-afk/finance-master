@@ -14,7 +14,7 @@
    if(saved){location.replace('/borrower.html?token='+encodeURIComponent(saved));return;}
   }
  }catch(e){}
- if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/borrower-service-worker.js?ownermk20261024',{scope:'/'}).catch(()=>{}));}
+ if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/borrower-service-worker.js?ownermk20261023-location-removed',{scope:'/'}).catch(()=>{}));}
 })();
 </script>
 <title>Borrower Account · Finance Master</title>
@@ -675,6 +675,26 @@ boot();;
   const tab=ev.target.closest('[data-share-tab]');if(tab&&['settings','account'].includes(tab.dataset.shareTab))showPage(tab.dataset.shareTab);
  });
  setTimeout(refreshAccount,700);
+})();
+</script>
+<script>
+/* Privacy safeguard: remove any legacy Location/GPS UI that may remain in a cached share-link page. */
+(function(){
+ const isLocationLabel=s=>/^(location|gps location|current location|device location|တည်နေရာ|လက်ရှိတည်နေရာ|ဖုန်းတည်နေရာ)$/i.test(String(s||'').replace(/[:：]/g,'').trim());
+ function removeLegacyLocationUI(root){
+  const scope=root&&root.querySelectorAll?root:document;
+  scope.querySelectorAll('[id*="location" i],[class*="location" i],[data-*="location" i]').forEach(el=>{
+   if(el.id==='location' || /location|gps/i.test(el.id+' '+el.className)) el.remove();
+  });
+  scope.querySelectorAll('label,dt,span,small,b,strong,div,p,h2,h3,h4').forEach(el=>{
+   if(!el.isConnected || !isLocationLabel(el.textContent)) return;
+   const row=el.closest('.owner-detail-row, .owner-detail-item, tr, li, .field, .row, article, section');
+   if(row && row!==document.body) row.remove(); else el.remove();
+  });
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>removeLegacyLocationUI(document));
+ else removeLegacyLocationUI(document);
+ new MutationObserver(()=>removeLegacyLocationUI(document)).observe(document.documentElement,{subtree:true,childList:true});
 })();
 </script>
 </body></html>
