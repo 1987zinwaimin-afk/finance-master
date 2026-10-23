@@ -2,15 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101c33">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%23101c33'/%3E%3Ctext x='50%25' y='58%25' font-size='320' font-family='Arial,sans-serif' font-weight='700' text-anchor='middle' fill='%23d8b56d'%3EF%3C/text%3E%3C/svg%3E">
+<link rel="manifest" href="/borrower-manifest.json">
+<link rel="icon" href="/borrower-icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/borrower-icon.svg">
 <script>
 (function(){
  try{
-  const icon='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#101c33"/><text x="50%" y="58%" font-size="320" font-family="Arial,sans-serif" font-weight="700" text-anchor="middle" fill="#d8b56d">F</text></svg>');
-  const start=location.pathname+location.search+location.hash;
-  const manifest={id:location.origin+'/borrower-app/'+encodeURIComponent(new URL(location.href).searchParams.get('token')||'account'),start_url:start,scope:location.origin+'/',name:'Finance Master · Borrower',short_name:'Finance Master',description:'Your private borrower account',display:'standalone',display_override:['standalone','minimal-ui'],background_color:'#f4f6fa',theme_color:'#101c33',prefer_related_applications:false,icons:[{src:icon,sizes:'192x192',type:'image/svg+xml',purpose:'any'},{src:icon,sizes:'512x512',type:'image/svg+xml',purpose:'any'},{src:icon,sizes:'any',type:'image/svg+xml',purpose:'maskable'}]};
-  const blob=new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'});
-  const link=document.createElement('link');link.rel='manifest';link.href=URL.createObjectURL(blob);document.head.appendChild(link);
+  const q=new URLSearchParams(location.search);
+  if(q.get('installed')==='1'){
+   const saved=localStorage.getItem('finance-master-borrower-install-token-v1')||'';
+   if(saved){location.replace('/borrower.html?token='+encodeURIComponent(saved));return;}
+  }
  }catch(e){}
  if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/borrower-service-worker.js',{scope:'/'}).catch(()=>{}));}
 })();
@@ -653,6 +655,7 @@ boot();;
  document.addEventListener('click',async ev=>{
   const install=ev.target.closest('#installBorrowerApp');
   if(install){
+   try{const currentToken=new URLSearchParams(location.search).get('token');if(currentToken)localStorage.setItem('finance-master-borrower-install-token-v1',currentToken);}catch(e){}
    const help=document.getElementById('borrowerInstallHelp');
    if(borrowerInstallPrompt){
     try{borrowerInstallPrompt.prompt();const choice=await borrowerInstallPrompt.userChoice;borrowerInstallPrompt=null;if(help)help.textContent=choice&&choice.outcome==='accepted'?'Home Screen မှာ Install လုပ်ရန် လက်ခံပြီးပါပြီ။':'Install မလုပ်ရသေးပါ။ Install ခလုတ်ကို ထပ်နှိပ်နိုင်ပါသည်။';}catch(e){if(help)help.textContent='Install Prompt မရသေးပါ။ Chrome မီနူးမှ Install app ကို ရွေးပါ။'}
