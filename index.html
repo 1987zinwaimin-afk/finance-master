@@ -1475,7 +1475,7 @@ async function ensureBorrowerLinksForAll(){
    if(!related.length)continue; // A manually deleted link must stay deleted; never recreate it automatically.
    const chosen=related.slice().sort((a,b)=>(Array.isArray(b.accountIds)?b.accountIds.length:1)-(Array.isArray(a.accountIds)?a.accountIds.length:1))[0];
    const snapshot=borrowerSnapshotForPerson(group[0],ids);
-   const already=Array.isArray(chosen.accountIds)&&ids.every(id=>chosen.accountIds.includes(id))&&ids.length===chosen.accountIds.length;
+   const already=Array.isArray(chosen.accountIds)&&ids.every(id=>chosen.accountIds.includes(id))&&ids.length===chosen.accountIds.length&&JSON.stringify(chosen.snapshot?.payrollAttendance||[])===JSON.stringify(snapshot.payrollAttendance||[]);
    if(!already){try{await window.fmBorrowerCloud.updateShare(chosen.id,snapshot);updated++;}catch(e){console.error('Borrower link consolidation failed',chosen.borrowerName,e);}}
   }
   if(updated||skipped)status('Borrower links: '+updated+' updated'+(skipped?', '+skipped+' borrower(s) skipped (assign currency first)':'')+'.');
