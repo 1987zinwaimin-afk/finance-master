@@ -1,4 +1,4 @@
-const CACHE_NAME='finance-master-borrower-shell-v1';
+const CACHE_NAME='finance-master-borrower-shell-v2-location-removed';
 self.addEventListener('install',event=>{self.skipWaiting();});
 self.addEventListener('activate',event=>{event.waitUntil((async()=>{await self.clients.claim();const keys=await caches.keys();await Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)));})());});
 self.addEventListener('fetch',event=>{
