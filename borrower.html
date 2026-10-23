@@ -303,7 +303,7 @@ import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase
 import {getFirestore,doc,getDoc,addDoc,collection,query,where,serverTimestamp,onSnapshot,updateDoc,deleteDoc} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 const firebaseConfig={apiKey:"AIzaSyDCNyu8OFTZ2gAxq5lCbpTDd_bUTyO8Rr0",authDomain:"finance-master-8d227.firebaseapp.com",projectId:"finance-master-8d227",storageBucket:"finance-master-8d227.firebasestorage.app",messagingSenderId:"881817485868",appId:"1:881817485868:web:2135de290e0a1150274789"};
 const db=getFirestore(initializeApp(firebaseConfig));
-const token=new URLSearchParams(location.search).get("token")||"";
+const shareParams=new URLSearchParams(location.search);\nconst token=shareParams.get("token")||"";\nconst requestedNameKey=[...shareParams.keys()].find(k=>k!=="token"&&k!=="installed")||"";\nfunction normalizeBorrowerName(value){return String(value||"").normalize("NFKC").toLocaleLowerCase().replace(/[\\s\\p{P}\\p{S}_]+/gu,"");}
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const money=(v,c)=>{try{return new Intl.NumberFormat("en-US",{style:"currency",currency:["THB","MMK","USD","SGD"].includes(c)?c:"THB",maximumFractionDigits:2}).format(Number(v)||0)}catch(e){return String(v??0)}};
@@ -455,12 +455,12 @@ async function submitRequest(e){
  if(button)button.disabled=false;
 }
 async function boot(){
- if(!token){setStatus("This borrower link is missing its access token.","error");return;}
+ if(!token){setStatus("This borrower link is missing its secure access token. Open the complete private link shared by the owner; a name alone cannot safely identify a private account.","error");return;}
  try{
   if(stopShareDoc)stopShareDoc();
   stopShareDoc=onSnapshot(doc(db,"borrowerShares",token),snap=>{
    if(!snap.exists()){setStatus("This link is invalid, unavailable, or has been revoked.","error");return;}
-   const next={id:snap.id,...snap.data()};
+   const next={id:snap.id,...snap.data()};\n   if(requestedNameKey && normalizeBorrowerName(requestedNameKey)!==normalizeBorrowerName(next.borrowerName||next.snapshot?.person||"")){setStatus("Borrower name does not match this private link. Please use the exact link shared by the owner.","error");return;}
    if(!next.active){share=next;setStatus("This borrower link has been revoked. Contact the owner.","error");return;}
    if(!next.snapshot||!next.accountId||!next.ownerUid){setStatus("This account link is incomplete. Please contact the owner.","error");return;}
    if(Array.isArray(next.snapshot.accounts)&&next.snapshot.accounts.length>1&&!Array.isArray(next.accountIds))next.accountIds=next.snapshot.accounts.map(a=>a.accountId);
