@@ -1454,7 +1454,8 @@ function borrowerSnapshotForShare(sh){
  const ids=Array.isArray(sh?.accountIds)&&sh.accountIds.length?sh.accountIds:(Array.isArray(sh?.snapshot?.accounts)?sh.snapshot.accounts.map(a=>a.accountId):[sh?.accountId]);
  const loans=(state.loans||[]).filter(l=>ids.includes(l.id));
  if(!loans.length)return sh?.snapshot||null;
- return loans.length>1?borrowerSnapshotForPerson(loans[0]):borrowerSnapshotForLoan(loans[0]);
+ if(loans.length>1)return borrowerSnapshotForPerson(loans[0],ids);
+ return {...borrowerSnapshotForLoan(loans[0]),person:loans[0].person||sh?.borrowerName||'',borrowerPhone:String(loans[0].borrowerPhone||''),payrollAttendance:payrollSnapshotForPerson(loans[0].person)};
 }
 let borrowerAutoCreateRunning=false;
 const borrowerAutoCreateAttempted=new Set();
