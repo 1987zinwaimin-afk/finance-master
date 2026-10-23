@@ -471,6 +471,7 @@ async function boot(){
    share=next;
    setStatus("Live account loaded · changes from the owner update automatically.","success");
    try{render();}catch(renderError){setStatus("Could not display the borrower account. "+(renderError?.message||String(renderError)),"error");console.error("Borrower render failed",renderError);return;}
+   window.dispatchEvent(new Event('borrower-share-loaded'));
    if(!shareListenersStarted){shareListenersStarted=true;startChat();startBorrowerRequestListener();}
   },err=>setStatus("Could not sync the latest owner records. "+(err.message||""),"error"));
  }catch(err){setStatus("Could not load this account. Firestore share-link rules may need to be configured. "+(err.message||""),"error");}
@@ -718,6 +719,7 @@ boot();;
   if(ev.target.closest('#openMyAccount')){refreshAccount();showPage('account');}
   const tab=ev.target.closest('[data-share-tab]');if(tab&&['settings','account'].includes(tab.dataset.shareTab))showPage(tab.dataset.shareTab);
  });
+ window.addEventListener('borrower-share-loaded',refreshAccount);
  setTimeout(refreshAccount,700);
 })();
 </script>
