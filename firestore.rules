@@ -17,9 +17,17 @@ service cloud.firestore {
         && request.resource.data.active == true
         && request.resource.data.accountId is string
         && request.resource.data.snapshot is map;
-      allow update: if request.auth != null
+      allow update: if (
+        request.auth != null
         && resource.data.ownerUid == request.auth.uid
-        && request.resource.data.ownerUid == resource.data.ownerUid;
+        && request.resource.data.ownerUid == resource.data.ownerUid
+      ) || (
+        request.auth == null
+        && resource.data.active == true
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['borrowerPhone'])
+        && request.resource.data.borrowerPhone is string
+        && request.resource.data.borrowerPhone.size() <= 32
+      );
       allow delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
 
       match /messages/{messageId} {
