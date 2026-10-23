@@ -645,18 +645,28 @@ boot();;
   document.querySelectorAll('[data-share-tab]').forEach(el=>{const on=el.dataset.shareTab===page;el.classList.toggle('active',on);el.setAttribute('aria-current',on?'page':'false');});
   document.body.classList.toggle('chat-mode',page==='chat');window.scrollTo({top:0,behavior:'auto'});
  }
+ const borrowerSessionStartedAt=new Date();
+ let borrowerExactLocation=null;
+ let borrowerLocationMessage="တည်နေရာရယူရန် ခွင့်ပြုချက်လိုအပ်သည်။";
+ const borrowerDeviceModel=(()=>{const ua=navigator.userAgent||"";if(/iPhone/i.test(ua)){const m=ua.match(/iPhone OS ([\d_]+)/);return "iPhone"+(m?" · iOS "+m[1].replace(/_/g,"."):"");}if(/iPad/i.test(ua))return "iPad";if(/Android/i.test(ua)){const m=ua.match(/Android[^;)]*;\s*([^;)]+?)(?:\s+Build\/[^)]*)?\)/i);return m&&m[1]&&!/wv|version\//i.test(m[1])?m[1].trim():"Android ဖုန်း (မော်ဒယ်ကို Browser က ဖျောက်ထားသည်)";}if(/Windows NT/i.test(ua))return "Windows PC";if(/Macintosh/i.test(ua))return "Mac";return "Browser device";})();
+ const borrowerSessionTime=borrowerSessionStartedAt.toLocaleString(undefined,{year:"numeric",month:"short",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit"});
  function accountMarkup(){
-  const name=document.querySelector('#app [data-share-page="summary"] h1')?.textContent?.trim()||'Borrower';
-  const intro=document.querySelector('#app [data-share-page="summary"] .head .muted')?.textContent?.trim()||'';
-  const currency=(intro.split('·').pop()||'').trim()||'—';
+  const name=document.querySelector('#app [data-share-page="summary"] .head h1')?.textContent?.trim()||'Borrower';
+  const locationValue=borrowerExactLocation?('<a href="https://www.google.com/maps?q='+encodeURIComponent(borrowerExactLocation.latitude+','+borrowerExactLocation.longitude)+'" target="_blank" rel="noopener">📍 '+escHtml(borrowerExactLocation.latitude.toFixed(6)+', '+borrowerExactLocation.longitude.toFixed(6))+' · Google Maps တွင်ကြည့်ရန်</a><small style="display:block;margin-top:5px;color:#697a98">Accuracy ±'+escHtml(Math.round(borrowerExactLocation.accuracy))+' m · '+escHtml(new Date(borrowerExactLocation.timestamp).toLocaleString())+'</small>'):escHtml(borrowerLocationMessage);
+  const rows=[['Name',name],['Model',borrowerDeviceModel],['Login Time',borrowerSessionTime],['Session status','🟢 Active · ဒီစာမျက်နှာဖွင့်ထားသည်'],['Location',locationValue]];
+  const rowHtml=rows.map(([k,v])=>'<div style="padding:13px;border-radius:14px;background:linear-gradient(135deg,#f5faff,#eaf8f5);border:1px solid #e0edf4;min-width:0"><div style="font-size:12px;color:#697a98;margin-bottom:6px;font-weight:700">'+escHtml(k)+'</div><div style="font-size:14px;font-weight:700;line-height:1.55;overflow-wrap:anywhere">'+(k==='Location'&&borrowerExactLocation?v:escHtml(v))+'</div></div>').join('');
   const cards=[...document.querySelectorAll('#app [data-share-page="summary"] article.panel')];
-  const rows=[['ချေးငွေသမားအမည်',name],['ငွေကြေးအမျိုးအစား',currency],['ချေးငွေအကောင့်အရေအတွက်',String(cards.length||1)]];
-  const rowHtml=rows.map(([k,v])=>'<div style="padding:12px;border-radius:13px;background:linear-gradient(135deg,#f5faff,#eaf8f5);border:1px solid #e0edf4"><div class="muted" style="font-size:12px;margin-bottom:5px">'+escHtml(k)+'</div><strong style="overflow-wrap:anywhere">'+escHtml(v)+'</strong></div>').join('');
   const loanCards=cards.map((card,i)=>'<div style="padding:12px;margin-top:8px;border-radius:13px;background:#f7faff;border:1px solid #e0eaf5"><strong>ချေးငွေစာရင်း '+(i+1)+'</strong><div style="margin-top:6px">'+escHtml((card.querySelector('h3')||card.querySelector('h2'))?.textContent||'ချေးငွေ')+'</div></div>').join('');
-  return '<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px">'+rowHtml+'</div>'+(loanCards?'<h3 style="margin-top:18px">ချိတ်ဆက်ထားသော ချေးငွေစာရင်းများ</h3>'+loanCards:'');
+  return '<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px">'+rowHtml+'</div><div style="margin-top:12px"><button id="borrowerGetExactLocation" class="btn secondary" type="button">📍 လက်ရှိတည်နေရာ အတိအကျရယူရန်</button><p class="muted" style="margin:7px 0 0">တည်နေရာကို ဖုန်း Browser ခွင့်ပြုချက်ပေးမှသာ ပြသမည်။ Location ကို အလိုအလျောက် Owner ထံ မပို့ပါ။</p></div>'+(loanCards?'<h3 style="margin-top:18px">ချိတ်ဆက်ထားသော ချေးငွေစာရင်းများ</h3>'+loanCards:'');
+ }
+ function requestBorrowerExactLocation(){
+  if(!navigator.geolocation){borrowerLocationMessage="ဒီ Browser မှာ Location မရနိုင်ပါ။";refreshAccount();return;}
+  borrowerLocationMessage="တည်နေရာရယူနေသည်…";refreshAccount();
+  navigator.geolocation.getCurrentPosition(pos=>{borrowerExactLocation={latitude:pos.coords.latitude,longitude:pos.coords.longitude,accuracy:pos.coords.accuracy,timestamp:pos.timestamp};borrowerLocationMessage="";refreshAccount();},err=>{borrowerLocationMessage=err.code===1?"Location ခွင့်ပြုချက်ကို ပိတ်ထားသည်။ Browser Settings မှ Allow လုပ်ပါ။":err.code===2?"တည်နေရာ မရရှိပါ။ GPS/Location ကို ဖွင့်ပြီး ထပ်ကြိုးစားပါ။":"တည်နေရာရယူချိန် ကုန်သွားသည်။ ထပ်ကြိုးစားပါ။";refreshAccount();},{enableHighAccuracy:true,timeout:20000,maximumAge:0});
  }
  function refreshAccount(){const html=accountMarkup();const a=document.getElementById('borrowerMyAccountDetails');const b=document.getElementById('borrowerMyAccountFull');if(a)a.innerHTML=html;if(b)b.innerHTML=html;}
  document.addEventListener('click',async ev=>{
+  if(ev.target.closest('#borrowerGetExactLocation')){requestBorrowerExactLocation();return;}
   const install=ev.target.closest('#installBorrowerApp');
   if(install){
    try{const currentToken=new URLSearchParams(location.search).get('token');if(currentToken)localStorage.setItem('finance-master-borrower-install-token-v1',currentToken);}catch(e){}
