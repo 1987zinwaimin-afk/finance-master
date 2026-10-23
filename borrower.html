@@ -683,7 +683,7 @@ boot();;
  const isLocationLabel=s=>/^(location|gps location|current location|device location|တည်နေရာ|လက်ရှိတည်နေရာ|ဖုန်းတည်နေရာ)$/i.test(String(s||'').replace(/[:：]/g,'').trim());
  function removeLegacyLocationUI(root){
   const scope=root&&root.querySelectorAll?root:document;
-  scope.querySelectorAll('[id*="location" i],[class*="location" i],[data-*="location" i]').forEach(el=>{
+  scope.querySelectorAll('[id*="location" i],[class*="location" i],[data-location]').forEach(el=>{
    if(el.id==='location' || /location|gps/i.test(el.id+' '+el.className)) el.remove();
   });
   scope.querySelectorAll('label,dt,span,small,b,strong,div,p,h2,h3,h4').forEach(el=>{
