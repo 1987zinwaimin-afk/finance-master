@@ -1434,12 +1434,21 @@ function borrowerSnapshotForLoan(l){
  const payments=(state.payments||[]).filter(p=>p.kind==='loan'&&p.account===l.id).map(p=>({accountId:l.id,accountPerson:l.person||'',date:p.date||'',amount:Number(p.amount)||0,currency:recordCurrency(p)||currency,apply:p.apply||'auto',note:p.note||'',interestApplied:Number(p.interestApplied)||0,principalApplied:Number(p.principalApplied)||0}));
  const targetStatus=monthlyTargetStatus(l,'loan');return {accountId:l.id,person:l.person||'',borrowerPhone:String(l.borrowerPhone||''),loanType:String(l.loanType||'').trim(),interestType:l.interestType||'normal',currency,principal:Number(l.principal)||0,principalPaid:Number(l.principalPaid)||0,rate:Number(l.rate)||0,period:l.period||'monthly',method:l.method||'simple',start:l.start||'',stop:l.stop||'',due:l.due||'',note:l.note||'',monthlyTarget:Number(l.monthlyTarget)||0,monthlyTargetSince:l.monthlyTargetSince||'',underpaymentMessage:l.underpaymentMessage||'',consecutiveUnderpaidMonths:targetStatus.consecutive,monthlyTargetStatuses:targetStatus.statuses,paidThisMonth:targetStatus.paidThisMonth,principalOutstanding:ledger.principalOutstanding,interestOutstanding:ledger.interestOutstanding,monthlyInterest:ledger.monthlyInterest,unpaidMonths:ledger.unpaidMonths,interestBuckets:ledger.interestBuckets.map(b=>({accountId:l.id,accountPerson:l.person||'',currency,date:b.date,original:b.original,remaining:b.remaining})),payments};
 }
+function payrollSnapshotForPerson(personName){
+ const target=String(personName||'').trim().replace(/\\s+/g,' ').toLocaleLowerCase();if(!target)return [];
+ return Object.entries(state.payroll||{}).sort(([a],[b])=>a.localeCompare(b)).flatMap(([month,rec])=>{
+  if(!rec||!Array.isArray(rec.employees))return [];
+  const emp=rec.employees.find(e=>String(e.name||'').trim().replace(/\\s+/g,' ').toLocaleLowerCase()===target);if(!emp)return [];
+  const attendance=emp.attendance&&typeof emp.attendance==='object'?emp.attendance:{};
+  return [{month,employeeName:String(emp.name||personName),periodStart:String(rec.periodStart||''),periodEnd:String(rec.periodEnd||''),currency:String(rec.currency||'THB'),dailyRate:Math.max(0,Number(emp.dailyRate)||0),salaryOverride:emp.salaryOverride===''||emp.salaryOverride===null||emp.salaryOverride===undefined?null:Math.max(0,Number(emp.salaryOverride)||0),attendance:Object.fromEntries(Object.entries(attendance).filter(([day,value])=>/^\\d{4}-\\d{2}-\\d{2}$/.test(day)&&['present','absent','off'].includes(value))),updatedAt:String(rec.updatedAt||'')}];
+ });
+}
 function borrowerSnapshotForPerson(selectedLoan,selectedIds){
  const person=String(selectedLoan.person||'').trim().toLocaleLowerCase();
  let loans=(state.loans||[]).filter(l=>String(l.person||'').trim().toLocaleLowerCase()===person);
  if(Array.isArray(selectedIds)&&selectedIds.length)loans=loans.filter(l=>selectedIds.includes(l.id));
  const accounts=loans.map(borrowerSnapshotForLoan),primary=accounts.find(a=>a.accountId===selectedLoan.id)||accounts[0]||borrowerSnapshotForLoan(selectedLoan);
- return {...primary,person:selectedLoan.person||'',borrowerPhone:String(selectedLoan.borrowerPhone||loans.find(l=>l.borrowerPhone)?.borrowerPhone||''),accounts,accountCount:accounts.length,interestBuckets:accounts.flatMap(a=>a.interestBuckets||[]),payments:accounts.flatMap(a=>a.payments||[])};
+ return {...primary,person:selectedLoan.person||'',borrowerPhone:String(selectedLoan.borrowerPhone||loans.find(l=>l.borrowerPhone)?.borrowerPhone||''),accounts,accountCount:accounts.length,interestBuckets:accounts.flatMap(a=>a.interestBuckets||[]),payments:accounts.flatMap(a=>a.payments||[]),payrollAttendance:payrollSnapshotForPerson(selectedLoan.person)};
 }
 function borrowerSnapshotForShare(sh){
  const ids=Array.isArray(sh?.accountIds)&&sh.accountIds.length?sh.accountIds:(Array.isArray(sh?.snapshot?.accounts)?sh.snapshot.accounts.map(a=>a.accountId):[sh?.accountId]);
