@@ -304,7 +304,7 @@ import {getFirestore,doc,getDoc,addDoc,collection,query,where,serverTimestamp,on
 const firebaseConfig={apiKey:"AIzaSyDCNyu8OFTZ2gAxq5lCbpTDd_bUTyO8Rr0",authDomain:"finance-master-8d227.firebaseapp.com",projectId:"finance-master-8d227",storageBucket:"finance-master-8d227.firebasestorage.app",messagingSenderId:"881817485868",appId:"1:881817485868:web:2135de290e0a1150274789"};
 const db=getFirestore(initializeApp(firebaseConfig));
 const shareParams=new URLSearchParams(location.search);
-const token=shareParams.get("token")||"";
+const token=shareParams.get("token")||new URLSearchParams(location.hash.slice(1)).get("token")||"";
 const requestedNameKey=[...shareParams.keys()].find(k=>k!=="token"&&k!=="installed")||"";
 function normalizeBorrowerName(value){return String(value||"").normalize("NFKC").toLocaleLowerCase().replace(/[\s\p{P}\p{S}_]+/gu,"");}
 const $=id=>document.getElementById(id);
