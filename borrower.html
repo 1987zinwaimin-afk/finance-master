@@ -676,9 +676,27 @@ boot();;
    {icon:'☎️',label:'Phone',value:phone,note:phone==='Owner က ဖုန်းနံပါတ် မထည့်ရသေးပါ'?'Owner က ချေးငွေစာရင်းကို Edit လုပ်ပြီး ဖုန်းနံပါတ် ထည့်နိုင်ပါသည်။':''}
   ];
   const rowHtml=rows.map((r,i)=>'<div style="display:grid;grid-template-columns:38px minmax(0,1fr);gap:10px;align-items:start;padding:15px 2px;'+(i===rows.length-1?'':'border-bottom:1px solid #e8edf4;')+'"><div style="width:36px;height:36px;border-radius:12px;background:#f0f4fa;display:flex;align-items:center;justify-content:center;font-size:18px">'+r.icon+'</div><div style="min-width:0"><div style="font-size:12px;letter-spacing:.2px;font-weight:700;color:#728096;margin-bottom:4px">'+escHtml(r.label)+'</div><div style="font-size:14px;font-weight:750;line-height:1.5;color:'+(r.status?'#087f66':'#172b49')+';overflow-wrap:anywhere">'+escHtml(r.value)+'</div>'+(r.note?'<small style="display:block;color:#8792a3;font-size:11px;line-height:1.45;margin-top:4px">'+escHtml(r.note)+'</small>':'')+'</div></div>').join('');
-  return '<section style="border:1px solid #e2e8f0;border-radius:20px;padding:6px 16px;background:linear-gradient(145deg,#fff,#f8faff);box-shadow:0 8px 24px rgba(18,39,70,.07)">'+rowHtml+'</section>';
+  const savedPhone=String(share?.borrowerPhone||share?.snapshot?.borrowerPhone||share?.snapshot?.accounts?.find(a=>a.borrowerPhone)?.borrowerPhone||'').trim();
+  return '<section style="border:1px solid #e2e8f0;border-radius:20px;padding:6px 16px;background:linear-gradient(145deg,#fff,#f8faff);box-shadow:0 8px 24px rgba(18,39,70,.07)">'+rowHtml+'</section><section style="margin-top:12px;border:1px solid #e2e8f0;border-radius:18px;padding:16px;background:#fff"><h3 style="margin:0 0 6px;font-size:15px;color:#172b49">📞 Phone number</h3><p style="margin:0 0 12px;font-size:12px;color:#728096;line-height:1.5">Owner ထည့်ထားသော ဖုန်းနံပါတ်ကို လိုအပ်ပါက ပြင်ဆင်နိုင်ပါသည်။</p><form id="borrowerPhoneEditForm"><div class="field"><label for="borrowerPhoneEdit">Phone</label><input id="borrowerPhoneEdit" name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="32" value="'+escHtml(savedPhone)+'" placeholder="+66 / 09xxxxxxxx"></div><button class="btn" id="saveBorrowerPhone" type="submit" style="margin-top:12px;width:100%">Save phone number</button><div id="borrowerPhoneSaveStatus" aria-live="polite" style="margin-top:10px;font-size:12px"></div></form></section>';
  }
  function refreshAccount(){const html=accountMarkup();const a=document.getElementById('borrowerMyAccountDetails');const b=document.getElementById('borrowerMyAccountFull');if(a)a.innerHTML=html;if(b)b.innerHTML=html;}
+ document.addEventListener('submit',async ev=>{
+  if(ev.target?.id!=='borrowerPhoneEditForm')return;
+  ev.preventDefault();
+  const input=document.getElementById('borrowerPhoneEdit'),button=document.getElementById('saveBorrowerPhone'),msg=document.getElementById('borrowerPhoneSaveStatus');
+  const phone=String(input?.value||'').trim();
+  if(phone.length>32){if(msg)msg.textContent='ဖုန်းနံပါတ်ကို စာလုံး ၃၂ လုံးထက် မပိုစေရပါ။';return;}
+  if(!share?.id||!token){if(msg)msg.textContent='Share Link မမှန်ပါ။';return;}
+  if(button)button.disabled=true;if(msg)msg.textContent='Saving…';
+  try{
+   await updateDoc(doc(db,'borrowerShares',token),{borrowerPhone:phone});
+   share.borrowerPhone=phone;
+   if(share.snapshot)share.snapshot.borrowerPhone=phone;
+   if(msg){msg.textContent='ဖုန်းနံပါတ် သိမ်းဆည်းပြီးပါပြီ။';msg.style.color='#087f66';}
+   refreshAccount();
+  }catch(err){if(msg){msg.textContent='သိမ်းဆည်းမရပါ။ Share Link ကို ပြန်ဖွင့်ပြီး ထပ်ကြိုးစားပါ။';msg.style.color='#b42318';}}
+  finally{if(button)button.disabled=false;}
+ });
  document.addEventListener('click',async ev=>{
   const install=ev.target.closest('#installBorrowerApp');
   if(install){
