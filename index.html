@@ -1478,7 +1478,7 @@ async function ensureBorrowerLinksForAll(){
    const already=Array.isArray(chosen.accountIds)&&ids.every(id=>chosen.accountIds.includes(id))&&ids.length===chosen.accountIds.length&&JSON.stringify(chosen.snapshot?.payrollAttendance||[])===JSON.stringify(snapshot.payrollAttendance||[]);
    if(!already){try{await window.fmBorrowerCloud.updateShare(chosen.id,snapshot);updated++;}catch(e){console.error('Borrower link consolidation failed',chosen.borrowerName,e);}}
   }
-  if(updated||skipped)status('Borrower links: '+updated+' updated'+(skipped?', '+skipped+' borrower(s) skipped (assign currency first)':'')+'.');
+  if(updated||skipped){const message='Borrower links: '+updated+' updated'+(skipped?', '+skipped+' borrower(s) skipped (assign currency first)':'')+'.';if(typeof status==='function')status(message);else{const el=document.getElementById('fmAuthStatus');if(el)el.textContent=message;}}
  }finally{borrowerAutoCreateRunning=false;}
 }
 function borrowerNameSlug(name){return String(name||'Borrower').trim().replace(/\s+/g,'')||'Borrower';}
