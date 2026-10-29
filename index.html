@@ -1993,7 +1993,7 @@ onAuthStateChanged(auth, user => {
    else if(user) status('Signed in as '+user.email+', but this is not the Owner Gmail. Owner finance data is hidden and unchanged.',true);
   else status('Not signed in. Create an account or sign in to enable cloud sync.'+(authPersistenceReady?'':' Persistent login is blocked by this browser. Open the site in Chrome and allow site storage.'));
   if(!user){window.fmSecurityState='signed-out';if(window.fmApp?.render)window.fmApp.render();}
-  if(user){setTimeout(()=>{if(currentUser&&document.getElementById('crumbPage')?.textContent==='Borrower Portal'){ensureBorrowerLinksForAll();}},900);}
+  if(user){setTimeout(()=>{if(currentUser&&document.getElementById('crumbPage')?.textContent==='Borrower Portal'){Promise.resolve().then(()=>ensureBorrowerLinksForAll()).catch(err=>{console.error('Borrower Portal background link check failed:',err);status('Borrower Portal ဖွင့်ထားနိုင်ပါသည်။ Share Link စစ်ဆေးမှုကို ယာယီမအောင်မြင်ပါ။ '+String(err?.message||err),true);});}},900);}
 });
 </script>
 
