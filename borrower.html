@@ -350,6 +350,48 @@ footer{padding:12px 10px;color:#7a879a;font-size:10px}
 @media(max-width:390px){.wrap{padding-left:10px;padding-right:10px}#app>.panel,#app .share-page{padding:13px}.share-bottom-nav button small{font-size:8px}#app .share-page[data-share-page="summary"] article.panel .grid{gap:7px!important}#app .share-page[data-share-page="summary"] article.panel .metric{padding:9px 8px!important}}
 
 </style>
+<style id="customer-portal-color-fix">
+/* Final customer portal palette overrides — intentionally last in document */
+:root{color-scheme:light;--fm-navy:#102441;--fm-navy-2:#18385f;--fm-gold:#d9b66d;--fm-ink:#182b49;--fm-muted:#65758d;--fm-border:#dce5f0;--fm-bg:#f3f6fb}
+html,body{background:#f2f5fa!important;color:var(--fm-ink)!important}
+body{background:linear-gradient(180deg,#eaf0fa 0,#f5f7fb 280px,#f2f5fa 100%)!important}
+.wrap{background:transparent!important;color:var(--fm-ink)!important}
+.brand{background:linear-gradient(115deg,#0d1b33 0%,#17365d 58%,#23456e 100%)!important;color:#fff!important;border:1px solid #2e4669!important;box-shadow:0 9px 24px rgba(13,27,51,.2)!important}
+.brand *{color:#fff!important}.brand .brand-title small{color:#e7ca88!important}
+.brand .language-wrap{color:#e8edf5!important}.brand .language-wrap select{background:#fff!important;color:#182b49!important;border:1px solid #cbd6e5!important}
+#status{background:#eef5ff!important;color:#34516f!important;border:1px solid #d7e3f3!important}
+#app>.panel,#app .share-page{background:#fff!important;color:#182b49!important;border:1px solid #dfe7f1!important;box-shadow:0 7px 22px rgba(20,42,72,.07)!important}
+#app>.panel:first-child{background:linear-gradient(125deg,#0d1b33,#17365d 72%,#25466e)!important;color:#fff!important;border:1px solid #2c466a!important}
+#app>.panel:first-child h1,#app>.panel:first-child h2,#app>.panel:first-child p,#app>.panel:first-child b,#app>.panel:first-child small{color:#fff!important}
+#app>.panel:first-child .tag{background:linear-gradient(135deg,#f4dfa8,#d5ae5d)!important;color:#14233f!important}
+#app .share-page h1,#app .share-page h2,#app .share-page h3,#app .share-page h4{color:#162b49!important}
+#app .share-page p,#app .share-page label,#app .share-page summary{color:#304560}
+#app .share-page .muted{color:#687990!important}
+#app .share-page[data-share-page="summary"] .loan-category-banner{background:linear-gradient(115deg,#102441,#1c416b)!important;color:#fff!important;border:1px solid #304d72!important}
+#app .share-page[data-share-page="summary"] .loan-category-banner *{color:#fff!important}
+#app .share-page[data-share-page="summary"] .loan-category-banner .banner-orb{background:linear-gradient(135deg,#f4dfa8,#d1a951)!important;color:#14233f!important}
+#app .share-page[data-share-page="summary"] article.panel{background:#fff!important;border:1px solid #dce5f0!important;color:#182b49!important;box-shadow:0 5px 16px rgba(17,41,73,.07)!important}
+#app .share-page[data-share-page="summary"] article.panel .loan-title-open{color:#172d4b!important}
+#app .share-page[data-share-page="summary"] article.panel .metric{background:linear-gradient(145deg,#f8faff,#edf3fb)!important;border:1px solid #e0e8f2!important;color:#172d4b!important;box-shadow:none!important}
+#app .share-page[data-share-page="summary"] article.panel .metric *{color:#172d4b!important}
+#app .share-page[data-share-page="summary"] article.panel .metric small{color:#65758d!important}
+#app .share-page[data-share-page="summary"] article.panel .metric b{color:#172d4b!important}
+#app .share-page[data-share-page="summary"] article.panel .notice{background:#fff7e6!important;color:#6b4d17!important;border-color:#f0dfb8!important}
+#app .share-page[data-share-page="summary"] .loan-detail-toggle{background:#fff!important;border-color:#dce5f0!important}
+#app .share-page[data-share-page="summary"] .loan-detail-toggle>summary{background:linear-gradient(110deg,#eef3fb,#f8faff)!important;color:#193453!important}
+#app .share-page[data-share-page="summary"] .loan-detail-toggle>summary *{color:#193453!important}
+#app .share-page[data-share-page="request"] input,#app .share-page[data-share-page="request"] select,#app .share-page[data-share-page="request"] textarea{background:#fbfcff!important;color:#182b49!important;border:1px solid #d5e0ee!important}
+#app .share-page[data-share-page="request"] .btn,#app .share-page[data-share-page="request"] .primary{background:linear-gradient(135deg,#f0d38b,#cda34f)!important;color:#14233f!important;border-color:#c9a04d!important}
+#app .share-page[data-share-page="history"] .customer-history-item{background:linear-gradient(145deg,#fff,#f6f9fe)!important;border-color:#dce5f0!important}
+#app .share-page[data-share-page="history"] .customer-history-main b{color:#172d4b!important}
+#app .share-bottom-nav{background:rgba(13,27,51,.98)!important;border-top:1px solid #344968!important;box-shadow:0 -8px 24px rgba(13,27,51,.2)!important}
+.share-bottom-nav button{color:#c7d2e2!important}
+.share-bottom-nav button span{color:#e1c27b!important}
+.share-bottom-nav button.active{background:linear-gradient(135deg,#f3dda3,#d1a54f)!important;color:#14233f!important}
+.share-bottom-nav button.active span,.share-bottom-nav button.active small{color:#14233f!important}
+footer{color:#718097!important}
+@media(prefers-color-scheme:dark){html,body{color-scheme:light!important;background:#f2f5fa!important;color:#182b49!important}input,select,textarea{color-scheme:light!important}}
+</style>
 </head>
 <body><main class="wrap">
 <div class="brand"><img class="logo brand-logo-img" src="/borrower-icon.svg?v=finance-logo-20261023" alt="Finance Master logo" width="44" height="44"><div class="brand-title"><b>Finance Master</b><small>PRIVATE BORROWER PORTAL</small></div><label class="language-wrap"><span id="languageLabel">Language</span><select id="languageSelect" aria-label="Language"><option value="my">မြန်မာ</option><option value="en">English</option><option value="th">ไทย</option></select></label></div>
