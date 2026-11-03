@@ -725,7 +725,17 @@ function render(){
    return '<section class="customer-currency-summary"><div class="customer-currency-heading"><b>စုစုပေါင်းအကြွေးအနှစ်ချုပ်</b><span>'+esc(currency)+'</span></div><div class="customer-total-debt"><small>ကျန်ရှိအကြွေးစုစုပေါင်း · Total Remaining</small><strong>'+esc(money(t.totalDue,currency))+'</strong></div><div class="customer-total-grid">'+metric("မူရင်းအရင်း",money(t.principal,currency))+metric("အတိုးကျန်",money(t.interestDue,currency))+metric("ပေးဆပ်ပြီး",money(t.paid,currency))+metric("ကျန်အရင်း",money(t.principalDue,currency))+'</div></section>';
   }).join("");
   const loanList=accounts.map((a,i)=>summaryCard(a,i)).join("");
-  return '<section class="panel share-page" data-share-page="summary"><div class="customer-dashboard-heading"><div><span class="tag">CUSTOMER PORTAL</span><h2>မင်္ဂလာပါ၊ '+esc(share.borrowerName||s.person||"Customer")+'</h2><p class="muted">သင့်ချေးငွေစာရင်းအားလုံးကို တစ်နေရာတည်းတွင် ရှင်းလင်းစွာ ကြည့်ရှုနိုင်ပါသည်။</p></div><span class="customer-loan-count">'+accounts.length+' ချေးငွေ</span></div>'+totalMarkup+'<div class="customer-loan-list-heading"><div><h3>သင့်ချေးငွေအမျိုးအစားများ</h3><p class="muted">အသေးစိတ်ကြည့်ရန် ချေးငွေတစ်ခုချင်းစီကို နှိပ်ပါ။</p></div><span>'+accounts.length+' ခု</span></div><div class="customer-loan-list">'+loanList+'</div><p class="customer-readonly-note">🔒 ဤစာမျက်နှာသည် ကြည့်ရှုရန်သာဖြစ်သည်။ ငွေပေးချေမှုများကို Owner အတည်ပြုပြီးမှ စာရင်းတွင် ထည့်သွင်းပါမည်။</p></section>';
+  return '<section class="panel share-page fm-customer-home" data-share-page="summary">
+  <header class="fm-customer-welcome">
+   <div class="fm-brand-row"><div class="fm-brand-mark">FM</div><div><b>Finance Master</b><small>PERSONAL FINANCE PORTAL</small></div><span class="fm-live-pill"><i></i> ACTIVE</span></div>
+   <div class="fm-profile-row"><div class="fm-profile-avatar">'+esc((share.borrowerName||s.person||"C").trim().charAt(0).toUpperCase())+'</div><div class="fm-profile-copy"><small>မင်္ဂလာပါ</small><h2>'+esc(share.borrowerName||s.person||"Customer")+'</h2><p>သင့်ချေးငွေစာရင်းနှင့် ငွေပေးချေမှုများကို တစ်နေရာတည်းတွင် ကြည့်ရှုနိုင်ပါသည်။</p></div><span class="fm-account-count">'+accounts.length+'<small>LOANS</small></span></div>
+  </header>
+  <div class="fm-section-title"><div><small>YOUR OVERVIEW</small><h3>ငွေကြေးအနှစ်ချုပ်</h3></div><span class="fm-readonly-chip">🔒 Read only</span></div>
+  <div class="fm-currency-stack">'+totalMarkup+'</div>
+  <div class="fm-section-title fm-loans-title"><div><small>YOUR ACCOUNTS</small><h3>ချေးငွေအကောင့်များ</h3><p>ချေးငွေတစ်ခုချင်းစီကို ရွေးချယ်ပြီး အသေးစိတ်ကြည့်နိုင်ပါသည်။</p></div><span class="fm-count-chip">'+accounts.length+' ခု</span></div>
+  <div class="customer-loan-list fm-loan-grid">'+loanList+'</div>
+  <div class="fm-security-note"><span>🛡️</span><div><b>သင့်အချက်အလက်များ လုံခြုံပါသည်</b><p>ဤစာမျက်နှာသည် ကြည့်ရှုရန်သာဖြစ်သည်။ ငွေပေးချေမှုတောင်းဆိုချက်များကို Owner အတည်ပြုပြီးမှ စာရင်းတွင် ထည့်သွင်းပါမည်။</p></div></div>
+ </section>';
  })();
  const historyMarkup=(()=>{
   const entries=accounts.flatMap(a=>(Array.isArray(a.payments)?a.payments:[]).filter(p=>Number(p.amount)>0).map(p=>({...p,accountLabel:a.loanType||a.label||'ချေးငွေ',accountCurrency:p.currency||a.currency||'THB'}))).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
@@ -1069,4 +1079,58 @@ boot();;
  #app .share-page[data-share-page="summary"] article.panel .metric{min-height:82px!important;padding:11px 9px!important;border-radius:15px!important}
  #app .share-page[data-share-page="summary"] article.panel .metric b{font-size:clamp(12px,3.3vw,15px)!important;overflow-wrap:anywhere!important}
 }
+</style><style id="fm-customer-full-redesign-v2">
+/* Complete customer portal visual system — layout + hierarchy, not just recoloring */
+:root{--fm-ink:#f7f5ef;--fm-muted:#b9c8d9;--fm-gold:#d8b56d;--fm-deep:#071629;--fm-panel:#102944;--fm-line:#385777}
+body{background:radial-gradient(ellipse at 50% -15%,#24496c 0,#102b47 38%,#071629 85%)!important}
+.wrap{max-width:980px!important;padding:14px 14px calc(105px + env(safe-area-inset-bottom))!important}
+#app>.fm-customer-home{padding:0!important;overflow:hidden;border-radius:26px!important;border:1px solid #496987!important;background:linear-gradient(160deg,#0b2038,#102b48 55%,#0a1d33)!important;box-shadow:0 18px 42px #0005,inset 0 1px #ffffff16!important}
+.fm-customer-welcome{padding:20px 18px 22px;background:linear-gradient(125deg,#0b1d34 0%,#173b5c 58%,#0d2742 100%);border-bottom:1px solid #466481;position:relative;overflow:hidden}
+.fm-customer-welcome:after{content:"";position:absolute;width:260px;height:260px;border:1px solid #d8b56d35;border-radius:50%;right:-100px;top:20px;box-shadow:0 0 0 22px #d8b56d0a,0 0 0 48px #d8b56d08;pointer-events:none}
+.fm-brand-row{display:flex;align-items:center;gap:10px;position:relative;z-index:1}
+.fm-brand-mark{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(145deg,#f5e5bd,#c69b4e);color:#10243d;font-weight:1000;font-size:16px;box-shadow:0 5px 15px #0004}
+.fm-brand-row>div:nth-child(2){display:grid;gap:2px}.fm-brand-row>div:nth-child(2) b{font-size:16px;color:#fff;letter-spacing:.1px}.fm-brand-row>div:nth-child(2) small{font-size:8px;letter-spacing:1.5px;color:#d8bd82}
+.fm-live-pill{margin-left:auto;border:1px solid #3b806c;background:#123d38;color:#a8e8d0;border-radius:99px;padding:5px 9px;font-size:9px;font-weight:900;letter-spacing:.8px;display:flex;align-items:center;gap:6px}
+.fm-live-pill i{width:6px;height:6px;border-radius:50%;background:#5de0a8;box-shadow:0 0 8px #5de0a8}
+.fm-profile-row{display:flex;align-items:center;gap:13px;margin-top:25px;position:relative;z-index:1}
+.fm-profile-avatar{flex:0 0 52px;width:52px;height:52px;border-radius:18px;display:grid;place-items:center;background:linear-gradient(145deg,#f5e6c2,#d3ad68);color:#142943;font-size:24px;font-weight:900;box-shadow:0 7px 17px #0004}
+.fm-profile-copy{min-width:0;flex:1}.fm-profile-copy>small{font-size:11px;color:#d7c18e}.fm-profile-copy h2{font-size:clamp(19px,5vw,25px)!important;line-height:1.2;margin:3px 0 5px!important;color:#fff!important}.fm-profile-copy p{font-size:11px;line-height:1.55;color:#c2d1e0;margin:0!important}
+.fm-account-count{width:48px;height:48px;border-radius:15px;background:#ffffff0d;border:1px solid #ffffff30;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#f5d993;font-weight:900;font-size:19px}.fm-account-count small{font-size:8px;letter-spacing:1px;color:#c1ccda}
+.fm-section-title{display:flex;justify-content:space-between;align-items:end;gap:10px;padding:20px 18px 11px}.fm-section-title>div>small{font-size:9px;letter-spacing:1.6px;color:#d7b66e;font-weight:900}.fm-section-title h3{font-size:18px!important;margin:3px 0 0!important;color:#fff!important}.fm-section-title p{font-size:11px;color:#b7c8da;margin:5px 0 0!important;line-height:1.5}
+.fm-readonly-chip,.fm-count-chip{white-space:nowrap;border:1px solid #536c85;border-radius:99px;padding:6px 9px;color:#e6d19e;font-size:9px;font-weight:800;background:#ffffff09}
+.fm-currency-stack{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px;padding:0 16px}
+#app .fm-customer-home .customer-currency-summary{margin:0!important;padding:14px!important;border:1px solid #486987!important;border-radius:20px!important;background:linear-gradient(145deg,#173956,#0d253e)!important;box-shadow:0 9px 22px #0003,inset 0 1px #ffffff14!important}
+.fm-customer-home .customer-currency-heading{font-size:12px!important;color:#eaf0f7!important;margin-bottom:12px!important}.fm-customer-home .customer-currency-heading span{background:linear-gradient(135deg,#f4e4bd,#d2aa61)!important;color:#162943!important;padding:5px 10px!important;border-radius:8px!important}
+.fm-customer-home .customer-total-debt{background:linear-gradient(120deg,#f4e5bd,#d8b56d 65%,#bd9147)!important;border:1px solid #f8eac7!important;border-radius:17px!important;padding:15px!important;box-shadow:0 8px 18px #0003!important}
+.fm-customer-home .customer-total-debt small{color:#5b4828!important;font-size:10px!important;letter-spacing:.2px}.fm-customer-home .customer-total-debt strong{color:#122640!important;font-size:clamp(24px,6vw,32px)!important;line-height:1.25!important;margin-top:6px!important}
+.fm-customer-home .customer-total-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;margin-top:10px!important}
+.fm-customer-home .customer-total-grid .metric{display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;gap:5px!important;min-height:72px!important;padding:11px!important;border:1px solid #42617e!important;border-radius:14px!important;background:linear-gradient(145deg,#204361,#15314d)!important;box-shadow:none!important}
+.fm-customer-home .customer-total-grid .metric-icon{width:27px!important;height:27px!important;border-radius:9px!important;background:#ffffff12!important;color:#f0d28c!important;font-size:15px!important}
+.fm-customer-home .customer-total-grid .metric small{color:#bdcddd!important;font-size:10px!important;line-height:1.35!important}.fm-customer-home .customer-total-grid .metric b{color:#fff!important;font-size:13px!important;line-height:1.3!important}
+.fm-loans-title{padding-top:25px!important}
+.fm-customer-home .customer-loan-list{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:12px!important;padding:0 16px}
+.fm-customer-home .customer-loan-list>article.panel{width:100%!important;box-sizing:border-box!important;margin:0!important;padding:15px!important;border:1px solid #456582!important;border-radius:19px!important;background:linear-gradient(145deg,#183956,#102943)!important;box-shadow:0 8px 20px #0003,inset 0 1px #ffffff12!important;color:#f6f8fb!important}
+.fm-customer-home .customer-loan-list>article.panel>div:first-child{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:9px!important;margin:0 0 13px!important;padding:0 0 12px!important;border-bottom:1px solid #ffffff1a!important;background:transparent!important;box-shadow:none!important;min-height:0!important}
+.fm-customer-home .customer-loan-list .loan-title-open{color:#fff!important;font-size:16px!important;line-height:1.35!important;font-weight:850!important}
+.fm-customer-home .customer-loan-list .tag{background:#263f58!important;color:#f1d596!important;border:1px solid #8b7447!important;font-size:9px!important;padding:5px 8px!important}
+.fm-customer-home .customer-loan-list .grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}
+.fm-customer-home .customer-loan-list .metric{display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;gap:5px!important;min-width:0!important;min-height:74px!important;padding:10px!important;border:1px solid #3c5b78!important;border-radius:13px!important;background:linear-gradient(145deg,#204260,#15314c)!important;box-shadow:none!important}
+.fm-customer-home .customer-loan-list .metric-icon{width:26px!important;height:26px!important;border-radius:9px!important;background:#ffffff10!important;color:#f0d18a!important;font-size:14px!important}
+.fm-customer-home .customer-loan-list .metric small{font-size:10px!important;color:#b9cbdc!important;line-height:1.35!important}
+.fm-customer-home .customer-loan-list .metric b{font-size:12px!important;color:#fff!important;line-height:1.35!important;overflow-wrap:anywhere!important;white-space:normal!important}
+.fm-customer-home .customer-loan-list .notice{background:linear-gradient(135deg,#49391f,#302817)!important;color:#f5e4bd!important;border:1px solid #8c7547!important;border-radius:13px!important}.fm-customer-home .customer-loan-list .notice *{color:#f5e4bd!important}
+.fm-customer-home .customer-loan-list .loan-detail-toggle{background:#0d243c!important;border:1px solid #496986!important;border-radius:14px!important;overflow:hidden}
+.fm-customer-home .customer-loan-list .loan-detail-toggle>summary{background:linear-gradient(110deg,#1d3d5b,#142f4b)!important;color:#f5dfa9!important;padding:13px!important}
+.fm-customer-home .customer-loan-list .loan-detail-toggle>summary *{color:#f5dfa9!important}
+.fm-customer-home .customer-loan-list .loan-detail-toggle>div{background:#0d243c!important;color:#e8eff7!important}
+.fm-customer-home .customer-loan-list .loan-detail-toggle>div *{color:#e8eff7!important}
+.fm-security-note{display:flex;gap:11px;align-items:flex-start;margin:18px 16px 18px;padding:14px;border:1px solid #45637e;border-radius:16px;background:linear-gradient(145deg,#142f49,#102640)}
+.fm-security-note>span{font-size:23px}.fm-security-note b{font-size:12px;color:#f1d99f}.fm-security-note p{font-size:10px;line-height:1.55;color:#b9c9da;margin:5px 0 0}
+#app .share-bottom-nav{max-width:980px;left:50%;right:auto;transform:translateX(-50%);width:100%;border-radius:18px 18px 0 0;background:rgba(6,19,35,.97)!important;border:1px solid #385674!important;border-bottom:0!important;box-shadow:0 -9px 30px #0005!important;backdrop-filter:blur(20px)!important}
+#app .share-bottom-nav button{min-height:60px!important;border-radius:14px!important;color:#c4d0de!important}
+#app .share-bottom-nav button span{color:#e4c57d!important;font-size:20px!important}
+#app .share-bottom-nav button.active{background:linear-gradient(135deg,#f3e2b7,#d5ae66)!important;color:#152943!important}
+#app .share-bottom-nav button.active span,#app .share-bottom-nav button.active small{color:#152943!important}
+@media(min-width:760px){.fm-customer-welcome{padding:25px 26px 28px}.fm-currency-stack{padding:0 22px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}.fm-customer-home .customer-loan-list{padding:0 22px;grid-template-columns:repeat(2,minmax(0,1fr))!important}.fm-section-title{padding-left:24px;padding-right:24px}.fm-security-note{margin-left:22px;margin-right:22px}.fm-customer-home .customer-loan-list>article.panel{height:100%}}
+@media(max-width:390px){.wrap{padding-left:9px!important;padding-right:9px!important}.fm-customer-welcome{padding:16px 13px 19px}.fm-profile-avatar{width:45px;height:45px;flex-basis:45px}.fm-customer-home .customer-loan-list{padding:0 10px}.fm-currency-stack{padding:0 10px}.fm-section-title{padding-left:12px;padding-right:12px}.fm-customer-home .customer-loan-list .metric{min-height:68px;padding:8px!important}.fm-customer-home .customer-loan-list .metric b{font-size:11px!important}.fm-security-note{margin-left:10px;margin-right:10px}}
 </style></body></html>
