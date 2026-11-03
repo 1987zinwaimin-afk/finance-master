@@ -725,17 +725,17 @@ function render(){
    return '<section class="customer-currency-summary"><div class="customer-currency-heading"><b>စုစုပေါင်းအကြွေးအနှစ်ချုပ်</b><span>'+esc(currency)+'</span></div><div class="customer-total-debt"><small>ကျန်ရှိအကြွေးစုစုပေါင်း · Total Remaining</small><strong>'+esc(money(t.totalDue,currency))+'</strong></div><div class="customer-total-grid">'+metric("မူရင်းအရင်း",money(t.principal,currency))+metric("အတိုးကျန်",money(t.interestDue,currency))+metric("ပေးဆပ်ပြီး",money(t.paid,currency))+metric("ကျန်အရင်း",money(t.principalDue,currency))+'</div></section>';
   }).join("");
   const loanList=accounts.map((a,i)=>summaryCard(a,i)).join("");
-  return '<section class="panel share-page fm-customer-home" data-share-page="summary">
-  <header class="fm-customer-welcome">
-   <div class="fm-brand-row"><div class="fm-brand-mark">FM</div><div><b>Finance Master</b><small>PERSONAL FINANCE PORTAL</small></div><span class="fm-live-pill"><i></i> ACTIVE</span></div>
-   <div class="fm-profile-row"><div class="fm-profile-avatar">'+esc((share.borrowerName||s.person||"C").trim().charAt(0).toUpperCase())+'</div><div class="fm-profile-copy"><small>မင်္ဂလာပါ</small><h2>'+esc(share.borrowerName||s.person||"Customer")+'</h2><p>သင့်ချေးငွေစာရင်းနှင့် ငွေပေးချေမှုများကို တစ်နေရာတည်းတွင် ကြည့်ရှုနိုင်ပါသည်။</p></div><span class="fm-account-count">'+accounts.length+'<small>LOANS</small></span></div>
-  </header>
-  <div class="fm-section-title"><div><small>YOUR OVERVIEW</small><h3>ငွေကြေးအနှစ်ချုပ်</h3></div><span class="fm-readonly-chip">🔒 Read only</span></div>
-  <div class="fm-currency-stack">'+totalMarkup+'</div>
-  <div class="fm-section-title fm-loans-title"><div><small>YOUR ACCOUNTS</small><h3>ချေးငွေအကောင့်များ</h3><p>ချေးငွေတစ်ခုချင်းစီကို ရွေးချယ်ပြီး အသေးစိတ်ကြည့်နိုင်ပါသည်။</p></div><span class="fm-count-chip">'+accounts.length+' ခု</span></div>
-  <div class="customer-loan-list fm-loan-grid">'+loanList+'</div>
-  <div class="fm-security-note"><span>🛡️</span><div><b>သင့်အချက်အလက်များ လုံခြုံပါသည်</b><p>ဤစာမျက်နှာသည် ကြည့်ရှုရန်သာဖြစ်သည်။ ငွေပေးချေမှုတောင်းဆိုချက်များကို Owner အတည်ပြုပြီးမှ စာရင်းတွင် ထည့်သွင်းပါမည်။</p></div></div>
- </section>';
+  return '<section class="panel share-page fm-customer-home" data-share-page="summary">'+
+   '<header class="fm-customer-welcome">'+
+    '<div class="fm-brand-row"><div class="fm-brand-mark">FM</div><div><b>Finance Master</b><small>PERSONAL FINANCE PORTAL</small></div><span class="fm-live-pill"><i></i> ACTIVE</span></div>'+
+    '<div class="fm-profile-row"><div class="fm-profile-avatar">'+esc((share.borrowerName||s.person||"C").trim().charAt(0).toUpperCase())+'</div><div class="fm-profile-copy"><small>မင်္ဂလာပါ</small><h2>'+esc(share.borrowerName||s.person||"Customer")+'</h2><p>သင့်ချေးငွေစာရင်းနှင့် ငွေပေးချေမှုများကို တစ်နေရာတည်းတွင် ကြည့်ရှုနိုင်ပါသည်။</p></div><span class="fm-account-count">'+accounts.length+'<small>LOANS</small></span></div>'+
+   '</header>'+
+   '<div class="fm-section-title"><div><small>YOUR OVERVIEW</small><h3>ငွေကြေးအနှစ်ချုပ်</h3></div><span class="fm-readonly-chip">🔒 Read only</span></div>'+
+   '<div class="fm-currency-stack">'+totalMarkup+'</div>'+
+   '<div class="fm-section-title fm-loans-title"><div><small>YOUR ACCOUNTS</small><h3>ချေးငွေအကောင့်များ</h3><p>ချေးငွေတစ်ခုချင်းစီကို ရွေးချယ်ပြီး အသေးစိတ်ကြည့်နိုင်ပါသည်။</p></div><span class="fm-count-chip">'+accounts.length+' ခု</span></div>'+
+   '<div class="customer-loan-list fm-loan-grid">'+loanList+'</div>'+
+   '<div class="fm-security-note"><span>🛡️</span><div><b>သင့်အချက်အလက်များ လုံခြုံပါသည်</b><p>ဤစာမျက်နှာသည် ကြည့်ရှုရန်သာဖြစ်သည်။ ငွေပေးချေမှုတောင်းဆိုချက်များကို Owner အတည်ပြုပြီးမှ စာရင်းတွင် ထည့်သွင်းပါမည်။</p></div></div>'+
+  '</section>';
  })();
  const historyMarkup=(()=>{
   const entries=accounts.flatMap(a=>(Array.isArray(a.payments)?a.payments:[]).filter(p=>Number(p.amount)>0).map(p=>({...p,accountLabel:a.loanType||a.label||'ချေးငွေ',accountCurrency:p.currency||a.currency||'THB'}))).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
