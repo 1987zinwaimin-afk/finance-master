@@ -1320,37 +1320,32 @@ body{background:radial-gradient(ellipse at 50% -15%,#24496c 0,#102b47 38%,#07162
 
 
 <style id="fm-customer-full-width-mobile-fix">
-/* Use the available phone width for borrower account and ledger cards */
+/* Extend the actual ledger card containers beyond the nested page padding */
 @media(max-width:760px){
-  html,body{width:100%;max-width:100%;overflow-x:hidden}
-  .wrap{
-    width:100%!important;max-width:none!important;
-    margin:0!important;
-    padding-left:8px!important;padding-right:8px!important;
-  }
+  html,body{max-width:100%;overflow-x:hidden}
+  .wrap{width:100%!important;max-width:none!important;margin:0!important;padding-left:8px!important;padding-right:8px!important}
   #app{width:100%!important;max-width:none!important;min-width:0!important;margin:0!important}
-  #app>.fm-customer-home,
-  #app .fm-customer-home,
-  #app .share-page[data-share-page="summary"]{
-    width:100%!important;max-width:none!important;
-    margin-left:0!important;margin-right:0!important;
-    box-sizing:border-box!important;
-  }
-  #app>.fm-customer-home{padding:0!important}
-  #app .fm-currency-stack,
-  #app .fm-customer-home .customer-loan-list{
-    width:100%!important;max-width:none!important;
-    padding-left:10px!important;padding-right:10px!important;
-    box-sizing:border-box!important;
-  }
+  #app .fm-customer-home{width:100%!important;max-width:none!important;box-sizing:border-box!important}
   #app .fm-customer-home .currency-ledger-stack,
   #app .fm-customer-home .customer-loan-list{
+    display:grid!important;
+    width:calc(100% + 80px)!important;
+    max-width:none!important;
+    margin-left:-40px!important;
+    margin-right:-40px!important;
+    padding:0!important;
+    box-sizing:border-box!important;
     min-width:0!important;
   }
   #app .fm-customer-home .currency-ledger-card,
   #app .fm-customer-home .loan-ledger-card{
-    width:100%!important;max-width:none!important;
-    min-width:0!important;box-sizing:border-box!important;
+    display:block!important;
+    width:100%!important;
+    max-width:none!important;
+    min-width:0!important;
+    margin-left:0!important;
+    margin-right:0!important;
+    box-sizing:border-box!important;
   }
 }
 </style>
