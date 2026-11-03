@@ -1065,6 +1065,68 @@ body:has(#bankQrModal:not([hidden])) .share-bottom-nav{display:none!important}
  #bankQrModal .bank-transfer-details b{font-size:10px!important}
 }
 </style>
+<style id="fm-customer-global-readable-colors">
+/* Customer portal contrast correction: readable text on every customer page */
+#app{color:#24364f!important}
+#app .share-page{color:#24364f!important}
+#app .share-page h1,#app .share-page h2,#app .share-page h3,
+#app .share-page .customer-section-heading h3,
+#app .share-page .customer-page-heading h2,
+#app .share-page .request-page-heading h2{color:#172b46!important}
+#app .share-page .customer-page-heading p,
+#app .share-page .request-page-heading p,
+#app .share-page .muted{color:#64748b!important}
+#app .share-page label{color:#33445f!important}
+#app .share-page input,#app .share-page select,#app .share-page textarea{color:#172b46!important}
+#app .share-page input::placeholder,#app .share-page textarea::placeholder{color:#8491a3!important;opacity:1!important}
+#app .share-page[data-share-page="history"] .history-summary{
+ background:#faf7ef!important;border:1px solid #e8dfcc!important;
+}
+#app .share-page[data-share-page="history"] .history-summary small{color:#806a43!important}
+#app .share-page[data-share-page="history"] .history-summary b{color:#172b46!important}
+#app .share-page[data-share-page="history"] .history-currency-chip{background:#eee7d8!important;color:#70572d!important}
+#app .share-page[data-share-page="history"] .customer-history-item{
+ background:#fff!important;background-image:none!important;
+ border:1px solid #e3e9f1!important;border-radius:12px!important;
+ padding:12px!important;margin:0 0 8px!important;
+}
+#app .share-page[data-share-page="history"] .history-index{
+ background:#f3ead6!important;color:#765a28!important;
+}
+#app .share-page[data-share-page="history"] .customer-history-main b{color:#172b46!important}
+#app .share-page[data-share-page="history"] .customer-history-main small{color:#64748b!important}
+#app .share-page[data-share-page="history"] .customer-history-main p{color:#52627a!important}
+#app .share-page[data-share-page="history"] .customer-history-item>strong{color:#087653!important}
+#app .share-page[data-share-page="history"] .customer-empty-history{background:#f8fafc!important;color:#24364f!important}
+#app .share-page[data-share-page="history"] .customer-empty-history b{color:#172b46!important}
+#app .share-page[data-share-page="history"] .customer-empty-history p{color:#64748b!important}
+#app .share-page[data-share-page="request"] .request-page-heading{
+ background:linear-gradient(120deg,#142844,#204766)!important;color:#fff!important;
+}
+#app .share-page[data-share-page="request"] .request-page-heading small,
+#app .share-page[data-share-page="request"] .request-page-heading h2,
+#app .share-page[data-share-page="request"] .request-page-heading p{color:#fff!important}
+#app .share-page[data-share-page="request"] .field label{color:#33445f!important}
+#app .share-page[data-share-page="request"] input,
+#app .share-page[data-share-page="request"] select,
+#app .share-page[data-share-page="request"] textarea{
+ background:#fbfcff!important;color:#172b46!important;border-color:#d8e1ec!important;
+}
+#app .share-page[data-share-page="settings"]{color:#24364f!important}
+#app .share-page[data-share-page="settings"] article.panel{background:#fff!important;color:#24364f!important}
+#app .share-page[data-share-page="settings"] article.panel b,
+#app .share-page[data-share-page="settings"] article.panel strong,
+#app .share-page[data-share-page="settings"] article.panel h3{color:#172b46!important}
+#app .share-page[data-share-page="settings"] article.panel p,
+#app .share-page[data-share-page="settings"] article.panel small{color:#64748b!important}
+#app .customer-security-note{background:#f8fafc!important;color:#24364f!important}
+#app .customer-security-note b{color:#24364f!important}
+#app .customer-security-note p{color:#64748b!important}
+#app .share-bottom-nav button{color:#cbd5e1!important}
+#app .share-bottom-nav button small{color:inherit!important}
+#app .share-bottom-nav button.active{color:#172b46!important}
+#app .share-bottom-nav button.active small{color:#172b46!important}
+</style>
 </head>
 <body><main class="wrap">
 <div class="brand"><img class="logo brand-logo-img" src="/borrower-icon.svg?v=finance-logo-20261023" alt="Finance Master logo" width="44" height="44"><div class="brand-title"><b>Finance Master</b><small>PRIVATE BORROWER PORTAL</small></div><label class="language-wrap"><span id="languageLabel">Language</span><select id="languageSelect" aria-label="Language"><option value="my">မြန်မာ</option><option value="en">English</option><option value="th">ไทย</option></select></label></div>
