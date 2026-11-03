@@ -1162,113 +1162,49 @@ body:has(#bankQrModal:not([hidden])) .share-bottom-nav{display:none!important}
  #app .fm-customer-home .customer-loan-list>.loan-ledger-card{border-radius:15px!important}
 }
 </style>
-<style id="fm-customer-loan-card-frame-final-v2">
-/* Customer share-link only: expand the loan card frame to align with the section heading */
-#app .fm-customer-home .customer-loan-list{
- display:grid!important;
- width:calc(100% + 36px)!important;
- max-width:none!important;
- margin-left:-18px!important;
- margin-right:-18px!important;
- padding:0!important;
- gap:12px!important;
- box-sizing:border-box!important;
-}
-#app .fm-customer-home .customer-loan-list > .loan-ledger-card{
- width:100%!important;
- max-width:none!important;
- min-width:0!important;
- margin:0!important;
- box-sizing:border-box!important;
- border:1.5px solid #d8c79f!important;
- border-radius:16px!important;
- overflow:hidden!important;
-}
-@media(max-width:480px){
- #app .fm-customer-home .customer-loan-list{
-  width:calc(100% + 36px)!important;
-  margin-left:-18px!important;
-  margin-right:-18px!important;
- }
-}
-</style>
-<style id="fm-customer-loan-list-full-frame-v3">
-/* Match Home loan list card width to the full-width History records panel */
-#app .fm-customer-home .customer-loan-list{
- display:grid!important;
- grid-template-columns:minmax(0,1fr)!important;
- width:100%!important;
- max-width:none!important;
- min-width:0!important;
- margin:0!important;
- padding:0!important;
- gap:12px!important;
- box-sizing:border-box!important;
-}
-#app .fm-customer-home .customer-loan-list > article.loan-ledger-card,
-#app .fm-customer-home .customer-loan-list > .loan-ledger-card{
- display:block!important;
- width:100%!important;
- max-width:none!important;
- min-width:0!important;
- margin:0!important;
- padding:0!important;
- box-sizing:border-box!important;
- border:1px solid #d9dfE8!important;
- border-radius:17px!important;
- background:#fff!important;
- color:#1b2b45!important;
- box-shadow:0 3px 12px rgba(16,28,51,.07)!important;
- overflow:hidden!important;
-}
-#app .fm-customer-home .customer-loan-list .loan-ledger-heading,
-#app .fm-customer-home .customer-loan-list .loan-ledger-total,
-#app .fm-customer-home .customer-loan-list .loan-ledger-section,
-#app .fm-customer-home .customer-loan-list .ledger-note,
-#app .fm-customer-home .customer-loan-list .ledger-owner-alert,
-#app .fm-customer-home .customer-loan-list .ledger-details,
-#app .fm-customer-home .customer-loan-list .loan-repay-action{
- width:100%!important;
- max-width:none!important;
- box-sizing:border-box!important;
-}
-@media(max-width:760px){
- #app .fm-customer-home .customer-loan-list{padding:0!important;margin:0!important}
- #app .fm-customer-home .customer-loan-list > article.loan-ledger-card,
- #app .fm-customer-home .customer-loan-list > .loan-ledger-card{width:100%!important}
-}
-</style>
-<style id="fm-customer-loan-edge-to-edge-v4">
-/* Customer Home only: extend loan account cards to the outer navy panel edges */
+
+
+
+<style id="fm-customer-loan-text-layout-v5">
+/* Customer share page: remove horizontal overflow and keep every loan detail readable */
+#app .fm-customer-home,
+#app .fm-customer-home *{box-sizing:border-box}
+#app .fm-customer-home{width:100%;max-width:100%;overflow-x:hidden}
 #app .fm-customer-home .customer-section-heading.loan-section-heading + .customer-loan-list{
- display:grid!important;
- grid-template-columns:minmax(0,1fr)!important;
- width:calc(100% + 56px)!important;
- max-width:none!important;
- min-width:0!important;
- margin:0 -28px 16px!important;
- padding:0!important;
- box-sizing:border-box!important;
- gap:14px!important;
+ display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+ width:100%!important;max-width:100%!important;min-width:0!important;
+ margin:0 0 16px!important;padding:0!important;gap:13px!important;
 }
-#app .fm-customer-home .customer-section-heading.loan-section-heading + .customer-loan-list > .loan-ledger-card{
- display:block!important;
- width:100%!important;
- max-width:none!important;
- min-width:0!important;
- margin:0!important;
- box-sizing:border-box!important;
- border:1px solid #d8c79f!important;
- border-radius:17px!important;
- background:#fff!important;
- overflow:hidden!important;
+#app .fm-customer-home .customer-loan-list > .loan-ledger-card{
+ display:block!important;width:100%!important;max-width:100%!important;min-width:0!important;
+ margin:0!important;padding:0!important;box-sizing:border-box!important;
+ overflow:hidden!important;border:1px solid #d8c79f!important;border-radius:17px!important;
+ background:#fff!important;color:#1b2b45!important;
 }
+#app .fm-customer-home .loan-ledger-heading,
+#app .fm-customer-home .loan-ledger-total,
+#app .fm-customer-home .loan-ledger-section{width:100%!important;max-width:100%!important;min-width:0!important}
+#app .fm-customer-home .loan-ledger-heading{flex-wrap:wrap!important}
+#app .fm-customer-home .loan-ledger-heading>div{flex:1 1 150px!important;min-width:0!important}
+#app .fm-customer-home .loan-ledger-total strong,
+#app .fm-customer-home .loan-ledger-total p,
+#app .fm-customer-home .ledger-row-copy,
+#app .fm-customer-home .ledger-row-copy b,
+#app .fm-customer-home .ledger-row-copy small,
+#app .fm-customer-home .ledger-note p,
+#app .fm-customer-home .ledger-owner-alert p,
+#app .fm-customer-home .ledger-details-content{min-width:0!important;max-width:100%!important;overflow-wrap:anywhere!important;word-break:normal!important}
+#app .fm-customer-home .ledger-row{display:flex!important;align-items:flex-start!important;justify-content:space-between!important;gap:10px!important;width:100%!important;min-width:0!important}
+#app .fm-customer-home .ledger-row-copy{flex:1 1 52%!important}
+#app .fm-customer-home .ledger-row>strong{flex:0 1 45%!important;max-width:45%!important;min-width:0!important;text-align:right!important;white-space:normal!important;overflow-wrap:anywhere!important}
+#app .fm-customer-home .ledger-note,
+#app .fm-customer-home .ledger-owner-alert,
+#app .fm-customer-home .ledger-details{max-width:calc(100% - 28px)!important;min-width:0!important}
 @media(max-width:760px){
- #app .fm-customer-home .customer-section-heading.loan-section-heading + .customer-loan-list{
-  width:calc(100% + 56px)!important;
-  margin-left:-28px!important;
-  margin-right:-28px!important;
- }
+ #app .fm-customer-home .customer-section-heading.loan-section-heading + .customer-loan-list{width:100%!important;margin:0 0 16px!important}
+ #app .fm-customer-home .loan-ledger-section{padding-left:12px!important;padding-right:12px!important}
+ #app .fm-customer-home .ledger-row{gap:8px!important}
+ #app .fm-customer-home .ledger-row>strong{font-size:11px!important}
 }
 </style>
 </head>
