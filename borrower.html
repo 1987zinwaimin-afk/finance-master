@@ -1020,6 +1020,51 @@ body:has(#bankQrModal:not([hidden])) .share-bottom-nav{display:none!important}
  #app .share-page[data-share-page="request"] textarea{height:64px!important;min-height:64px!important}
 }
 </style>
+<style id="fm-bank-details-horizontal">
+/* Show bank name, account holder and transfer amount side-by-side */
+#bankQrModal .bank-transfer-details{
+ display:grid!important;
+ grid-template-columns:repeat(3,minmax(0,1fr))!important;
+ align-items:stretch!important;
+ gap:0!important;
+ padding:12px 8px!important;
+ margin:0 0 10px!important;
+ background:#fff7e6!important;
+ border:1px solid #ead9b8!important;
+ border-radius:14px!important;
+}
+#bankQrModal .bank-transfer-details>div{
+ display:flex!important;
+ flex-direction:column!important;
+ justify-content:flex-start!important;
+ min-width:0!important;
+ padding:2px 8px!important;
+ border-right:1px solid #e7d7b7!important;
+}
+#bankQrModal .bank-transfer-details>div:last-child{border-right:0!important}
+#bankQrModal .bank-transfer-details .bank-label{
+ display:block!important;
+ margin:0 0 7px!important;
+ color:#68758a!important;
+ font-size:10px!important;
+ line-height:1.25!important;
+ overflow-wrap:anywhere!important;
+}
+#bankQrModal .bank-transfer-details b{
+ display:block!important;
+ color:#172b46!important;
+ font-size:clamp(11px,3.1vw,14px)!important;
+ line-height:1.35!important;
+ overflow-wrap:anywhere!important;
+ word-break:break-word!important;
+}
+@media(max-width:360px){
+ #bankQrModal .bank-transfer-details{padding:10px 4px!important}
+ #bankQrModal .bank-transfer-details>div{padding:2px 5px!important}
+ #bankQrModal .bank-transfer-details .bank-label{font-size:9px!important}
+ #bankQrModal .bank-transfer-details b{font-size:10px!important}
+}
+</style>
 </head>
 <body><main class="wrap">
 <div class="brand"><img class="logo brand-logo-img" src="/borrower-icon.svg?v=finance-logo-20261023" alt="Finance Master logo" width="44" height="44"><div class="brand-title"><b>Finance Master</b><small>PRIVATE BORROWER PORTAL</small></div><label class="language-wrap"><span id="languageLabel">Language</span><select id="languageSelect" aria-label="Language"><option value="my">မြန်မာ</option><option value="en">English</option><option value="th">ไทย</option></select></label></div>
