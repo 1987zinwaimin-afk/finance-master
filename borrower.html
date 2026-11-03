@@ -1666,4 +1666,34 @@ footer{color:#8994a3!important;font-size:10px!important}
 }
 </style>
 
+
+<style id="fm-borrower-heading-nav-contrast-fix">
+/* Restore contrast for section titles on navy dashboard and make tab bar span viewport */
+#app .fm-customer-home .customer-dashboard-heading h2,
+#app .fm-customer-home .customer-section-heading h3{
+ color:#fff!important;
+ -webkit-text-fill-color:#fff!important;
+ text-shadow:0 1px 1px rgba(0,0,0,.12)!important;
+}
+#app .fm-customer-home .customer-dashboard-heading p,
+#app .fm-customer-home .customer-section-heading p{
+ color:#c5d2e1!important;
+}
+#app .share-bottom-nav{
+ position:fixed!important;
+ left:0!important;right:0!important;bottom:0!important;
+ width:100vw!important;max-width:none!important;
+ margin:0!important;transform:none!important;
+ box-sizing:border-box!important;
+ display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;
+ padding-left:8px!important;padding-right:8px!important;
+ z-index:10000!important;
+}
+#app .share-bottom-nav button{min-width:0!important;width:100%!important}
+@media(max-width:420px){
+ #app .share-bottom-nav{padding-left:6px!important;padding-right:6px!important}
+ #app .share-bottom-nav button small{font-size:9px!important}
+}
+</style>
+
 </body></html>
