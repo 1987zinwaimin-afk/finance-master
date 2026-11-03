@@ -1850,4 +1850,48 @@ html,body{overflow-x:hidden!important}
 }
 </style>
 
+
+<style id="fm-force-all-notice-readable-text-v3">
+/* The two pale notice boxes are rendered outside the specific loan-card wrapper.
+   Target every notice in the borrower app, including descendants and inline-styled text. */
+#app .notice,
+#app .notice *,
+#app .notice b,
+#app .notice strong,
+#app .notice p,
+#app .notice div,
+#app .notice span{
+ color:#26364d!important;
+ -webkit-text-fill-color:#26364d!important;
+ opacity:1!important;
+ text-shadow:none!important;
+}
+#app .notice{
+ background:#fff7e7!important;
+ border:1px solid #e8d6aa!important;
+}
+#app .notice b,
+#app .notice strong{
+ color:#62491f!important;
+ -webkit-text-fill-color:#62491f!important;
+ font-weight:800!important;
+}
+#app .notice p,
+#app .notice div,
+#app .notice span{
+ color:#34445a!important;
+ -webkit-text-fill-color:#34445a!important;
+}
+#app .notice[role="alert"]{
+ background:#fff1f0!important;
+ border-color:#e7b9b5!important;
+}
+#app .notice[role="alert"],
+#app .notice[role="alert"] *,
+#app .notice[role="alert"] b{
+ color:#7b2925!important;
+ -webkit-text-fill-color:#7b2925!important;
+}
+</style>
+
 </body></html>
