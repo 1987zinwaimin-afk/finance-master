@@ -776,6 +776,138 @@ footer{color:#aebbd0!important}
 @media(min-width:760px){.wrap{padding-top:22px!important}.brand{padding:15px 19px!important}.fm-customer-home .currency-ledger-stack,.fm-customer-home .customer-loan-list{margin-left:8px!important;margin-right:8px!important}.fm-customer-home .customer-section-heading{margin-left:8px!important;margin-right:8px!important}}
 @media(max-width:480px){.wrap{padding:10px 10px calc(96px + env(safe-area-inset-bottom))!important}.brand{gap:9px!important;padding:11px!important}.brand-logo-img{width:42px!important;height:42px!important}.brand-title b{font-size:16px!important}.language-wrap select{max-width:86px!important;padding:7px 5px!important;font-size:11px!important}#app .fm-customer-home .fm-customer-welcome{padding:17px 14px 19px!important;border-radius:19px!important}.fm-profile-copy h2{font-size:19px!important}#app .fm-customer-home .customer-dashboard-heading,#app .fm-customer-home .customer-section-heading{padding:11px 12px!important;border-radius:15px!important}.fm-customer-home .currency-ledger-stack,.fm-customer-home .customer-loan-list{padding-left:7px!important;padding-right:7px!important}.share-bottom-nav button{min-height:53px!important}.share-bottom-nav button small{font-size:9px!important}}
 </style>
+<style id="fm-customer-reference-layout-final">
+/* Match the supplied customer screenshot: section icon headers + complete cream finance cards */
+#app>.fm-customer-home{
+ background:linear-gradient(155deg,#0a1c34,#102b49 58%,#0b2038)!important;
+ border:1px solid #42617f!important;border-radius:25px!important;
+ box-shadow:0 14px 34px #02081755,inset 0 1px #ffffff12!important;
+ overflow:hidden!important;padding:0!important
+}
+#app .fm-customer-home .fm-customer-welcome{
+ margin:0 0 14px!important;padding:18px 18px 20px!important;
+ border-radius:0!important;border:0!important;border-bottom:1px solid #6e8da966!important;
+ background:linear-gradient(115deg,#102943 0%,#173b5c 70%,#214968 100%)!important
+}
+#app .fm-customer-home .fm-brand-row{display:none!important}
+#app .fm-customer-home .fm-profile-row{margin:0!important;padding:0!important;gap:13px!important}
+#app .fm-customer-home .fm-profile-avatar{width:52px!important;height:52px!important;flex-basis:52px!important;border-radius:17px!important;background:linear-gradient(145deg,#f7e5b5,#d3a84f)!important;color:#fff!important;border:1px solid #ffe9b5!important;font-size:23px!important}
+#app .fm-customer-home .fm-profile-copy h2{font-size:22px!important;margin:3px 0 5px!important;color:#fff!important}
+#app .fm-customer-home .fm-profile-copy p{font-size:11px!important;line-height:1.55!important;color:#d5e1ed!important}
+#app .fm-customer-home .fm-profile-copy>small{color:#e4c57d!important}
+#app .fm-customer-home .fm-section-title{
+ display:flex!important;align-items:center!important;justify-content:flex-start!important;
+ position:relative!important;min-height:78px!important;
+ margin:0 14px 12px!important;padding:10px 12px 10px 70px!important;
+ border:1px solid #536f8b!important;border-radius:18px!important;
+ background:linear-gradient(110deg,#142e4b,#10243e)!important;
+ box-shadow:0 6px 16px #02081744!important
+}
+#app .fm-customer-home .fm-section-title:before{
+ content:"▥";position:absolute!important;left:13px!important;top:50%!important;transform:translateY(-50%)!important;
+ width:46px!important;height:46px!important;display:grid!important;place-items:center!important;
+ border-radius:13px!important;border:1px solid #d8b56d88!important;
+ background:linear-gradient(145deg,#3d5269,#1d3550)!important;
+ color:#efcf83!important;font-size:25px!important;font-weight:900!important;
+ box-shadow:inset 0 1px #ffffff25,0 3px 8px #02081744!important
+}
+#app .fm-customer-home .fm-section-title>div{min-width:0!important}
+#app .fm-customer-home .fm-section-title>div>small{font-size:9px!important;letter-spacing:1.5px!important;color:#e4bd68!important}
+#app .fm-customer-home .fm-section-title h3{font-size:19px!important;line-height:1.25!important;margin:3px 0!important;color:#fff!important}
+#app .fm-customer-home .fm-section-title p{font-size:11px!important;line-height:1.45!important;color:#c6d4e3!important;margin:0!important}
+#app .fm-customer-home .fm-readonly-chip,#app .fm-customer-home .fm-count-chip{
+ margin-left:auto!important;flex:0 0 auto!important;padding:8px 10px!important;border-radius:11px!important;
+ background:linear-gradient(135deg,#f5e5bd,#d8b56d)!important;border:1px solid #f6e4b7!important;
+ color:#4e3b1c!important;font-size:11px!important;font-weight:900!important
+}
+#app .fm-customer-home .fm-currency-stack{
+ display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:13px!important;
+ margin:0 12px 0!important;padding:0!important
+}
+#app .fm-customer-home .customer-currency-summary{
+ margin:0!important;padding:0!important;overflow:hidden!important;
+ border:1px solid #e6d5ae!important;border-radius:22px!important;
+ background:linear-gradient(145deg,#fffdf8,#f7ecd8)!important;
+ box-shadow:0 10px 24px #02081755,inset 0 1px #fff!important
+}
+#app .fm-customer-home .customer-currency-heading{
+ display:flex!important;align-items:center!important;justify-content:space-between!important;
+ gap:10px!important;margin:0!important;padding:15px 16px!important;
+ background:linear-gradient(110deg,#fff8e9,#f1e5ce)!important;
+ border-bottom:1px solid #eadbb9!important;color:#5e4b2a!important;font-size:13px!important
+}
+#app .fm-customer-home .customer-currency-heading:before{content:"🇹🇭";font-size:22px!important;margin-right:0!important}
+#app .fm-customer-home .customer-currency-heading span{
+ margin-left:auto!important;padding:7px 10px!important;border-radius:10px!important;
+ background:transparent!important;color:#5b4a2c!important;border-left:1px solid #e1d2b2!important
+}
+#app .fm-customer-home .customer-total-debt{
+ position:relative!important;margin:0!important;padding:17px 16px 15px 70px!important;
+ border:0!important;border-radius:0!important;box-shadow:none!important;
+ background:linear-gradient(120deg,#fffdf8,#f8eedc)!important;color:#172b49!important
+}
+#app .fm-customer-home .customer-total-debt:before{
+ content:"🪙";position:absolute!important;left:17px!important;top:50%!important;transform:translateY(-50%)!important;
+ font-size:34px!important;filter:drop-shadow(0 2px 2px #b88c3533)!important
+}
+#app .fm-customer-home .customer-total-debt small{color:#66758a!important;font-size:11px!important}
+#app .fm-customer-home .customer-total-debt strong{color:#172b49!important;font-size:clamp(25px,6vw,32px)!important}
+#app .fm-customer-home .customer-total-grid{
+ display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:0!important;
+ margin:0!important;padding:0 16px 10px!important;background:#fffdf8!important
+}
+#app .fm-customer-home .customer-total-grid .metric{
+ display:grid!important;grid-template-columns:32px minmax(0,1fr) auto!important;
+ align-items:center!important;gap:9px!important;min-height:50px!important;
+ padding:8px 0!important;border:0!important;border-top:1px solid #e9dfcd!important;
+ border-radius:0!important;background:transparent!important;box-shadow:none!important
+}
+#app .fm-customer-home .customer-total-grid .metric-icon{
+ width:28px!important;height:28px!important;display:grid!important;place-items:center!important;
+ border:0!important;background:transparent!important;color:#b8892e!important;font-size:19px!important
+}
+#app .fm-customer-home .customer-total-grid .metric small{font-size:12px!important;color:#53647b!important}
+#app .fm-customer-home .customer-total-grid .metric b{font-size:13px!important;color:#172b49!important;text-align:right!important}
+#app .fm-customer-home .fm-loans-title{margin-top:17px!important}
+#app .fm-customer-home .fm-loans-title:before{content:"▰"!important}
+#app .fm-customer-home .customer-loan-list{
+ display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:13px!important;
+ margin:0 12px!important;padding:0 0 16px!important
+}
+#app .fm-customer-home .customer-loan-list>article.panel{
+ width:100%!important;margin:0!important;padding:0!important;overflow:hidden!important;
+ border:1px solid #e6d5ae!important;border-radius:21px!important;
+ background:linear-gradient(145deg,#fffdf8,#f7ecd8)!important;color:#172b49!important;
+ box-shadow:0 9px 22px #02081744!important
+}
+#app .fm-customer-home .customer-loan-list>article.panel>div:first-child{
+ display:flex!important;align-items:center!important;justify-content:space-between!important;
+ gap:10px!important;margin:0!important;padding:14px 15px!important;
+ border-bottom:1px solid #eadbb9!important;background:linear-gradient(110deg,#fff8e9,#f1e5ce)!important
+}
+#app .fm-customer-home .customer-loan-list .loan-title-open,
+#app .fm-customer-home .customer-loan-list .metric b,
+#app .fm-customer-home .customer-loan-list .metric strong{color:#172b49!important}
+#app .fm-customer-home .customer-loan-list .metric small,
+#app .fm-customer-home .customer-loan-list p,
+#app .fm-customer-home .customer-loan-list .muted{color:#68768b!important}
+#app .fm-customer-home .customer-loan-list .grid{margin:0!important;padding:0 15px!important;background:#fffdf8!important}
+#app .fm-customer-home .customer-loan-list .metric{border:0!important;border-bottom:1px solid #e9dfcd!important;background:transparent!important;border-radius:0!important}
+#app .fm-customer-home .customer-loan-list .loan-detail-toggle{margin:10px 14px!important;background:#fff!important;border-color:#e4d7bd!important}
+#app .fm-customer-home .customer-loan-list .loan-detail-toggle>summary{background:linear-gradient(110deg,#fff8e9,#f1e5ce)!important;color:#283b56!important}
+#app .fm-customer-home .customer-loan-list .loan-detail-toggle>summary *{color:#283b56!important}
+#app .fm-customer-home .customer-loan-list .notice{margin:10px 14px!important}
+@media(max-width:480px){
+ #app .fm-customer-home .fm-section-title{min-height:76px!important;margin-left:10px!important;margin-right:10px!important;padding-left:62px!important}
+ #app .fm-customer-home .fm-section-title:before{left:10px!important;width:43px!important;height:43px!important}
+ #app .fm-customer-home .fm-section-title h3{font-size:17px!important}
+ #app .fm-customer-home .customer-currency-heading{padding:13px!important}
+ #app .fm-customer-home .customer-total-debt{padding-left:63px!important}
+ #app .fm-customer-home .customer-total-debt:before{left:13px!important;font-size:30px!important}
+ #app .fm-customer-home .customer-total-grid{padding-left:13px!important;padding-right:13px!important}
+ #app .fm-customer-home .customer-loan-list{margin-left:10px!important;margin-right:10px!important}
+}
+</style>
 </head>
 <body><main class="wrap">
 <div class="brand"><img class="logo brand-logo-img" src="/borrower-icon.svg?v=finance-logo-20261023" alt="Finance Master logo" width="44" height="44"><div class="brand-title"><b>Finance Master</b><small>PRIVATE BORROWER PORTAL</small></div><label class="language-wrap"><span id="languageLabel">Language</span><select id="languageSelect" aria-label="Language"><option value="my">မြန်မာ</option><option value="en">English</option><option value="th">ไทย</option></select></label></div>
