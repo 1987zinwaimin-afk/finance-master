@@ -1192,6 +1192,52 @@ body:has(#bankQrModal:not([hidden])) .share-bottom-nav{display:none!important}
  }
 }
 </style>
+<style id="fm-customer-loan-list-full-frame-v3">
+/* Match Home loan list card width to the full-width History records panel */
+#app .fm-customer-home .customer-loan-list{
+ display:grid!important;
+ grid-template-columns:minmax(0,1fr)!important;
+ width:100%!important;
+ max-width:none!important;
+ min-width:0!important;
+ margin:0!important;
+ padding:0!important;
+ gap:12px!important;
+ box-sizing:border-box!important;
+}
+#app .fm-customer-home .customer-loan-list > article.loan-ledger-card,
+#app .fm-customer-home .customer-loan-list > .loan-ledger-card{
+ display:block!important;
+ width:100%!important;
+ max-width:none!important;
+ min-width:0!important;
+ margin:0!important;
+ padding:0!important;
+ box-sizing:border-box!important;
+ border:1px solid #d9dfE8!important;
+ border-radius:17px!important;
+ background:#fff!important;
+ color:#1b2b45!important;
+ box-shadow:0 3px 12px rgba(16,28,51,.07)!important;
+ overflow:hidden!important;
+}
+#app .fm-customer-home .customer-loan-list .loan-ledger-heading,
+#app .fm-customer-home .customer-loan-list .loan-ledger-total,
+#app .fm-customer-home .customer-loan-list .loan-ledger-section,
+#app .fm-customer-home .customer-loan-list .ledger-note,
+#app .fm-customer-home .customer-loan-list .ledger-owner-alert,
+#app .fm-customer-home .customer-loan-list .ledger-details,
+#app .fm-customer-home .customer-loan-list .loan-repay-action{
+ width:100%!important;
+ max-width:none!important;
+ box-sizing:border-box!important;
+}
+@media(max-width:760px){
+ #app .fm-customer-home .customer-loan-list{padding:0!important;margin:0!important}
+ #app .fm-customer-home .customer-loan-list > article.loan-ledger-card,
+ #app .fm-customer-home .customer-loan-list > .loan-ledger-card{width:100%!important}
+}
+</style>
 </head>
 <body><main class="wrap">
 <div class="brand"><img class="logo brand-logo-img" src="/borrower-icon.svg?v=finance-logo-20261023" alt="Finance Master logo" width="44" height="44"><div class="brand-title"><b>Finance Master</b><small>PRIVATE BORROWER PORTAL</small></div><label class="language-wrap"><span id="languageLabel">Language</span><select id="languageSelect" aria-label="Language"><option value="my">မြန်မာ</option><option value="en">English</option><option value="th">ไทย</option></select></label></div>
