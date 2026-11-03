@@ -1267,4 +1267,55 @@ body{background:radial-gradient(ellipse at 50% -15%,#24496c 0,#102b47 38%,#07162
 .fm-customer-home .customer-loan-list .tag{max-width:48%;text-align:center;line-height:1.35!important}
 @media(min-width:760px){.fm-customer-home .customer-loan-list{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(max-width:390px){.fm-customer-home .customer-total-grid .metric,.fm-customer-home .customer-loan-list .metric{padding:10px 1px!important}.fm-customer-home .customer-total-grid .metric small,.fm-customer-home .customer-loan-list .metric small{font-size:11px!important}.fm-customer-home .customer-total-grid .metric b,.fm-customer-home .customer-loan-list .metric b{font-size:12px!important}}
-</style></body></html>
+</style>
+<style id="fm-customer-ledger-contrast-fix">
+/* Ensure the redesigned ledger cards use readable ink on their light surfaces */
+#app .fm-customer-home .currency-ledger-card,
+#app .fm-customer-home .loan-ledger-card{
+  background:#fff!important;color:#24334c!important;border:1px solid #dce3ec!important;
+}
+#app .fm-customer-home .currency-ledger-card *,
+#app .fm-customer-home .loan-ledger-card *{
+  color:#24334c!important;text-shadow:none!important;
+}
+#app .fm-customer-home .currency-ledger-card>header{background:#f7f4ec!important;border-bottom-color:#e9e1d2!important}
+#app .fm-customer-home .currency-ledger-card>header small,
+#app .fm-customer-home .loan-ledger-heading small,
+#app .fm-customer-home .customer-section-heading small{color:#8a6a32!important}
+#app .fm-customer-home .currency-ledger-total strong,
+#app .fm-customer-home .loan-ledger-total strong{color:#102943!important;font-weight:850!important}
+#app .fm-customer-home .currency-ledger-rows span,
+#app .fm-customer-home .loan-ledger-total small,
+#app .fm-customer-home .loan-ledger-total p,
+#app .fm-customer-home .ledger-row-copy small{color:#637187!important}
+#app .fm-customer-home .currency-ledger-rows b,
+#app .fm-customer-home .ledger-row-copy b,
+#app .fm-customer-home .ledger-row>strong,
+#app .fm-customer-home .loan-ledger-section h4,
+#app .fm-customer-home .ledger-details-content h4,
+#app .fm-customer-home .ledger-history-date b,
+#app .fm-customer-home .ledger-history-amount b{color:#24334c!important}
+#app .fm-customer-home .loan-ledger-heading{background:#faf8f3!important;border-bottom:1px solid #e9e1d2!important}
+#app .fm-customer-home .ledger-row,
+#app .fm-customer-home .ledger-history-row{border-bottom-color:#e9edf2!important}
+#app .fm-customer-home .ledger-details{background:#fff!important;border-color:#dce3ec!important}
+#app .fm-customer-home .ledger-details>summary{background:#f5f2eb!important;color:#344158!important}
+#app .fm-customer-home .ledger-details>summary span{color:#8a6a32!important}
+#app .fm-customer-home .ledger-details-content{background:#fff!important}
+#app .fm-customer-home .ledger-note,
+#app .fm-customer-home .ledger-owner-alert,
+#app .fm-customer-home .loan-ledger-card .notice{background:#fff7e7!important;border-color:#ead7aa!important}
+#app .fm-customer-home .ledger-note *,
+#app .fm-customer-home .ledger-owner-alert *,
+#app .fm-customer-home .loan-ledger-card .notice *{color:#654d24!important}
+#app .fm-customer-home .ledger-status.active{background:#e8f5ed!important;color:#236b4b!important}
+#app .fm-customer-home .ledger-status.paused{background:#fbf0dc!important;color:#865d1e!important}
+#app .fm-customer-home .customer-section-heading h3{color:#fff!important}
+@media(max-width:480px){
+ #app .fm-customer-home .loan-ledger-section{padding:12px!important}
+ #app .fm-customer-home .ledger-row{gap:8px!important}
+ #app .fm-customer-home .ledger-row>strong{max-width:55%!important;font-size:12px!important}
+}
+</style>
+
+</body></html>
