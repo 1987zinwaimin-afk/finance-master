@@ -513,7 +513,72 @@ footer{color:#afbdd0!important}
 }
 @media(max-width:380px){.customer-dashboard-heading h2{font-size:18px!important}.customer-total-grid{gap:6px}.customer-total-grid .metric{padding:9px 7px!important}}
 </style>
-</head>
+<style id="finance-master-customer-redesign-2026">
+/* Premium navy + champagne customer portal redesign */
+:root{color-scheme:dark;--fm-bg:#081629;--fm-navy:#101c33;--fm-panel:#102844;--fm-panel2:#173653;--fm-gold:#d8b56d;--fm-champagne:#f5e6bd;--fm-text:#f5f7fb;--fm-muted:#b6c5d8;--fm-line:#34516f;--fm-green:#54c58a;--fm-red:#ff7777}
+html,body{min-height:100%;background:#081629!important;color:var(--fm-text)!important}
+body{background:radial-gradient(ellipse at 50% -12%,#24476c 0,#102844 34%,#081629 78%)!important;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif!important}
+.wrap{width:min(100%,1040px)!important;max-width:1040px!important;padding:18px 16px calc(104px + env(safe-area-inset-bottom))!important}
+.brand{position:relative;display:flex;align-items:center;gap:12px;padding:13px 15px!important;margin-bottom:15px!important;border-radius:20px!important;background:linear-gradient(115deg,#091a30,#153555 68%,#1d4263)!important;border:1px solid #486887!important;box-shadow:0 12px 32px #0005,inset 0 1px #ffffff18!important}
+.brand-logo-img{width:46px!important;height:46px!important;filter:drop-shadow(0 3px 8px #d8b56d55)}
+.brand-title b{font-size:18px!important;letter-spacing:-.35px}.brand-title small{font-size:9px!important;letter-spacing:1.2px!important;color:#f0d99f!important}
+.language-wrap{color:#dce7f4!important}.language-wrap select{background:#0e2945!important;color:#fff!important;border:1px solid #5b7898!important;border-radius:10px!important}
+#status{border-radius:13px!important;padding:11px 13px!important;background:#142f4c!important;color:#e8f0fa!important;border:1px solid #3b5d7d!important}
+#app{min-width:0}
+#app .share-page{border:1px solid #385776!important;border-radius:22px!important;background:linear-gradient(155deg,#102b48,#0d233d 75%)!important;color:var(--fm-text)!important;box-shadow:0 14px 34px #0004,inset 0 1px #ffffff12!important;padding:17px!important}
+#app .share-page h1,#app .share-page h2,#app .share-page h3,#app .share-page h4,#app .share-page b,#app .share-page strong{color:#fff!important}
+#app .share-page p,#app .share-page label,#app .share-page li,#app .share-page td,#app .share-page th{color:#d8e3f0!important}
+#app .share-page .muted,#app .share-page small{color:#afc0d4!important}
+#app .share-page .panel,#app .share-page article.panel{background:linear-gradient(145deg,#193956,#112b47)!important;border:1px solid #3b5b7b!important;border-radius:17px!important;color:#fff!important;box-shadow:0 8px 20px #0003,inset 0 1px #ffffff0d!important}
+#app .share-page .metric{background:linear-gradient(145deg,#1b3d5c,#132d49)!important;border:1px solid #3c5b7a!important;border-radius:14px!important;color:#fff!important;box-shadow:none!important}
+#app .share-page .metric small{color:#c2d0e0!important;font-size:11px!important}
+#app .share-page .metric b,#app .share-page .metric strong{color:#fff!important;font-size:clamp(15px,3.8vw,21px)!important;font-variant-numeric:tabular-nums}
+#app .share-page .tag{background:linear-gradient(135deg,#f4e3b5,#d8b56d)!important;color:#172943!important;border:0!important;border-radius:999px!important;font-weight:850!important}
+#app .share-page input,#app .share-page select,#app .share-page textarea{background:#0d223a!important;color:#f7f9fc!important;border:1px solid #496785!important;border-radius:12px!important;min-height:44px!important}
+#app .share-page input::placeholder,#app .share-page textarea::placeholder{color:#9eb1c7!important}
+#app .share-page .btn,#app .share-page button.primary{background:linear-gradient(135deg,#f4dfa7,#d8b56d 65%,#bd9347)!important;color:#152943!important;border:1px solid #f1d99a!important;border-radius:13px!important;box-shadow:0 5px 14px #0003!important;font-weight:850!important}
+#app .share-page .btn.secondary,#app .share-page button.secondary{background:#173653!important;color:#f5f7fb!important;border:1px solid #4b6b89!important}
+#app .share-page a{color:#f0d18b!important}
+#app .share-page .notice{background:#3b321e!important;color:#f8e7bd!important;border:1px solid #806b3e!important}
+#app .share-page .success{background:#123d35!important;color:#bdf0d9!important;border:1px solid #2c8068!important}
+#app .share-page .error{background:#492b32!important;color:#ffd5d5!important;border:1px solid #92515a!important}
+#app .share-page table{min-width:520px!important}#app .share-page th{color:#c5d2e1!important;border-color:#38536e!important}#app .share-page td{border-color:#2e4965!important}
+#app .share-page[data-share-page="summary"]{padding:17px!important}
+.customer-dashboard-heading{padding:3px 2px 16px!important}
+.customer-dashboard-heading h2{font-size:clamp(21px,5vw,27px)!important;letter-spacing:-.5px!important}
+.customer-dashboard-heading p{color:#b9c9dc!important}
+.customer-loan-count{background:#1a3b5a!important;border:1px solid #5b7897!important;color:#f2d895!important}
+.customer-currency-summary{background:linear-gradient(145deg,#102b49,#0b2038)!important;border:1px solid #496987!important;border-radius:19px!important;padding:14px!important;box-shadow:0 9px 22px #0003!important}
+.customer-currency-heading{color:#f8f9fb!important}
+.customer-currency-heading span{background:linear-gradient(135deg,#f5e5bd,#d8b56d)!important;color:#162b46!important}
+.customer-total-debt{background:linear-gradient(120deg,#f4e2b2,#d8b56d 58%,#bd944b)!important;border:1px solid #f7e6b7!important;border-radius:16px!important;box-shadow:0 8px 18px #0004!important}
+.customer-total-debt small{color:#4b3b20!important}.customer-total-debt strong{color:#12243d!important;font-size:clamp(24px,6vw,32px)!important}
+.customer-total-grid .metric{background:linear-gradient(145deg,#1b3b59,#112a45)!important;border:1px solid #3c5c7b!important}
+.customer-total-grid .metric small{color:#c1cfdf!important}.customer-total-grid .metric b{color:#fff!important}
+.customer-loan-list-heading h3{color:#fff!important}.customer-loan-list-heading p{color:#b7c7d9!important}.customer-loan-list-heading>span{color:#f1d68f!important;border-color:#806c46!important}
+#app .share-page[data-share-page="summary"] .customer-loan-list>article.panel{background:linear-gradient(145deg,#1b3b59,#102943)!important;border:1px solid #496987!important;border-radius:18px!important}
+#app .share-page[data-share-page="summary"] .customer-loan-list .metric{background:linear-gradient(145deg,#204361,#15314e)!important;border-color:#466887!important}
+#app .share-page[data-share-page="summary"] .customer-loan-list .metric small{color:#c4d2e2!important}
+#app .share-page[data-share-page="summary"] .customer-loan-list .metric b{color:#fff!important}
+#app .share-page[data-share-page="summary"] .loan-detail-toggle{background:#102a46!important;border:1px solid #476785!important;border-radius:15px!important}
+#app .share-page[data-share-page="summary"] .loan-detail-toggle>summary{background:#1a3b5a!important;color:#fff!important;border-radius:12px!important}
+#app .share-page[data-share-page="summary"] .loan-detail-toggle>summary *{color:#fff!important}
+#app .share-page[data-share-page="history"] .customer-history-item{background:linear-gradient(145deg,#193956,#102943)!important;border:1px solid #3d5c7b!important;border-radius:15px!important}
+#app .share-page[data-share-page="history"] .customer-history-item *{color:#f4f7fb!important}
+#app .share-page[data-share-page="history"] .customer-history-item small{color:#b6c6d8!important}
+#app .share-page[data-share-page="request"] .bank-transfer-panel{background:#102a46!important;border-color:#476785!important}
+#app .share-page[data-share-page="request"] .bank-transfer-notice{background:#174b3d!important;color:#d2f5e5!important}
+#app .share-bottom-nav{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:6px!important;padding:8px 10px calc(8px + env(safe-area-inset-bottom))!important;background:rgba(7,20,37,.96)!important;border-top:1px solid #3b5877!important;box-shadow:0 -9px 28px #0005!important;backdrop-filter:blur(18px)!important}
+.share-bottom-nav button{min-height:57px!important;border-radius:14px!important;color:#c4d1e0!important}
+.share-bottom-nav button span{font-size:20px!important;color:#e7c77e!important}
+.share-bottom-nav button small{font-size:10px!important;color:inherit!important}
+.share-bottom-nav button.active{background:linear-gradient(135deg,#f2dfa9,#d4ae61)!important;color:#142943!important;box-shadow:0 4px 13px #0004!important}
+.share-bottom-nav button.active span,.share-bottom-nav button.active small{color:#142943!important}
+footer{color:#9eb1c7!important}
+@media(min-width:760px){.wrap{padding-top:24px!important}.brand{padding:15px 19px!important}.share-page[data-share-page="summary"] .customer-total-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important}.customer-loan-list{grid-template-columns:repeat(2,minmax(0,1fr))!important}.share-bottom-nav{left:50%!important;right:auto!important;transform:translateX(-50%);width:min(100%,760px)!important;border:1px solid #3b5877!important;border-bottom:0!important;border-radius:18px 18px 0 0!important}}
+@media(max-width:480px){.wrap{padding:10px 10px calc(94px + env(safe-area-inset-bottom))!important}.brand{gap:9px;padding:11px!important;border-radius:16px!important}.brand-logo-img{width:40px!important;height:40px!important}.brand-title b{font-size:16px!important}.brand-title small{font-size:8px!important}.language-wrap select{max-width:86px!important;padding:7px 5px!important;font-size:11px!important}#app .share-page{padding:13px!important;border-radius:18px!important}.customer-total-grid{gap:8px!important}.customer-total-grid .metric{padding:10px!important}.share-bottom-nav{gap:3px!important;padding-left:5px!important;padding-right:5px!important}.share-bottom-nav button{min-height:53px!important}.share-bottom-nav button small{font-size:9px!important}}
+@media(prefers-reduced-motion:no-preference){#app .share-page{animation:fmPortalEnter .22s ease-out}@keyframes fmPortalEnter{from{opacity:.75;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}}
+</style></head>
 <body><main class="wrap">
 <div class="brand"><img class="logo brand-logo-img" src="/borrower-icon.svg?v=finance-logo-20261023" alt="Finance Master logo" width="44" height="44"><div class="brand-title"><b>Finance Master</b><small>PRIVATE BORROWER PORTAL</small></div><label class="language-wrap"><span id="languageLabel">Language</span><select id="languageSelect" aria-label="Language"><option value="my">မြန်မာ</option><option value="en">English</option><option value="th">ไทย</option></select></label></div>
 <div id="status" class="status muted">Loading your private account…</div>
