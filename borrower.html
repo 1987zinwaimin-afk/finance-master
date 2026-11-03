@@ -349,6 +349,105 @@ footer{padding:12px 10px;color:#7a879a;font-size:10px}
 @media(min-width:700px){.wrap{max-width:860px;padding-top:24px}#app .share-page[data-share-page="summary"] .horizontal-loan-list{grid-template-columns:repeat(2,minmax(0,1fr))!important}#app .share-page[data-share-page="summary"] .horizontal-loan-list>article.panel{width:100%!important}#app .share-page[data-share-page="summary"] article.panel .grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(max-width:390px){.wrap{padding-left:10px;padding-right:10px}#app>.panel,#app .share-page{padding:13px}.share-bottom-nav button small{font-size:8px}#app .share-page[data-share-page="summary"] article.panel .grid{gap:7px!important}#app .share-page[data-share-page="summary"] article.panel .metric{padding:9px 8px!important}}
 
+
+/* Customer portal redesign — calm, readable ledger-first layout */
+:root{--navy:#101c33;--gold:#d8b56d;--bg:#f5f6f8;--ink:#172238;--muted:#718096;--line:#e7eaf0;--green:#16785d}
+body{background:#f5f6f8!important;color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:820px!important;padding:18px 14px calc(104px + env(safe-area-inset-bottom))!important}
+.brand{padding:10px 2px 14px;margin-bottom:10px;border-bottom:1px solid #e6e9ef}
+.logo{width:42px;height:42px;border-radius:13px;background:linear-gradient(145deg,#f5e5bf,#d8b56d)!important;box-shadow:none!important;transform:none!important}
+.brand b{color:var(--navy);font-size:16px}.brand small{letter-spacing:.7px}
+#status{border-radius:12px;padding:10px 12px;font-size:12px;line-height:1.5}
+.panel{background:#fff!important;border:1px solid #e8ebf0!important;border-radius:17px!important;box-shadow:0 3px 12px rgba(16,28,51,.035)!important;backdrop-filter:none!important;animation:none!important;padding:17px!important}
+.panel h2,.panel h3,.panel h4{color:var(--navy)}
+.fm-customer-welcome{margin:-17px -17px 20px;padding:19px 17px 20px;border-radius:17px 17px 0 0;background:var(--navy);color:#fff}
+.fm-brand-row{display:flex;align-items:center;gap:10px;padding-bottom:18px;border-bottom:1px solid #ffffff20}
+.fm-brand-mark{width:38px;height:38px;display:grid;place-items:center;border-radius:11px;background:linear-gradient(145deg,#f3dfb0,#d8b56d);color:var(--navy);font-weight:900}
+.fm-brand-row b{display:block;font-size:14px;color:#fff}.fm-brand-row small{display:block;color:#c6d0df;font-size:9px;letter-spacing:1.2px}
+.fm-live-pill{margin-left:auto;padding:5px 9px;border:1px solid #ffffff30;border-radius:99px;color:#e8d4a8;font-size:9px;font-weight:800;letter-spacing:.5px}
+.fm-live-pill i{display:inline-block;width:6px;height:6px;margin-right:5px;border-radius:50%;background:#75d6a9}
+.fm-profile-row{display:flex;align-items:center;gap:12px;padding-top:17px}
+.fm-profile-avatar{width:48px;height:48px;flex:0 0 48px;display:grid;place-items:center;border-radius:50%;background:#ffffff16;border:1px solid #d8b56d88;color:#f1d99e;font-size:20px;font-weight:800}
+.fm-profile-copy{min-width:0}.fm-profile-copy small{font-size:11px;color:#d8b56d}.fm-profile-copy h2{margin:3px 0 4px;color:#fff;font-size:21px;overflow-wrap:anywhere}.fm-profile-copy p{margin:0;color:#c8d1df;font-size:11px;line-height:1.55}
+.customer-section-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:20px 0 12px}
+.customer-section-heading>div{min-width:0}.customer-section-heading small,.customer-page-heading>small{font-size:9px;font-weight:800;letter-spacing:1.2px;color:#a27e3d}
+.customer-section-heading h3{margin:3px 0;font-size:18px}.customer-section-heading p,.customer-page-heading p{margin:0;color:var(--muted);font-size:11px;line-height:1.5}
+.readonly-pill,.loan-count-pill{flex:0 0 auto;padding:7px 9px;border-radius:9px;background:#f4f0e7;color:#80632f;font-size:10px;font-weight:800}
+.loan-count-pill{background:#f0f2f5;color:#596579}
+.currency-ledger-stack{display:grid;gap:12px}
+.currency-ledger-card{overflow:hidden;border:1px solid #e9e3d6;border-radius:14px;background:#fff}
+.currency-ledger-card>header{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;background:#faf8f3;border-bottom:1px solid #eee8dc}
+.currency-ledger-card>header small{display:block;color:#8b7854;font-size:9px;font-weight:800;letter-spacing:.7px}
+.currency-ledger-card>header h3{margin:2px 0 0;font-size:16px}
+.currency-ledger-card>header>span{font-size:10px;color:#76664b}
+.currency-ledger-total{padding:15px 14px 12px}
+.currency-ledger-total small{display:block;color:var(--muted);font-size:11px}
+.currency-ledger-total strong{display:block;margin-top:4px;color:var(--navy);font-size:clamp(23px,6vw,30px);font-weight:850;letter-spacing:-.6px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.currency-ledger-rows{padding:0 14px 8px}
+.currency-ledger-rows>div{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:9px 0;border-top:1px solid #f0f1f3}
+.currency-ledger-rows span{color:#667286;font-size:11px}.currency-ledger-rows b{color:#24334c;text-align:right;font-size:12px;font-weight:750;font-variant-numeric:tabular-nums}
+.customer-loan-list{display:grid;gap:13px}
+.loan-ledger-card{overflow:hidden;border:1px solid #e6e9ee;border-radius:15px;background:#fff}
+.loan-ledger-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 14px;border-bottom:1px solid #edf0f3}
+.loan-ledger-heading>div{min-width:0}.loan-ledger-heading small{display:block;color:#9a7b42;font-size:9px;font-weight:800;letter-spacing:.8px}.loan-ledger-heading h3{margin:3px 0 0;font-size:15px;overflow-wrap:anywhere}
+.ledger-status{flex:0 0 auto;padding:6px 8px;border-radius:8px;font-size:9px;font-weight:800}.ledger-status.active{background:#edf6f1;color:#267354}.ledger-status.paused{background:#fbf2df;color:#90651e}
+.loan-ledger-total{padding:15px 14px;background:#f8f7f3;border-bottom:1px solid #eee9df}
+.loan-ledger-total small{display:block;color:#786e5d;font-size:11px}
+.loan-ledger-total strong{display:block;margin:4px 0;color:var(--navy);font-size:clamp(23px,6vw,29px);font-weight:850;letter-spacing:-.6px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.loan-ledger-total p{margin:0;color:#667286;font-size:10px;line-height:1.5}.loan-ledger-total p span{padding:0 4px;color:#b2a58d}
+.loan-ledger-section{padding:13px 14px 7px}.loan-ledger-section h4,.ledger-details-content h4{margin:0 0 5px;color:var(--navy);font-size:12px}
+.ledger-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #f0f1f3}
+.ledger-row:last-child{border-bottom:0}.ledger-row-copy{display:flex;flex-direction:column;gap:3px;min-width:0}
+.ledger-row-copy b{font-size:11px;color:#344158;font-weight:650}.ledger-row-copy small{font-size:9px;color:#929baa;line-height:1.4}
+.ledger-row>strong{flex:0 0 auto;max-width:58%;text-align:right;color:#1e2c43;font-size:12px;font-weight:750;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.ledger-note,.ledger-owner-alert{margin:10px 14px;padding:11px 12px;border-radius:10px;background:#f7f8fa;border:1px solid #eceff3}
+.ledger-note b,.ledger-owner-alert b{font-size:11px;color:#6d5730}.ledger-note p,.ledger-owner-alert p{margin:5px 0 0;color:#596579;font-size:11px;line-height:1.6;white-space:pre-wrap}
+.ledger-owner-alert{background:#fff8e9;border-color:#f0dfb8}.ledger-owner-alert p{color:#755a28}
+.loan-ledger-card .notice{margin:10px 14px!important;padding:11px!important;border:1px solid #f0dfb8!important;border-radius:10px!important;background:#fff8e9!important;color:#765b2a!important;font-size:11px!important;line-height:1.55!important;box-shadow:none!important}
+.ledger-details{margin:10px 14px 14px;border:1px solid #e8ebef;border-radius:11px;overflow:hidden}
+.ledger-details>summary{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px;background:#f8f9fb;color:#344158;font-size:11px;font-weight:800;cursor:pointer;list-style:none}
+.ledger-details>summary::-webkit-details-marker{display:none}.ledger-details>summary span{color:#9a7b42;font-size:10px}
+.ledger-details[open]>summary{border-bottom:1px solid #e8ebef;background:#f5f2eb}
+.ledger-details-content{padding:12px}.ledger-details-content h4{display:flex;justify-content:space-between;margin:8px 0;color:#344158}.ledger-details-content h4 small{color:#9aa3b1;font-size:9px;font-weight:600}
+.ledger-history-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #f0f1f3}
+.ledger-history-date,.ledger-history-amount{display:flex;flex-direction:column;gap:4px;min-width:0}.ledger-history-date b{font-size:11px;color:#344158}.ledger-history-date small,.ledger-history-amount small{font-size:9px;color:#8a94a3;line-height:1.4}
+.ledger-history-amount{text-align:right;max-width:55%}.ledger-history-amount b{font-size:11px;color:#1d2d45;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.ledger-history-amount .ledger-due{color:#a66d24}.ledger-history-amount .ledger-paid{color:#28775a}
+.ledger-empty{padding:12px 0;color:#8b95a4;font-size:11px}
+.customer-security-note{display:flex;gap:10px;margin-top:16px;padding:13px;border:1px solid #e7eaf0;border-radius:12px;background:#fafbfc}
+.customer-security-note>span{font-size:18px}.customer-security-note b{font-size:11px;color:#344158}.customer-security-note p{margin:4px 0 0;color:#8791a0;font-size:10px;line-height:1.5}
+.customer-history-page{padding:17px!important}.customer-page-heading{margin-bottom:14px}.customer-page-heading h2{margin:4px 0;font-size:19px}
+.history-summary{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px;border:1px solid #e9e3d6;border-radius:12px;background:#faf8f3;margin-bottom:12px}
+.history-summary>div:first-child{display:flex;flex-direction:column;gap:3px}.history-summary small{color:#8b7854;font-size:9px}.history-summary b{color:var(--navy);font-size:16px}
+.history-currency-list{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}.history-currency-chip{padding:5px 7px;border-radius:7px;background:#eee8dc;color:#78623b;font-size:9px;font-weight:800}
+.customer-history-list{display:grid;gap:0}
+.customer-history-item{display:grid;grid-template-columns:27px minmax(0,1fr) auto;align-items:center;gap:9px;padding:13px 2px;border-bottom:1px solid #edf0f3}
+.history-index{width:24px;height:24px;display:grid;place-items:center;border-radius:50%;background:#f3f0e8;color:#987a42;font-size:9px;font-weight:800}
+.customer-history-main{min-width:0}.customer-history-main b{display:block;color:#2b394f;font-size:11px}.customer-history-main small{display:block;margin-top:4px;color:#8b95a3;font-size:9px}.customer-history-main p{margin:5px 0 0;color:#667286;font-size:10px;line-height:1.5;overflow-wrap:anywhere}
+.customer-history-item>strong{max-width:120px;text-align:right;color:#176b50;font-size:11px;font-weight:800;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.customer-empty-history{padding:30px 12px;text-align:center}.customer-empty-history>span{display:block;font-size:25px;color:#b5a17b}.customer-empty-history b{display:block;margin:8px 0;color:#344158;font-size:13px}.customer-empty-history p{margin:0;color:#8993a1;font-size:10px}
+.share-bottom-nav{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:3px!important;padding:7px 7px calc(7px + env(safe-area-inset-bottom))!important;background:rgba(255,255,255,.97)!important;border-top:1px solid #e6e9ef!important;box-shadow:0 -4px 16px #1720330a!important;backdrop-filter:blur(12px)}
+.share-bottom-nav button{min-height:52px!important;border-radius:10px!important;color:#7b8492!important}.share-bottom-nav button.active{background:#f3efe5!important;color:#8c6d35!important;box-shadow:none!important}
+.share-bottom-nav button span{font-size:18px!important}.share-bottom-nav button small{font-size:9px!important}
+.tag{background:#f3f5f7!important;color:#536176!important;border:0!important;box-shadow:none!important}
+.btn{background:var(--navy)!important;color:#fff!important;border-radius:10px!important;box-shadow:none!important;padding:12px 15px!important}
+.btn.secondary{background:#fff!important;color:var(--navy)!important;border:1px solid #dfe4eb!important}
+.field label{color:#344158;font-size:11px}.field input,.field select,.field textarea{border:1px solid #dfe4eb!important;border-radius:10px!important;background:#fff!important;box-shadow:none!important;padding:12px!important}
+.bank-transfer-panel,.owner-public-panel{background:#fff!important;border:1px solid #e8ebf0!important;box-shadow:none!important}
+@media(max-width:480px){
+ .wrap{padding:10px 10px calc(100px + env(safe-area-inset-bottom))!important}
+ .panel{padding:14px!important;border-radius:15px!important}
+ .fm-customer-welcome{margin:-14px -14px 17px;padding:16px 14px 17px;border-radius:15px 15px 0 0}
+ .fm-profile-copy h2{font-size:19px}
+ .customer-section-heading{align-items:flex-start;margin:17px 0 10px}
+ .currency-ledger-total strong,.loan-ledger-total strong{font-size:24px}
+ .loan-ledger-heading{padding:12px}.loan-ledger-total{padding:13px 12px}
+ .loan-ledger-section{padding:12px}.ledger-row{padding:9px 0}
+ .ledger-row>strong{font-size:11px;max-width:55%}
+ .customer-history-item{grid-template-columns:24px minmax(0,1fr) auto;gap:7px;padding:12px 0}
+ .customer-history-item>strong{max-width:100px;font-size:10px}
+ .share-bottom-nav button small{font-size:8px!important}
+}
+
 </style>
 <style id="customer-portal-color-fix">
 /* Final customer portal palette overrides — intentionally last in document */
@@ -700,46 +799,63 @@ function render(){
  const totalInterestFor=a=>Number(interestPaid(a)||0)+Number(a.interestOutstanding||0);
  const isPaused=a=>String(a.interestType||"normal")==="paused";
  const summaryCard=(a,i)=>{
-  const paused=isPaused(a),currency=a.currency||"THB",im=interestMonths(a),target=Math.max(0,Number(a.monthlyTarget||0)),paid=monthlyPaidFor(a);
-  const title=esc(a.loanType||a.label||(multi?"ချေးငွေ "+(i+1):"ချေးငွေ"));
-  const totalPaid=(Array.isArray(a.payments)?a.payments:[]).reduce((sum,p)=>sum+Math.max(0,Number(p.amount||0)),0);
-  const paymentMetrics=metric("လစဉ်ပေးရန်သတ်မှတ်ငွေ",money(target,currency))+metric("စုစုပေါင်းသွင်းပြီးငွေ",money(totalPaid,currency));
-  const metricGrid=paused
-   ? metric("ချေးငွေ",money(a.principal,currency))+metric("လက်ကျန်ငွေ",money(a.principalOutstanding,currency))+metric("အတိုးအခြေအနေ","အတိုးရပ်ထားသည်")+metric("အတိုးစုစုပေါင်းလ",String(im.due)+" လ")+metric("အတိုးစုစုပေါင်းငွေ",money(totalInterestFor(a),currency))+metric("အတိုးသွင်းပြီးငွေစုစုပေါင်း",money(interestPaid(a),currency))+metric("အတိုးရပ်ထားသည့်ရက်စွဲ",a.stop?esc(a.stop):"မှတ်တမ်းမရှိ")+metric("အတိုး/အရင်း လက်ကျန်စုစုပေါင်း",money(Math.max(0,Number(a.principalOutstanding)||0)+Math.max(0,Number(a.interestOutstanding)||0),currency))
-   : metric("ချေးငွေ",money(a.principal,currency))+metric("လက်ကျန်ငွေ",money(a.principalOutstanding,currency))+metric("အတိုးနှုန်း",String(a.rate||0)+"% · "+(a.period==="yearly"?"နှစ်စဉ်":a.period==="none"?"အတိုးမရှိ":"လစဉ်"))+metric("လစဉ်အတိုးငွေ",money(a.monthlyInterest,currency))+metric("အတိုးစုစုပေါင်းလ",String(im.due)+" လ")+metric("အတိုးစုစုပေါင်းငွေ",money(totalInterestFor(a),currency));
-  const completeMetricGrid=metricGrid+paymentMetrics;
-  return '<article class="panel" style="padding:15px;border-radius:15px;border:1px solid '+(paused?'#d97706':'#d7dee8')+';box-shadow:0 5px 18px rgba(16,28,51,.06)"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:12px"><button type="button" class="loan-title-open" data-loan-fullscreen="summary" aria-label="ချေးငွေအကျဉ်းချုပ်ကို မျက်နှာပြင်အပြည့်ဖွင့်ရန်" style="border:0;background:transparent;color:inherit;padding:0;text-align:left;font:inherit;font-size:17px;font-weight:900;cursor:pointer;flex:1;min-width:0">'+title+' <span aria-hidden="true">↗</span></button><span class="tag" style="background:'+(paused?'#fff3d6':'#e8f5ee')+';color:'+(paused?'#925b00':'#176b45')+'">'+(paused?'အတိုးရပ်ထားသောချေးငွေ':'အတိုးရှိသောချေးငွေ')+'</span></div>'+(a.underpaymentMessage?'<div role="alert" style="margin:0 0 14px;padding:16px;border:2px solid #e2a72e;border-left:7px solid #d97706;border-radius:15px;background:linear-gradient(135deg,#fff0a8,#ffe08a);color:#573b00;box-shadow:0 5px 16px rgba(180,120,0,.2);font-size:15px;line-height:1.65"><div style="font-size:17px;font-weight:900;margin-bottom:6px">📢 ပိုင်ရှင်၏ အရေးကြီးသတိပေးချက်</div><p style="margin:0;white-space:pre-wrap;font-weight:650">'+esc(a.underpaymentMessage)+'</p></div>':'')+'<div class="grid">'+completeMetricGrid+'</div>'+(a.note?'<div class="notice" style="margin:0 0 12px;border-left:4px solid #c49a43"><b>📝 ပိုင်ရှင်၏ မှတ်ချက်</b><p style="margin:6px 0 0;white-space:pre-wrap">'+esc(a.note)+'</p></div>':'')+loanAlertMarkup(a)+(a.due?'<p class="muted" style="margin-bottom:0">ပေးဆပ်ရမည့်ရက်: '+esc(a.due)+'</p>':'')+'<details class="loan-detail-toggle" style="margin-top:14px;border:1px solid #d9e4f2;border-radius:13px;overflow:hidden;background:#fff"><summary data-loan-fullscreen="details" style="cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 14px;background:linear-gradient(100deg,#eaf8f4,#eef4ff);color:#12324b;font-weight:800"><span>စာရင်းအသေးစိတ်ကြည့်ရန်</span><span aria-hidden="true">မျက်နှာပြင်အပြည့် ↗</span></summary><div style="padding:12px"><div class="grid">'+metric("သွင်းငွေမှတ်တမ်းအရေအတွက်",String((Array.isArray(a.payments)?a.payments:[]).filter(p=>Number(p.amount)>0).length)+" ကြိမ်")+metric("စုစုပေါင်းသွင်းငွေ",money((Array.isArray(a.payments)?a.payments:[]).reduce((sum,p)=>sum+Math.max(0,Number(p.amount||0)),0),currency))+metric("အတိုးမှတ်တမ်းလ",String((Array.isArray(a.interestBuckets)?a.interestBuckets:[]).filter(x=>Number(x.original)>0).length)+" လ")+'</div><h4 style="margin:16px 0 8px;font-size:14px">ငွေသွင်းထားသော မှတ်တမ်းများ</h4>'+(Array.isArray(a.payments)&&a.payments.some(p=>Number(p.amount)>0)?'<div style="display:grid;gap:8px">'+a.payments.filter(p=>Number(p.amount)>0).slice().sort((x,y)=>String(y.date||"").localeCompare(String(x.date||""))).map(p=>'<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:start;padding:10px;border:1px solid #e7edf5;border-radius:10px;background:#fbfdff"><div><b>'+esc(p.date||"ရက်စွဲမရှိ")+'</b><div style="font-size:12px;color:#64748b;margin-top:3px">'+esc(p.apply||p.type||"ငွေပေးချေမှု")+'</div>'+(p.note?'<div style="font-size:12px;color:#64748b;margin-top:3px;white-space:pre-wrap">'+esc(p.note)+'</div>':'')+'</div><b style="color:#087d5b;text-align:right;overflow-wrap:anywhere">'+money(p.amount,p.currency||currency)+'</b></div>').join('')+'</div>':'<p class="muted" style="font-size:13px">ဒီချေးငွေအတွက် ငွေသွင်းမှတ်တမ်း မရှိသေးပါ။</p>')+'<h4 style="margin:16px 0 8px;font-size:14px">လစဉ်အတိုးစာရင်း</h4>'+(Array.isArray(a.interestBuckets)&&a.interestBuckets.some(x=>Number(x.original)>0)?'<div style="display:grid;gap:7px">'+a.interestBuckets.filter(x=>Number(x.original)>0).slice().sort((x,y)=>String(y.date||"").localeCompare(String(x.date||""))).map(x=>'<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,auto);gap:8px;padding:10px;border:1px solid #e7edf5;border-radius:10px"><div><b>'+esc(x.date||"လ/ရက်စွဲမရှိ")+'</b><div style="font-size:12px;color:#64748b;margin-top:3px">အတိုး: '+money(x.original,x.currency||currency)+'</div><div style="font-size:12px;color:'+(Number(x.remaining)>0.004?'#b45309':'#087d5b')+';margin-top:3px">'+(Number(x.remaining)>0.004?'ကျန်အတိုး: ':'ပေးချေပြီး: ')+money(Number(x.remaining)>0.004?x.remaining:Math.max(0,Number(x.original||0)-Number(x.remaining||0)),x.currency||currency)+'</div></div><b style="font-size:12px;color:'+(Number(x.remaining)>0.004?'#b45309':'#087d5b')+'">'+(Number(x.remaining)>0.004?'မပြီးသေး':'ပြီးပြီ')+'</b></div>').join('')+'</div>':'<p class="muted" style="font-size:13px">အတိုးစာရင်းမှတ်တမ်း မရှိသေးပါ။</p>')+'<p class="muted" style="font-size:12px;margin:12px 0 0">ဤအသေးစိတ်စာရင်းသည် ဒီချေးငွေတစ်ခုတည်းနှင့် သက်ဆိုင်ပါသည်။ Owner အတည်ပြုထားသော မှတ်တမ်းများကိုသာ ပြသပါသည်။</p></div></details>'+'</article>';
+  const currency=a.currency||"THB",paused=isPaused(a);
+  const principal=Math.max(0,Number(a.principalOutstanding)||0);
+  const interest=Math.max(0,Number(a.interestOutstanding)||0);
+  const total=principal+interest;
+  const paymentsList=(Array.isArray(a.payments)?a.payments:[]).filter(p=>Number(p.amount)>0).slice().sort((x,y)=>String(y.date||"").localeCompare(String(x.date||"")));
+  const bucketsList=(Array.isArray(a.interestBuckets)?a.interestBuckets:[]).filter(x=>Number(x.original)>0).slice().sort((x,y)=>String(y.date||"").localeCompare(String(x.date||"")));
+  const paid=paymentsList.reduce((sum,p)=>sum+Math.max(0,Number(p.amount)||0),0);
+  const im=interestMonths(a);
+  const title=esc(a.loanType||a.label||("ချေးငွေ "+(i+1)));
+  const row=(label,value,help)=>'<div class="ledger-row"><div class="ledger-row-copy"><b>'+label+'</b><small>'+help+'</small></div><strong>'+value+'</strong></div>';
+  const paymentRows=paymentsList.length?paymentsList.map(p=>'<article class="ledger-history-row"><div class="ledger-history-date"><b>'+esc(p.date||"ရက်စွဲမရှိ")+'</b><small>'+esc(p.apply||p.type||"ငွေပေးချေမှု")+'</small></div><div class="ledger-history-amount"><b>'+money(p.amount,p.currency||currency)+'</b>'+(p.note?'<small>'+esc(p.note)+'</small>':'')+'</div></article>').join(""):'<div class="ledger-empty">ငွေသွင်းမှတ်တမ်း မရှိသေးပါ။</div>';
+  const interestRows=bucketsList.length?bucketsList.map(x=>{const rem=Math.max(0,Number(x.remaining)||0),done=Math.max(0,Number(x.original||0)-rem);return '<article class="ledger-history-row"><div class="ledger-history-date"><b>'+esc(x.date||"လ/ရက်စွဲမရှိ")+'</b><small>သတ်မှတ်အတိုး '+money(x.original,x.currency||currency)+'</small></div><div class="ledger-history-amount"><b>'+money(rem>0.004?rem:done,x.currency||currency)+'</b><small class="'+(rem>0.004?'ledger-due':'ledger-paid')+'">'+(rem>0.004?'ကျန်ရှိအတိုး':'ပေးချေပြီး')+'</small></div></article>';}).join(""):'<div class="ledger-empty">အတိုးမှတ်တမ်း မရှိသေးပါ။</div>';
+  return '<article class="loan-ledger-card">'+
+   '<header class="loan-ledger-heading"><div><small>ချေးငွေအကောင့် '+(i+1)+'</small><h3>'+title+'</h3></div><span class="ledger-status '+(paused?'paused':'active')+'">'+(paused?'အတိုးရပ်ထားသည်':'လက်ရှိစာရင်း')+'</span></header>'+
+   '<section class="loan-ledger-total"><small>ယနေ့အထိ ပြန်ပေးရန်ကျန်ငွေ</small><strong>'+money(total,currency)+'</strong><p>ကျန်အရင်း '+money(principal,currency)+' <span>·</span> ကျန်အတိုး '+money(interest,currency)+'</p></section>'+
+   '<section class="loan-ledger-section"><h4>ချေးငွေအသေးစိတ်</h4>'+
+   row("မူရင်းချေးငွေ",money(a.principal,currency),"စတင်ချေးယူခဲ့သော အရင်းငွေ")+
+   row("ပြန်ဆပ်ပြီးငွေ",money(paid,currency),"မှတ်တမ်းတင်ထားသော ငွေပေးချေမှုစုစုပေါင်း")+
+   row("ကျန်ရှိသော အရင်းငွေ",money(principal,currency),"ပြန်ဆပ်ရန်ကျန်နေသည့် မူရင်းငွေ")+
+   row("ကျန်ရှိသော အတိုး",money(interest,currency),"ပေးချေရန်ကျန်နေသည့် အတိုးငွေ")+
+   row("အတိုးနှုန်း",String(a.rate||0)+"% · "+(a.period==="yearly"?"နှစ်စဉ်":a.period==="none"?"အတိုးမရှိ":"လစဉ်"),"သဘောတူထားသော အတိုးနှုန်း")+
+   row("လစဉ်အတိုး",paused?"အတိုးရပ်ထားသည်":money(a.monthlyInterest,currency),"လက်ရှိတွက်ချက်ထားသော လစဉ်အတိုး")+
+   row("အတိုးစာရင်းကာလ",String(im.due)+" လ","အတိုးစာရင်းတွင် မှတ်တမ်းရှိသောလများ")+
+   (Number(a.monthlyTarget)>0?row("လစဉ်သတ်မှတ်ပေးငွေ",money(a.monthlyTarget,currency),"လစဉ်ပေးဆပ်ရန် သတ်မှတ်ထားသော ပမာဏ"):"")+
+   (a.due?row("ပေးဆပ်ရမည့်ရက်",esc(a.due),"သတ်မှတ်ထားသော နောက်ဆုံးပေးချေရက်"):"")+
+   '</section>'+
+   (a.note?'<section class="ledger-note"><b>Owner ၏ မှတ်ချက်</b><p>'+esc(a.note).replace(/\n/g,"<br>")+'</p></section>':'')+
+   (a.underpaymentMessage?'<section class="ledger-owner-alert"><b>Owner ထံမှ အသိပေးချက်</b><p>'+esc(a.underpaymentMessage).replace(/\n/g,"<br>")+'</p></section>':'')+
+   loanAlertMarkup(a)+
+   '<details class="ledger-details"><summary>ငွေပေးချေမှုနှင့် အတိုးမှတ်တမ်းအသေးစိတ် <span>ကြည့်ရန်＋</span></summary><div class="ledger-details-content"><h4>ငွေပေးချေမှုမှတ်တမ်း <small>'+paymentsList.length+' ကြိမ်</small></h4>'+paymentRows+'<h4>လစဉ်အတိုးမှတ်တမ်း <small>'+bucketsList.length+' လ</small></h4>'+interestRows+'</div></details>'+
+  '</article>';
  };
  const summaryMarkup=(()=>{
   const currencies=[...new Set(accounts.map(a=>a.currency||"THB"))];
-  const totalsFor=currency=>{
-   const list=accounts.filter(a=>(a.currency||"THB")===currency);
-   const principal=list.reduce((n,a)=>n+Math.max(0,Number(a.principal)||0),0);
-   const principalDue=list.reduce((n,a)=>n+Math.max(0,Number(a.principalOutstanding)||0),0);
-   const interestDue=list.reduce((n,a)=>n+Math.max(0,Number(a.interestOutstanding)||0),0);
-   const paid=list.reduce((n,a)=>n+(Array.isArray(a.payments)?a.payments:[]).reduce((m,p)=>m+Math.max(0,Number(p.amount)||0),0),0);
-   return {currency,principal,principalDue,interestDue,paid,totalDue:principalDue+interestDue};
-  };
   const totalMarkup=currencies.map(currency=>{
-   const t=totalsFor(currency);
-   return '<section class="customer-currency-summary"><div class="customer-currency-heading"><b>စုစုပေါင်းအကြွေးအနှစ်ချုပ်</b><span>'+esc(currency)+'</span></div><div class="customer-total-debt"><small>ကျန်ရှိအကြွေးစုစုပေါင်း · Total Remaining</small><strong>'+esc(money(t.totalDue,currency))+'</strong></div><div class="customer-total-grid">'+metric("မူရင်းအရင်း",money(t.principal,currency))+metric("အတိုးကျန်",money(t.interestDue,currency))+metric("ပေးဆပ်ပြီး",money(t.paid,currency))+metric("ကျန်အရင်း",money(t.principalDue,currency))+'</div></section>';
+   const list=accounts.filter(a=>(a.currency||"THB")===currency);
+   const principal=list.reduce((n,a)=>n+Math.max(0,Number(a.principalOutstanding)||0),0);
+   const interest=list.reduce((n,a)=>n+Math.max(0,Number(a.interestOutstanding)||0),0);
+   const original=list.reduce((n,a)=>n+Math.max(0,Number(a.principal)||0),0);
+   const paid=list.reduce((n,a)=>n+(Array.isArray(a.payments)?a.payments:[]).reduce((m,p)=>m+Math.max(0,Number(p.amount)||0),0),0);
+   return '<section class="currency-ledger-card"><header><div><small>ငွေကြေးအမျိုးအစား</small><h3>'+esc(currency)+'</h3></div><span>'+list.length+' အကောင့်</span></header><div class="currency-ledger-total"><small>စုစုပေါင်း ပြန်ပေးရန်ကျန်ငွေ</small><strong>'+money(principal+interest,currency)+'</strong></div><div class="currency-ledger-rows"><div><span>မူရင်းချေးငွေ</span><b>'+money(original,currency)+'</b></div><div><span>ပြန်ဆပ်ပြီးငွေ</span><b>'+money(paid,currency)+'</b></div><div><span>ကျန်အရင်းငွေ</span><b>'+money(principal,currency)+'</b></div><div><span>ကျန်အတိုးငွေ</span><b>'+money(interest,currency)+'</b></div></div></section>';
   }).join("");
   const loanList=accounts.map((a,i)=>summaryCard(a,i)).join("");
   return '<section class="panel share-page fm-customer-home" data-share-page="summary">'+
-   '<header class="fm-customer-welcome">'+
-    '<div class="fm-brand-row"><div class="fm-brand-mark">FM</div><div><b>Finance Master</b><small>PERSONAL FINANCE PORTAL</small></div><span class="fm-live-pill"><i></i> ACTIVE</span></div>'+
-    '<div class="fm-profile-row"><div class="fm-profile-avatar">'+esc((share.borrowerName||s.person||"C").trim().charAt(0).toUpperCase())+'</div><div class="fm-profile-copy"><small>မင်္ဂလာပါ</small><h2>'+esc(share.borrowerName||s.person||"Customer")+'</h2><p>သင့်ချေးငွေစာရင်းနှင့် ငွေပေးချေမှုများကို တစ်နေရာတည်းတွင် ကြည့်ရှုနိုင်ပါသည်။</p></div><span class="fm-account-count">'+accounts.length+'<small>LOANS</small></span></div>'+
-   '</header>'+
-   '<div class="fm-section-title"><div><small>YOUR OVERVIEW</small><h3>ငွေကြေးအနှစ်ချုပ်</h3></div><span class="fm-readonly-chip">🔒 Read only</span></div>'+
-   '<div class="fm-currency-stack">'+totalMarkup+'</div>'+
-   '<div class="fm-section-title fm-loans-title"><div><small>YOUR ACCOUNTS</small><h3>ချေးငွေအကောင့်များ</h3><p>ချေးငွေတစ်ခုချင်းစီကို ရွေးချယ်ပြီး အသေးစိတ်ကြည့်နိုင်ပါသည်။</p></div><span class="fm-count-chip">'+accounts.length+' ခု</span></div>'+
-   '<div class="customer-loan-list fm-loan-grid">'+loanList+'</div>'+
-   '<div class="fm-security-note"><span>🛡️</span><div><b>သင့်အချက်အလက်များ လုံခြုံပါသည်</b><p>ဤစာမျက်နှာသည် ကြည့်ရှုရန်သာဖြစ်သည်။ ငွေပေးချေမှုတောင်းဆိုချက်များကို Owner အတည်ပြုပြီးမှ စာရင်းတွင် ထည့်သွင်းပါမည်။</p></div></div>'+
+   '<header class="fm-customer-welcome"><div class="fm-brand-row"><div class="fm-brand-mark">FM</div><div><b>Finance Master</b><small>PERSONAL FINANCE</small></div><span class="fm-live-pill"><i></i> LIVE</span></div><div class="fm-profile-row"><div class="fm-profile-avatar">'+esc((share.borrowerName||s.person||"C").trim().charAt(0).toUpperCase())+'</div><div class="fm-profile-copy"><small>မင်္ဂလာပါ</small><h2>'+esc(share.borrowerName||s.person||"Customer")+'</h2><p>သင့်ချေးငွေနှင့် ငွေပေးချေမှုစာရင်းများကို ရှင်းလင်းစွာ ကြည့်ရှုနိုင်ပါသည်။</p></div></div></header>'+
+   '<div class="customer-section-heading"><div><small>FINANCIAL OVERVIEW</small><h3>ငွေကြေးအနှစ်ချုပ်</h3><p>သင့်အကောင့်အားလုံး၏ လက်ရှိအခြေအနေ</p></div><span class="readonly-pill">🔒 ကြည့်ရှုရန်သာ</span></div>'+
+   '<div class="currency-ledger-stack">'+totalMarkup+'</div>'+
+   '<div class="customer-section-heading loan-section-heading"><div><small>YOUR LOANS</small><h3>ချေးငွေအကောင့်များ</h3><p>ချေးငွေတစ်ခုချင်းစီ၏ အရင်း၊ အတိုးနှင့် လက်ကျန်ကို ကြည့်ရှုပါ။</p></div><span class="loan-count-pill">'+accounts.length+' ခု</span></div>'+
+   '<div class="customer-loan-list">'+loanList+'</div>'+
+   '<div class="customer-security-note"><span>🔐</span><div><b>သင့်စာရင်းများကို လုံခြုံစွာ ပြသထားပါသည်</b><p>ဤစာမျက်နှာသည် ကြည့်ရှုရန်သာဖြစ်သည်။ ငွေပေးချေမှုတောင်းဆိုချက်များကို Owner အတည်ပြုပြီးမှ စာရင်းတွင် ထည့်သွင်းပါမည်။</p></div></div>'+
   '</section>';
  })();
  const historyMarkup=(()=>{
-  const entries=accounts.flatMap(a=>(Array.isArray(a.payments)?a.payments:[]).filter(p=>Number(p.amount)>0).map(p=>({...p,accountLabel:a.loanType||a.label||'ချေးငွေ',accountCurrency:p.currency||a.currency||'THB'}))).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
-  return '<section class="panel share-page" data-share-page="history"><h2 style="margin-top:0">ငွေဆပ်မှတ်တမ်း</h2><p class="muted">Owner အတည်ပြုထားသော ငွေပေးချေမှုမှတ်တမ်းများကို ရက်စွဲအလိုက် ဖော်ပြထားပါသည်။</p>'+(entries.length?'<div class="customer-history-list">'+entries.map(p=>'<article class="customer-history-item"><div class="customer-history-icon">✓</div><div class="customer-history-main"><b>'+esc(p.accountLabel)+'</b><small>'+esc(p.date||'ရက်စွဲမရှိ')+' · '+esc(p.apply||p.type||'ငွေပေးချေမှု')+'</small>'+(p.note?'<p>'+esc(p.note)+'</p>':'')+'</div><strong>'+esc(money(p.amount,p.accountCurrency))+'</strong></article>').join('')+'</div>':'<div class="customer-empty-history"><span>▤</span><b>ငွေဆပ်မှတ်တမ်း မရှိသေးပါ</b><p class="muted">Owner အတည်ပြုပြီးသော ငွေပေးချေမှုများ ဒီနေရာမှာ ပေါ်လာပါမယ်။</p></div>')+'</section>';
+  const entries=accounts.flatMap(a=>(Array.isArray(a.payments)?a.payments:[]).filter(p=>Number(p.amount)>0).map(p=>({...p,accountLabel:a.loanType||a.label||"ချေးငွေ",accountCurrency:p.currency||a.currency||"THB"}))).sort((a,b)=>String(b.date||"").localeCompare(String(a.date||"")));
+  const currencies=[...new Set(entries.map(p=>p.accountCurrency))];
+  const filters=currencies.map(cur=>'<span class="history-currency-chip">'+esc(cur)+'</span>').join("");
+  return '<section class="panel share-page customer-history-page" data-share-page="history"><header class="customer-page-heading"><small>PAYMENT RECORDS</small><h2>ငွေပေးချေမှုမှတ်တမ်း</h2><p>Owner အတည်ပြုပြီး စာရင်းသွင်းထားသော ငွေပေးချေမှုအားလုံး</p></header><div class="history-summary"><div><small>စုစုပေါင်း မှတ်တမ်း</small><b>'+entries.length+' ကြိမ်</b></div><div class="history-currency-list">'+(filters||'<span class="history-currency-chip">မှတ်တမ်းမရှိသေးပါ</span>')+'</div></div>'+(entries.length?'<div class="customer-history-list">'+entries.map((p,i)=>'<article class="customer-history-item"><span class="history-index">'+(i+1)+'</span><div class="customer-history-main"><b>'+esc(p.accountLabel)+'</b><small>'+esc(p.date||"ရက်စွဲမရှိ")+' · '+esc(p.apply||p.type||"ငွေပေးချေမှု")+'</small>'+(p.note?'<p>'+esc(p.note)+'</p>':'')+'</div><strong>'+esc(money(p.amount,p.accountCurrency))+'</strong></article>').join("")+'</div>':'<div class="customer-empty-history"><span>▤</span><b>ငွေပေးချေမှုမှတ်တမ်း မရှိသေးပါ</b><p>Owner က ငွေပေးချေမှုကို အတည်ပြုပြီးနောက် ဒီနေရာမှာ ပြသပါမယ်။</p></div>')+'</section>';
  })();
  $("app").innerHTML='<section class="panel share-page" data-share-page="summary"><div class="head"><div><span class="tag">Read only</span><h1>'+esc(share.borrowerName||s.person||"Borrower")+'</h1></div></div></section>'+
  summaryMarkup+
