@@ -857,8 +857,7 @@ function render(){
   const filters=currencies.map(cur=>'<span class="history-currency-chip">'+esc(cur)+'</span>').join("");
   return '<section class="panel share-page customer-history-page" data-share-page="history"><header class="customer-page-heading"><small>PAYMENT RECORDS</small><h2>ငွေပေးချေမှုမှတ်တမ်း</h2><p>Owner အတည်ပြုပြီး စာရင်းသွင်းထားသော ငွေပေးချေမှုအားလုံး</p></header><div class="history-summary"><div><small>စုစုပေါင်း မှတ်တမ်း</small><b>'+entries.length+' ကြိမ်</b></div><div class="history-currency-list">'+(filters||'<span class="history-currency-chip">မှတ်တမ်းမရှိသေးပါ</span>')+'</div></div>'+(entries.length?'<div class="customer-history-list">'+entries.map((p,i)=>'<article class="customer-history-item"><span class="history-index">'+(i+1)+'</span><div class="customer-history-main"><b>'+esc(p.accountLabel)+'</b><small>'+esc(p.date||"ရက်စွဲမရှိ")+' · '+esc(p.apply||p.type||"ငွေပေးချေမှု")+'</small>'+(p.note?'<p>'+esc(p.note)+'</p>':'')+'</div><strong>'+esc(money(p.amount,p.accountCurrency))+'</strong></article>').join("")+'</div>':'<div class="customer-empty-history"><span>▤</span><b>ငွေပေးချေမှုမှတ်တမ်း မရှိသေးပါ</b><p>Owner က ငွေပေးချေမှုကို အတည်ပြုပြီးနောက် ဒီနေရာမှာ ပြသပါမယ်။</p></div>')+'</section>';
  })();
- $("app").innerHTML='<section class="panel share-page" data-share-page="summary"><div class="head"><div><span class="tag">Read only</span><h1>'+esc(share.borrowerName||s.person||"Borrower")+'</h1></div></div></section>'+
- summaryMarkup+
+ $("app").innerHTML=summaryMarkup+
  historyMarkup+
  payrollAttendanceMarkup(s.payrollAttendance)+
  ownerDataPanel(share.ownerData)+
@@ -1693,6 +1692,101 @@ footer{color:#8994a3!important;font-size:10px!important}
 @media(max-width:420px){
  #app .share-bottom-nav{padding-left:6px!important;padding-right:6px!important}
  #app .share-bottom-nav button small{font-size:9px!important}
+}
+</style>
+
+
+<style id="fm-borrower-compact-layout-v2">
+/* Compact the complete borrower experience without changing account data or actions */
+:root{--fm-navy:#101c33;--fm-gold:#d8b56d}
+html,body{overflow-x:hidden!important}
+.wrap{
+ max-width:680px!important;
+ padding:8px 10px calc(88px + env(safe-area-inset-bottom))!important;
+}
+.brand{
+ padding:5px 2px 8px!important;margin:0 2px 8px!important;gap:8px!important;
+}
+.brand .logo{width:34px!important;height:34px!important;flex-basis:34px!important}
+.brand .brand-title b{font-size:14px!important;line-height:1.15!important}
+.brand .brand-title small{font-size:8px!important}
+#status{padding:9px 11px!important;margin:0 0 8px!important;font-size:10px!important;line-height:1.35!important}
+#app{gap:8px!important}
+#app>.panel,#app .share-page{padding:12px!important;border-radius:14px!important}
+#app .fm-customer-home{padding:0!important;border-radius:16px!important}
+#app .fm-customer-home .fm-customer-welcome{
+ padding:10px 13px 11px!important;
+ background:linear-gradient(135deg,#101c33,#193957)!important;
+}
+#app .fm-customer-home .fm-brand-row{display:none!important}
+#app .fm-customer-home .fm-profile-row{
+ padding:0!important;margin:0!important;gap:9px!important;align-items:center!important;
+}
+#app .fm-customer-home .fm-profile-avatar{
+ width:34px!important;height:34px!important;flex:0 0 34px!important;
+ font-size:14px!important;border-radius:10px!important;
+}
+#app .fm-customer-home .fm-profile-copy small{font-size:9px!important}
+#app .fm-customer-home .fm-profile-copy h2{font-size:16px!important;line-height:1.2!important;margin:1px 0!important}
+#app .fm-customer-home .fm-profile-copy p{font-size:9px!important;line-height:1.35!important;margin:0!important}
+#app .fm-customer-home .customer-section-heading{
+ margin:10px 12px 7px!important;gap:7px!important;
+}
+#app .fm-customer-home .customer-section-heading small{font-size:7px!important;letter-spacing:1px!important}
+#app .fm-customer-home .customer-section-heading h3{font-size:14px!important;line-height:1.25!important;margin:1px 0!important;color:#fff!important;-webkit-text-fill-color:#fff!important}
+#app .fm-customer-home .customer-section-heading p{font-size:9px!important;line-height:1.35!important;margin:0!important;color:#c5d2e1!important}
+#app .fm-customer-home .readonly-pill,#app .fm-customer-home .loan-count-pill{
+ padding:5px 7px!important;font-size:8px!important;border-radius:7px!important;
+}
+#app .fm-customer-home .currency-ledger-stack,
+#app .fm-customer-home .customer-loan-list{
+ margin:0 10px!important;gap:8px!important;
+}
+#app .fm-customer-home .currency-ledger-card,
+#app .fm-customer-home .loan-ledger-card{border-radius:11px!important}
+#app .fm-customer-home .currency-ledger-card>header,
+#app .fm-customer-home .loan-ledger-heading{padding:8px 10px!important}
+#app .fm-customer-home .currency-ledger-total{padding:9px 10px 7px!important}
+#app .fm-customer-home .currency-ledger-total strong,
+#app .fm-customer-home .loan-ledger-total strong{font-size:22px!important;margin:2px 0!important}
+#app .fm-customer-home .currency-ledger-rows{padding:0 10px 4px!important}
+#app .fm-customer-home .currency-ledger-rows>div{padding:6px 0!important;gap:7px!important}
+#app .fm-customer-home .currency-ledger-rows span{font-size:9px!important}
+#app .fm-customer-home .currency-ledger-rows b{font-size:10px!important}
+#app .fm-customer-home .loan-ledger-total{padding:9px 10px!important}
+#app .fm-customer-home .loan-ledger-section{padding:7px 10px 3px!important}
+#app .fm-customer-home .ledger-row{padding:6px 0!important;gap:7px!important}
+#app .fm-customer-home .ledger-row-copy b{font-size:9px!important}
+#app .fm-customer-home .ledger-row-copy small{font-size:8px!important}
+#app .fm-customer-home .ledger-row>strong{font-size:10px!important}
+#app .fm-customer-home .loan-detail-toggle{margin:6px 10px 8px!important}
+#app .fm-customer-home .loan-detail-toggle>summary{padding:7px 9px!important;font-size:9px!important}
+#app .fm-customer-home .ledger-note,#app .fm-customer-home .ledger-owner-alert{margin:6px 10px!important;padding:8px!important}
+#app .fm-customer-home .customer-security-note{margin:9px 10px!important;padding:8px!important}
+#app .share-page[data-share-page="history"],
+#app .share-page[data-share-page="request"],
+#app .share-page[data-share-page="settings"]{padding:12px!important;border-radius:14px!important}
+#app .share-page[data-share-page="history"] .customer-page-heading{margin-bottom:9px!important}
+#app .share-page[data-share-page="history"] .customer-page-heading h2{font-size:16px!important}
+#app .share-page[data-share-page="history"] .customer-history-item{padding:9px 1px!important}
+#app .share-page[data-share-page="request"] .field{margin-bottom:8px!important}
+#app .share-page[data-share-page="request"] input,
+#app .share-page[data-share-page="request"] select,
+#app .share-page[data-share-page="request"] textarea{min-height:40px!important;padding:9px 10px!important}
+#app .share-page[data-share-page="settings"] article.panel{padding:10px!important;margin:8px 0!important}
+#app .share-bottom-nav{
+ left:0!important;right:0!important;width:100%!important;max-width:none!important;
+ margin:0!important;transform:none!important;
+ padding:5px 7px calc(5px + env(safe-area-inset-bottom))!important;
+ border-radius:14px 14px 0 0!important;
+}
+#app .share-bottom-nav button{min-height:46px!important;padding:4px 1px!important;gap:3px!important}
+#app .share-bottom-nav button span{font-size:16px!important}
+#app .share-bottom-nav button small{font-size:8px!important;line-height:1.1!important}
+@media(min-width:600px){
+ .wrap{padding-left:14px!important;padding-right:14px!important}
+ #app .fm-customer-home .currency-ledger-stack,
+ #app .fm-customer-home .customer-loan-list{margin-left:14px!important;margin-right:14px!important}
 }
 </style>
 
