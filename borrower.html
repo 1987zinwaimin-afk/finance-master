@@ -1350,4 +1350,51 @@ body{background:radial-gradient(ellipse at 50% -15%,#24496c 0,#102b47 38%,#07162
 }
 </style>
 
+
+<style id="fm-customer-stop-horizontal-overflow-fix">
+/* Keep the borrower portal centered in the viewport; expand cards only within it */
+@media(max-width:760px){
+  html,body{
+    width:100%!important;max-width:100%!important;
+    overflow-x:clip!important;
+  }
+  .wrap{
+    width:100%!important;max-width:100%!important;
+    margin:0 auto!important;
+    padding-left:8px!important;padding-right:8px!important;
+    box-sizing:border-box!important;
+  }
+  #app{
+    width:100%!important;max-width:100%!important;
+    min-width:0!important;margin:0!important;
+    overflow-x:clip!important;box-sizing:border-box!important;
+  }
+  #app .fm-customer-home,
+  #app .share-page[data-share-page="summary"]{
+    width:100%!important;max-width:100%!important;
+    min-width:0!important;margin-left:0!important;margin-right:0!important;
+    box-sizing:border-box!important;overflow-x:clip!important;
+  }
+  #app .fm-customer-home .currency-ledger-stack,
+  #app .fm-customer-home .customer-loan-list{
+    display:grid!important;
+    width:100%!important;max-width:100%!important;min-width:0!important;
+    margin-left:0!important;margin-right:0!important;
+    padding-left:10px!important;padding-right:10px!important;
+    box-sizing:border-box!important;
+  }
+  #app .fm-customer-home .currency-ledger-card,
+  #app .fm-customer-home .loan-ledger-card{
+    width:100%!important;max-width:100%!important;min-width:0!important;
+    margin-left:0!important;margin-right:0!important;
+    box-sizing:border-box!important;
+  }
+  #app .fm-customer-home .customer-section-heading{
+    min-width:0!important;max-width:100%!important;
+    padding-left:12px!important;padding-right:12px!important;
+    box-sizing:border-box!important;
+  }
+}
+</style>
+
 </body></html>
