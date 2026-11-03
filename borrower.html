@@ -1233,6 +1233,20 @@ main.wrap{margin-left:auto!important;margin-right:auto!important;padding-left:12
 #app .fm-customer-home .ledger-row>strong{min-width:0!important;width:100%!important;max-width:100%!important;white-space:normal!important;text-align:right!important;overflow-wrap:anywhere!important;word-break:break-word!important}
 @media(max-width:480px){main.wrap{padding-left:10px!important;padding-right:10px!important}#app .fm-customer-home .loan-ledger-section{padding-left:10px!important;padding-right:10px!important}}
 </style>
+
+<style id="fm-customer-ledger-width-correction-v2">
+/* Cancel previous over-expansion that shifted the customer loan ledger off-screen */
+@media(max-width:760px){
+ .wrap{width:100%!important;max-width:100%!important;margin:0 auto!important;padding-left:8px!important;padding-right:8px!important;box-sizing:border-box!important}
+ #app .fm-customer-home .currency-ledger-stack,
+ #app .fm-customer-home .customer-loan-list{width:100%!important;max-width:100%!important;min-width:0!important;margin-left:0!important;margin-right:0!important;padding-left:0!important;padding-right:0!important;box-sizing:border-box!important;overflow:visible!important}
+ #app .fm-customer-home .loan-ledger-card,
+ #app .fm-customer-home .currency-ledger-card{width:100%!important;max-width:100%!important;min-width:0!important;margin-left:0!important;margin-right:0!important;box-sizing:border-box!important}
+ #app .fm-customer-home .loan-ledger-section{padding-left:12px!important;padding-right:12px!important}
+ #app .fm-customer-home .ledger-row{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,44%)!important;gap:8px!important}
+ #app .fm-customer-home .ledger-row>strong{max-width:100%!important;min-width:0!important;white-space:normal!important;overflow-wrap:anywhere!important}
+}
+</style>
 </head>
 <body><main class="wrap">
 <div class="brand"><img class="logo brand-logo-img" src="/borrower-icon.svg?v=finance-logo-20261023" alt="Finance Master logo" width="44" height="44"><div class="brand-title"><b>Finance Master</b><small>PRIVATE BORROWER PORTAL</small></div><label class="language-wrap"><span id="languageLabel">Language</span><select id="languageSelect" aria-label="Language"><option value="my">မြန်မာ</option><option value="en">English</option><option value="th">ไทย</option></select></label></div>
