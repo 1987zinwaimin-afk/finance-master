@@ -1043,4 +1043,30 @@ boot();;
 })();
 </script>
 
-</body></html>
+<style id="finance-master-final-customer-contrast">
+/* Final cascade override: remove legacy pale cards from the navy/gold portal */
+#app .share-page[data-share-page="summary"] article.panel,
+#app .share-page[data-share-page="summary"] article.panel .metric,
+#app .share-page[data-share-page="summary"] article.panel .metric-icon{
+ background:linear-gradient(145deg,#1c3b59,#102943)!important;
+ color:#f5f7fb!important;border:1px solid #456684!important;
+ box-shadow:inset 0 1px #ffffff12!important
+}
+#app .share-page[data-share-page="summary"] article.panel .metric small,
+#app .share-page[data-share-page="summary"] article.panel .metric b,
+#app .share-page[data-share-page="summary"] article.panel .metric strong,
+#app .share-page[data-share-page="summary"] article.panel .metric span{color:#f4f7fb!important}
+#app .share-page[data-share-page="summary"] article.panel .metric small{color:#bdcde0!important}
+#app .share-page[data-share-page="summary"] article.panel .metric-icon{color:#f0d38e!important}
+#app .share-page[data-share-page="summary"] article.panel>div:nth-child(3){background:linear-gradient(145deg,#173653,#102943)!important;border:1px solid #456684!important}
+#app .share-page[data-share-page="summary"] article.panel .notice{background:linear-gradient(145deg,#4a3b20,#302817)!important;color:#f8e7bd!important;border:1px solid #927543!important}
+#app .share-page[data-share-page="summary"] article.panel .notice *{color:#f8e7bd!important}
+#app .share-page[data-share-page="summary"] article.panel .loan-title-open{color:#fff!important}
+#app .share-page[data-share-page="summary"] article.panel .loan-detail-toggle{background:#102943!important;border-color:#496987!important}
+#app .share-page[data-share-page="summary"] article.panel .loan-detail-toggle>summary,
+#app .share-page[data-share-page="summary"] article.panel .loan-detail-toggle>summary *{background:#193956!important;color:#f5f7fb!important}
+@media(max-width:480px){
+ #app .share-page[data-share-page="summary"] article.panel .metric{min-height:82px!important;padding:11px 9px!important;border-radius:15px!important}
+ #app .share-page[data-share-page="summary"] article.panel .metric b{font-size:clamp(12px,3.3vw,15px)!important;overflow-wrap:anywhere!important}
+}
+</style></body></html>
