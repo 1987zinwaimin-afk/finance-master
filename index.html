@@ -1521,7 +1521,7 @@ async function createSelectedBorrowerShare(accountId){
   const shares=window.fmBorrowerCloud.shares||[];
   let sh=shares.find(x=>x.active&&Array.isArray(x.accountIds)&&x.accountIds.length===sortedIds.length&&x.accountIds.slice().sort().every((id,i)=>id===sortedIds[i]));
   let url;
-  if(sh){await window.fmBorrowerCloud.updateShare(sh.id,snapshot);url=borrowerShareUrl(sh.id,sh.borrowerName||snapshot.person||l.person);}
+  if(sh){await window.fmBorrowerCloud.updateShare(sh.id,snapshot);url=borrowerShareUrl(sh.id,sh.borrowerName||snapshot.person||loan.person);}
   else{url=await window.fmBorrowerCloud.createShare(loan.id,snapshot);sh=(window.fmBorrowerCloud.shares||[]).find(x=>x.accountId===loan.id&&x.active&&Array.isArray(x.accountIds)&&x.accountIds.length===ids.length&&ids.every(id=>x.accountIds.includes(id)));}
   closeModal();showBorrowerShareActions(url,loan.person+' · '+ids.length+' selected loan account(s)');
  }catch(e){toast('Could not create Share Link: '+String(e?.message||e));}
