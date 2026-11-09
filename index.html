@@ -831,6 +831,55 @@ input,select,textarea{border-radius:11px!important}
 @media(max-width:700px){.dashboard-hero{padding:22px 19px;min-height:0;border-radius:18px;gap:18px}.dashboard-hero-actions{align-items:flex-start;flex-direction:row;justify-content:space-between;flex-wrap:wrap}.dashboard-live{align-self:center}.dashboard-hero .goldbtn{padding:11px 13px}.dashboard-currency-panel .panelhead{padding:16px 15px 11px}.dashboard-currency-panel .dashboard-metrics{padding:0 14px 15px}}
 </style>
 
+
+<style id="fm-ledger-pages-redesign-v1">
+/* Income and Expenses: unified ledger workspace, presentation-only */
+#content:has(.pagehead) .pagehead{
+ display:flex;align-items:center;justify-content:space-between;gap:18px;
+ padding:23px 25px;margin:0 0 20px;border-radius:19px;
+ background:linear-gradient(112deg,#142744,#203858);
+ border:1px solid rgba(217,182,111,.22);
+ box-shadow:0 12px 28px rgba(15,31,56,.10);color:#fff
+}
+#content:has(.pagehead) .pagehead h1{color:#fff;font-size:clamp(24px,2.7vw,31px);letter-spacing:-.8px;margin:0 0 7px}
+#content:has(.pagehead) .pagehead p{color:#c4d0e1;margin:0;font-size:12px;line-height:1.6}
+#content:has(.pagehead) .pagehead .primary{background:linear-gradient(135deg,#f0d9a5,#d4ad61)!important;color:#17243a!important;border:0!important;white-space:nowrap;box-shadow:0 7px 18px rgba(0,0,0,.16)!important}
+#content:has(.pagehead)>.cards{gap:13px;margin:0 0 19px}
+#content:has(.pagehead)>.cards .metric{border:1px solid var(--line);border-radius:16px;padding:17px 18px;box-shadow:0 7px 22px rgba(19,36,64,.045);background:var(--card)}
+#content:has(.pagehead)>.cards .metric .metrichead{color:var(--muted);font-size:11px;font-weight:700}
+#content:has(.pagehead)>.cards .metric>strong{font-size:clamp(19px,2vw,25px);letter-spacing:-.5px;color:var(--navy)}
+#content:has(.pagehead)>.panel,#content:has(.pagehead) .panel{border-radius:17px;border-color:var(--line);box-shadow:0 7px 24px rgba(19,36,64,.045)}
+#content:has(.pagehead) .panelhead{padding:18px 20px 13px}
+#content:has(.pagehead) .panelhead h2,#content:has(.pagehead) .panel>h2{color:var(--navy);font-size:15px}
+#content:has(.pagehead) .toolbar{display:flex;gap:9px;flex-wrap:wrap;padding:13px 16px;border-bottom:1px solid var(--line);background:rgba(242,245,250,.55)}
+#content:has(.pagehead) .toolbar input,#content:has(.pagehead) .toolbar select{min-height:40px;background:var(--card);border:1px solid var(--line);padding:9px 12px;min-width:145px}
+#content:has(.pagehead) .tablewrap{padding:0 15px 13px}
+#content:has(.pagehead) table{border-collapse:separate;border-spacing:0;width:100%}
+#content:has(.pagehead) thead th{background:#f4f6fa;color:#6d7b91;font-size:10px;letter-spacing:.45px;text-transform:uppercase;padding:12px 10px}
+#content:has(.pagehead) tbody td{padding:13px 10px;border-bottom:1px solid #edf0f5;font-size:12px}
+#content:has(.pagehead) tbody tr:last-child td{border-bottom:0}
+#content:has(.pagehead) .linkbtn{color:#8b6a32;font-weight:750}
+#content:has(.pagehead) .expense-group-manager{padding-bottom:14px}
+#content:has(.pagehead) .expense-group-chip{border:1px solid var(--line);border-radius:12px;background:var(--card);box-shadow:0 3px 12px rgba(19,36,64,.035)}
+#content:has(.pagehead) .expense-page-hint{border:1px solid rgba(217,182,111,.3);background:rgba(217,182,111,.10);border-radius:10px;padding:9px 12px;color:#82652f;font-size:11px;margin:0 0 12px}
+#content:has(.pagehead) .expense-page-slide>h2{font-size:14px;color:var(--navy);margin:0 0 12px}
+@media(max-width:700px){
+ #content:has(.pagehead) .pagehead{padding:18px 16px;align-items:flex-start;flex-direction:column;border-radius:16px;gap:13px}
+ #content:has(.pagehead) .pagehead .primary{width:100%}
+ #content:has(.pagehead)>.cards{gap:9px}
+ #content:has(.pagehead)>.cards .metric{padding:13px 12px}
+ #content:has(.pagehead) .panelhead{padding:15px 14px 11px}
+ #content:has(.pagehead) .toolbar{padding:10px;gap:7px}
+ #content:has(.pagehead) .toolbar input,#content:has(.pagehead) .toolbar select{min-width:0;flex:1 1 100%;width:100%}
+ #content:has(.pagehead) .tablewrap{padding:0 9px 10px}
+ #content:has(.pagehead) tbody td{padding:11px 8px;font-size:11px}
+}
+body.fm-dark:not(.fm-login-mode) #content:has(.pagehead) .pagehead{background:linear-gradient(112deg,#111f36,#1b304e)}
+body.fm-dark:not(.fm-login-mode) #content:has(.pagehead) thead th{background:#1b2a41}
+body.fm-dark:not(.fm-login-mode) #content:has(.pagehead) .toolbar{background:#142238}
+body.fm-dark:not(.fm-login-mode) #content:has(.pagehead)>.cards .metric>strong{color:var(--ink)}
+</style>
+
 </head>
 <body>
 <div class="app">
