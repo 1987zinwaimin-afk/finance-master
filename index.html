@@ -1531,6 +1531,57 @@ function saveExpenseReportPDF(){const rows=selectedReportExpenses(),cur=reportCu
 }
 </style>
 
+
+<style id="fm-chat-account-polish-v1">
+/* Chat, borrower conversation and individual account detail presentation */
+#content .chat-list-panel{overflow:hidden;border-radius:18px}
+#content .chat-list-title{padding:16px 17px;border-bottom:1px solid var(--line)}
+#content .chat-list-title>b{font-size:16px;color:var(--text)}
+#content .chat-list-title>p{font-size:11px;color:var(--muted);margin:5px 0 0}
+#content .chat-contact{display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--text);text-align:left}
+#content .chat-contact:last-child{border-bottom:0}
+#content .chat-contact:hover{background:color-mix(in srgb,var(--gold) 7%,transparent)}
+#content .chat-avatar{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;border-radius:50%;background:linear-gradient(145deg,#142b50,#294a72);color:#f1d99b;font-weight:800}
+#content .chat-contact-text{display:flex;flex:1;min-width:0;flex-direction:column;gap:4px}
+#content .chat-contact-text b{font-size:13px;overflow-wrap:anywhere}
+#content .chat-contact-text small{font-size:10px;color:var(--muted)}
+#content .chat-chevron{font-size:22px;color:var(--gold)}
+#content .chat-window{overflow:hidden;border-radius:18px}
+#content .chat-window-head{display:flex;align-items:center;gap:11px;padding:13px 15px;background:linear-gradient(120deg,#102544,#1d3a60);color:#fff}
+#content .chat-window-head .chat-person-title{display:flex;flex-direction:column;gap:4px;min-width:0}
+#content .chat-window-head .chat-person-title b{font-size:14px;color:#fff}
+#content .chat-window-head .chat-person-title small{font-size:10px;color:#d7dfeb}
+#content .chat-window-head .chat-back{display:grid;place-items:center;flex:0 0 38px;width:38px;height:38px;border:1px solid #ffffff35;border-radius:11px;background:#ffffff12;color:#f2d99e}
+#content .chat-window-head .chat-back svg{width:19px;height:19px}
+#content .chat-messages{padding:16px;min-height:240px;max-height:min(58vh,620px);overflow-y:auto;background:color-mix(in srgb,var(--panel) 78%,var(--card))}
+#content .chat-compose{display:flex;align-items:flex-end;gap:8px;padding:12px;border-top:1px solid var(--line)}
+#content .chat-compose textarea{flex:1;min-width:0;resize:vertical;min-height:44px;max-height:130px;border-radius:12px}
+#content .chat-photo-button{display:grid;place-items:center;min-height:42px;padding:0 11px;border:1px solid var(--line);border-radius:11px;color:var(--text);font-size:11px;white-space:nowrap}
+#content .chat-compose button{min-height:42px}
+#content .person-tabs{display:flex;gap:7px;overflow-x:auto;padding:5px 0 12px}
+#content .person-tabs button{flex:1 0 105px;min-height:42px;border:1px solid var(--line);border-radius:11px;background:var(--card);color:var(--muted);font-size:11px}
+#content .person-tabs button.active{border-color:var(--gold);background:color-mix(in srgb,var(--gold) 13%,var(--card));color:var(--text);font-weight:800}
+#content .person-head .person-edit{margin-left:auto;flex:0 0 auto}
+#content .detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#content .detail-grid>*{min-width:0;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel);overflow-wrap:anywhere}
+#content .detail-panel .tablewrap{margin-top:10px}
+#content .target-warning{border-left:4px solid #c78c35}
+#content .ledger-table th,#content .ledger-table td{white-space:nowrap}
+@media(max-width:680px){
+ #content .chat-list-title{padding:13px}
+ #content .chat-contact{padding:12px}
+ #content .chat-avatar{flex-basis:38px;width:38px;height:38px}
+ #content .chat-messages{padding:11px;max-height:54vh}
+ #content .chat-compose{gap:6px;padding:9px}
+ #content .chat-photo-button{padding:0 8px;font-size:10px}
+ #content .chat-compose button{padding:9px 11px}
+ #content .detail-grid{grid-template-columns:1fr}
+ #content .person-head .person-title-row{flex-wrap:wrap}
+ #content .person-head .person-edit{margin-left:auto}
+ #content .person-tabs button{flex-basis:94px}
+}
+</style>
+
 </head><body><h1>Finance Master — Expense Report</h1><p>Period: '+escape(period)+' · Currency: '+escape(cur)+' · Generated: '+escape(new Date().toLocaleString())+'</p><div class="summary">Total expense records: <b>'+rows.length+'</b><div class="total">'+totalAmount.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})+' '+escape(cur)+'</div></div><h2>Expense groups</h2><table><thead><tr><th>Group</th><th>Total</th></tr></thead><tbody>'+groupRows+'</tbody></table><h2>Detailed expenses</h2><table><thead><tr><th>Date</th><th>Expense name</th><th>For whom</th><th>Group</th><th>Category</th><th>Payment</th><th>Amount</th><th>Note</th></tr></thead><tbody>'+(tableRows||'<tr><td colspan="8">No expense records for this period.</td></tr>')+'</tbody></table><p>THB and MMK are reported separately. Keep this report with your monthly records.</p><button onclick="window.print()">Print / Save as PDF</button><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body></html>');w.document.close();toast('Print dialog opened — choose Save as PDF')}
 function setReportCurrency(value){
  if(!['THB','MMK'].includes(value))return;
