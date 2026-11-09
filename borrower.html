@@ -1485,6 +1485,8 @@ function closeBankQrModal(){const modal=$("bankQrModal");if(modal)modal.hidden=t
 function showBankQr(){
  const modal=$("bankQrModal"),out=$("bankQrResult");
  if(!modal||!out){setStatus("Bank QR Popup မတွေ့ပါ။ Customer page ကို ပြန်ဖွင့်ပါ။","error");return;}
+ /* The modal is rendered inside the hidden Pay Request tab. Move it to body so Home quick-repay can display it above hidden tabs. */
+ if(modal.parentElement!==document.body)document.body.appendChild(modal);
  const amount=Number($("amount")?.value||0),selectedId=$("requestAccountId")?.value||share.accountId;
  const accounts=Array.isArray(share.snapshot?.accounts)&&share.snapshot.accounts.length?share.snapshot.accounts:[share.snapshot||{}];
  const account=accounts.find(a=>a.accountId===selectedId)||share.snapshot||{};
