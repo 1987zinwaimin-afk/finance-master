@@ -1296,6 +1296,33 @@ main.wrap{margin-left:auto!important;margin-right:auto!important;padding-left:12
  #app .customer-history-group-head>strong{font-size:12px;max-width:112px}
  #app .customer-history-group-list{padding:0 10px}
 }
+</style><style id="fm-history-account-table-v2">
+#app .customer-history-table-head,#app .customer-history-account-row{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr) minmax(0,1fr);gap:8px;align-items:center}
+#app .customer-history-table-head{padding:9px 11px;color:#8b7854;font-size:10px;font-weight:800;background:#f8f5ed;border:1px solid #ebe4d5;border-radius:11px 11px 0 0}
+#app .customer-history-account-list{display:grid;gap:8px;margin-top:8px}
+#app .customer-history-account{border:1px solid #e5e9ef;border-radius:13px;background:#fff;overflow:hidden}
+#app .customer-history-account-row{list-style:none;padding:12px 10px;cursor:pointer}
+#app .customer-history-account-row::-webkit-details-marker{display:none}
+#app .customer-history-account-name,#app .customer-history-account-balance,#app .customer-history-account-paid{display:flex;flex-direction:column;gap:5px;min-width:0}
+#app .customer-history-account-name small,#app .customer-history-account-balance small,#app .customer-history-account-paid small{font-size:9px;color:#8792a1}
+#app .customer-history-account-name b{font-size:12px;color:#1b2d48;overflow-wrap:anywhere}
+#app .customer-history-account-name em{font-size:9px;color:#a1844b;font-style:normal}
+#app .customer-history-account-balance b,#app .customer-history-account-paid b{font-size:11px;color:#1d2d45;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+#app .customer-history-account-paid b{color:#16785d}
+#app .customer-history-account[open]{border-color:#d8c391;box-shadow:0 4px 14px #15243a08}
+#app .customer-history-account[open] .customer-history-account-name em{color:#16785d}
+#app .customer-history-account-details{padding:13px;border-top:1px solid #eee8dc;background:#fcfcfb}
+#app .customer-history-account-details h4{margin:4px 0 8px;color:#1a2d49;font-size:12px}
+#app .customer-history-account-details h4:not(:first-child){margin-top:16px}
+#app .customer-history-account-details h4 small{color:#8792a1;font-size:10px;font-weight:500}
+#app .customer-history-account-details .ledger-row{padding:8px 0}
+@media(max-width:390px){
+ #app .customer-history-table-head,#app .customer-history-account-row{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr);gap:5px}
+ #app .customer-history-table-head{font-size:9px;padding:8px 7px}
+ #app .customer-history-account-row{padding:10px 7px}
+ #app .customer-history-account-name b{font-size:11px}
+ #app .customer-history-account-balance b,#app .customer-history-account-paid b{font-size:10px}
+}
 </style></head>
 <body><main class="wrap">
 <div class="brand"><img class="logo brand-logo-img" src="/borrower-icon.svg?v=finance-logo-20261023" alt="Finance Master logo" width="44" height="44"><div class="brand-title"><b>Finance Master</b><small>PRIVATE BORROWER PORTAL</small></div><label class="language-wrap"><span id="languageLabel">Language</span><select id="languageSelect" aria-label="Language"><option value="my">မြန်မာ</option><option value="en">English</option><option value="th">ไทย</option></select></label></div>
@@ -1486,16 +1513,28 @@ function render(){
  const historyMarkup=(()=>{
   const groups=accounts.map((a,index)=>{
    const payments=(Array.isArray(a.payments)?a.payments:[]).filter(p=>Number(p.amount)>0).slice().sort((x,y)=>String(y.date||"").localeCompare(String(x.date||"")));
-   return {account:a,index,payments,currency:a.currency||"THB",total:payments.reduce((sum,p)=>sum+Math.max(0,Number(p.amount)||0),0)};
-  }).filter(g=>g.payments.length);
-  const entries=groups.reduce((sum,g)=>sum+g.payments.length,0);
+   const currency=a.currency||"THB",principal=Math.max(0,Number(a.principalOutstanding)||0),interest=Math.max(0,Number(a.interestOutstanding)||0);
+   const paid=payments.reduce((sum,p)=>sum+Math.max(0,Number(p.amount)||0),0);
+   const remaining=principal+interest;
+   return {account:a,index,payments,currency,paid,remaining,principal,interest};
+  });
   const currencies=[...new Set(groups.map(g=>g.currency))];
-  const filters=currencies.map(cur=>'<span class="history-currency-chip">'+esc(cur)+'</span>').join("");
-  const groupMarkup=groups.map(g=>{
-   const label=g.account.loanType||g.account.label||("ချေးငွေအကောင့် "+(g.index+1));
-   return '<section class="customer-history-group"><header class="customer-history-group-head"><div><small>LOAN ACCOUNT '+(g.index+1)+'</small><h3>'+esc(label)+'</h3><p>'+esc(g.currency)+' · '+g.payments.length+' ကြိမ် သွင်းထားသည်</p></div><strong>'+esc(money(g.total,g.currency))+'</strong></header><div class="customer-history-group-list">'+g.payments.map((p,i)=>'<article class="customer-history-item"><span class="history-index">'+(i+1)+'</span><div class="customer-history-main"><b>'+esc(p.apply||p.type||"ငွေပေးချေမှု")+'</b><small>'+esc(p.date||"ရက်စွဲမရှိ")+'</small>'+(p.note?'<p>'+esc(p.note)+'</p>':'')+'</div><strong>'+esc(money(p.amount,p.currency||g.currency))+'</strong></article>').join("")+'</div></section>';
+  const rows=groups.map(g=>{
+   const a=g.account,label=a.loanType||a.label||("ချေးငွေအကောင့် "+(g.index+1));
+   const paymentRows=g.payments.length?g.payments.map((p,i)=>'<article class="ledger-history-row is-paid"><div class="ledger-history-date"><b>'+esc(p.date||"ရက်စွဲမရှိ")+'</b><small>'+esc(p.apply||p.type||"ငွေပေးချေမှု")+'</small></div><div class="ledger-history-amount"><b class="ledger-amount-paid">'+esc(money(p.amount,p.currency||g.currency))+'</b><small class="ledger-paid">✓ ပေးချေပြီး</small>'+(p.note?'<small>'+esc(p.note)+'</small>':'')+'</div></article>').join(""):'<div class="ledger-empty">ငွေသွင်းမှတ်တမ်း မရှိသေးပါ။</div>';
+   const detailRows=[
+    ['မူရင်းချေးငွေ',money(a.principal,g.currency)],
+    ['ပြန်ဆပ်ပြီးငွေ',money(g.paid,g.currency)],
+    ['ကျန်ရှိသော အရင်းငွေ',money(g.principal,g.currency)],
+    ['ကျန်ရှိသော အတိုး',money(g.interest,g.currency)],
+    ['အတိုးနှုန်း',String(a.rate||0)+'% · '+(a.period==='yearly'?'နှစ်စဉ်':a.period==='none'?'အတိုးမရှိ':'လစဉ်')],
+    ['လစဉ်အတိုး',String(a.interestType||'normal')==='paused'?'အတိုးရပ်ထားသည်':money(a.monthlyInterest,g.currency)],
+    ...(Number(a.monthlyTarget)>0?[['လစဉ်သတ်မှတ်ပေးငွေ',money(a.monthlyTarget,g.currency)]]:[]),
+    ...(a.due?[['ပေးဆပ်ရမည့်ရက်',a.due]]:[])
+   ].map(([k,v])=>'<div class="ledger-row"><div class="ledger-row-copy"><b>'+esc(k)+'</b></div><strong>'+esc(v)+'</strong></div>').join("");
+   return '<details class="customer-history-account"><summary class="customer-history-account-row"><span class="customer-history-account-name"><small>ချေးငွေအကောင့် '+(g.index+1)+'</small><b>'+esc(label)+'</b><em>အသေးစိတ်ကြည့်ရန်＋</em></span><span class="customer-history-account-balance"><small>ချေးငွေကျန်ငွေ</small><b>'+esc(money(g.remaining,g.currency))+'</b></span><span class="customer-history-account-paid"><small>သွင်းပြီးငွေ</small><b>'+esc(money(g.paid,g.currency))+'</b></span></summary><div class="customer-history-account-details"><h4>ချေးငွေအသေးစိတ်</h4>'+detailRows+(a.note?'<div class="ledger-note"><b>Owner ၏ မှတ်ချက်</b><p>'+esc(a.note)+'</p></div>':'')+(a.underpaymentMessage?'<div class="ledger-owner-alert"><b>Owner ထံမှ အသိပေးချက်</b><p>'+esc(a.underpaymentMessage)+'</p></div>':'')+'<h4>ငွေပေးချေမှုမှတ်တမ်း <small>'+g.payments.length+' ကြိမ်</small></h4>'+paymentRows+'</div></details>';
   }).join("");
-  return '<section class="panel share-page customer-history-page" data-share-page="history"><header class="customer-page-heading"><small>PAYMENT RECORDS</small><h2>ငွေပေးချေမှုမှတ်တမ်း</h2><p>ချေးငွေအကောင့်တစ်ခုချင်းစီအလိုက် သီးခြားခွဲပြထားပါသည်။</p></header><div class="history-summary"><div><small>စုစုပေါင်း မှတ်တမ်း</small><b>'+entries+' ကြိမ်</b></div><div class="history-currency-list">'+(filters||'<span class="history-currency-chip">မှတ်တမ်းမရှိသေးပါ</span>')+'</div></div>'+(entries?'<div class="customer-history-groups">'+groupMarkup+'</div>':'<div class="customer-empty-history"><span>▤</span><b>ငွေပေးချေမှုမှတ်တမ်း မရှိသေးပါ</b><p>Owner က ငွေပေးချေမှုကို အတည်ပြုပြီးနောက် ဒီနေရာမှာ ပြသပါမယ်။</p></div>')+'</section>';
+  return '<section class="panel share-page customer-history-page" data-share-page="history"><header class="customer-page-heading"><small>LOAN ACCOUNTS</small><h2>ချေးငွေ History</h2><p>ချေးငွေအမျိုးအစားတစ်ခုချင်းစီ၏ ကျန်ငွေနှင့် သွင်းပြီးငွေကို ကြည့်ပါ။ အမည်ကိုနှိပ်လျှင် အသေးစိတ်ပေါ်လာပါမည်။</p></header><div class="customer-history-table-head"><span>ချေးငွေအမျိုးအစား</span><span>ကျန်ငွေ</span><span>သွင်းပြီးငွေ</span></div><div class="customer-history-account-list">'+(rows||'<div class="customer-empty-history"><span>▤</span><b>ချေးငွေမှတ်တမ်း မရှိသေးပါ</b></div>')+'</div><div class="history-currency-list">'+currencies.map(c=>'<span class="history-currency-chip">'+esc(c)+'</span>').join("")+'</div></section>';
  })();
  $("app").innerHTML=summaryMarkup+
  historyMarkup+
