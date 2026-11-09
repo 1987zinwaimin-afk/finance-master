@@ -1316,6 +1316,43 @@ main.wrap{margin-left:auto!important;margin-right:auto!important;padding-left:12
 #app .customer-history-account-details h4 small{color:#8792a1;font-size:10px;font-weight:500}
 #app .customer-history-account-details .ledger-row{padding:8px 0}
 @media(max-width:390px){#app .customer-history-table-head,#app .customer-history-account-row{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr);gap:5px}#app .customer-history-table-head{font-size:9px;padding:8px 7px}#app .customer-history-account-row{padding:10px 7px}#app .customer-history-account-name b{font-size:11px}#app .customer-history-account-balance strong,#app .customer-history-account-paid strong{font-size:10px}}
+</style><style id="fm-borrower-history-readable-v3">
+/* Strong readable contrast for loan details and payment history */
+#app .customer-history-account-details{background:#fffdf8!important;color:#20324b!important;padding:10px 12px!important}
+#app .customer-history-account-details h4{color:#172b46!important;font-size:13px!important;font-weight:850!important;margin:8px 0 7px!important}
+#app .customer-history-account-details h4 small{color:#68778c!important}
+#app .customer-history-account-details .ledger-row{padding:7px 0!important;gap:9px!important;border-bottom-color:#e8e3d8!important}
+#app .customer-history-account-details .ledger-row-copy{gap:2px!important}
+#app .customer-history-account-details .ledger-row-copy b{color:#263952!important;font-size:12px!important;font-weight:750!important}
+#app .customer-history-account-details .ledger-row-copy small{color:#68778c!important;font-size:10px!important;line-height:1.35!important}
+#app .customer-history-account-details .ledger-row>strong{color:#172b46!important;font-size:12px!important;font-weight:850!important}
+#app .customer-history-account-details .ledger-note,
+#app .customer-history-account-details .ledger-owner-alert{margin:8px 0!important;padding:10px 11px!important;background:#fff5dc!important;border:1px solid #e8d39c!important}
+#app .customer-history-account-details .ledger-note b,
+#app .customer-history-account-details .ledger-owner-alert b{color:#6b4d13!important;font-size:12px!important}
+#app .customer-history-account-details .ledger-note p,
+#app .customer-history-account-details .ledger-owner-alert p{color:#394b62!important;font-size:11px!important;line-height:1.5!important;margin:4px 0 0!important}
+#app .customer-history-account-details .ledger-history-row{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:8px!important;align-items:start!important;padding:8px 0!important;border-bottom:1px solid #e8e3d8!important}
+#app .customer-history-account-details .ledger-history-date,
+#app .customer-history-account-details .ledger-history-amount{display:flex!important;flex-direction:column!important;gap:3px!important;min-width:0!important}
+#app .customer-history-account-details .ledger-history-date b{color:#263952!important;font-size:12px!important;font-weight:800!important}
+#app .customer-history-account-details .ledger-history-date small,
+#app .customer-history-account-details .ledger-history-amount small{color:#65758b!important;font-size:10px!important;line-height:1.4!important;opacity:1!important}
+#app .customer-history-account-details .ledger-history-amount{text-align:right!important;max-width:none!important}
+#app .customer-history-account-details .ledger-history-amount b{color:#172b46!important;font-size:13px!important;font-weight:900!important;opacity:1!important}
+#app .customer-history-account-details .ledger-history-amount .ledger-paid{color:#087653!important;font-weight:800!important}
+#app .customer-history-account-details .ledger-history-amount .ledger-due{color:#a65d13!important;font-weight:800!important}
+#app .customer-history-account-details .ledger-empty{color:#68778c!important;padding:8px 0!important}
+#app .customer-history-account-details .ledger-details{margin:8px 0!important}
+#app .customer-history-account-details .ledger-details-content{padding:9px 10px!important}
+#app .customer-history-account-details .ledger-details-content h4{margin:5px 0 6px!important}
+@media(max-width:480px){
+ #app .customer-history-account-details{padding:9px 10px!important}
+ #app .customer-history-account-details .ledger-row{padding:6px 0!important}
+ #app .customer-history-account-details .ledger-history-row{padding:7px 0!important;gap:6px!important}
+ #app .customer-history-account-details .ledger-history-date b{font-size:11px!important}
+ #app .customer-history-account-details .ledger-history-amount b{font-size:12px!important}
+}
 </style></head>
 <body><main class="wrap">
 <div class="brand"><img class="logo brand-logo-img" src="/borrower-icon.svg?v=finance-logo-20261023" alt="Finance Master logo" width="44" height="44"><div class="brand-title"><b>Finance Master</b><small>PRIVATE BORROWER PORTAL</small></div><label class="language-wrap"><span id="languageLabel">Language</span><select id="languageSelect" aria-label="Language"><option value="my">မြန်မာ</option><option value="en">English</option><option value="th">ไทย</option></select></label></div>
