@@ -1353,6 +1353,18 @@ main.wrap{margin-left:auto!important;margin-right:auto!important;padding-left:12
  #app .customer-history-account-details .ledger-history-date b{font-size:11px!important}
  #app .customer-history-account-details .ledger-history-amount b{font-size:12px!important}
 }
+</style><style id="fm-borrower-notice-fold-v1">
+#app .borrower-notice-fold{margin:9px 14px 10px;border:1px solid #e8d9b2;border-radius:12px;background:#fffaf0;overflow:hidden}
+#app .borrower-notice-fold>summary{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:11px 12px;list-style:none;cursor:pointer;color:#59451f;font-size:12px;font-weight:800}
+#app .borrower-notice-fold>summary::-webkit-details-marker{display:none}
+#app .borrower-notice-fold>summary b{flex:0 0 auto;color:#94743c;font-size:10px;font-weight:750}
+#app .borrower-notice-fold[open]>summary{border-bottom:1px solid #eadfca;background:#f8f1e3}
+#app .borrower-notice-fold-body{padding:8px 10px 10px}
+#app .borrower-notice-fold-body .ledger-note,#app .borrower-notice-fold-body .ledger-owner-alert{margin:6px 0!important;padding:9px 10px!important}
+#app .borrower-notice-fold-body .notice{margin:6px 0!important;padding:10px 11px!important;border-width:1px!important;border-radius:10px!important;font-size:11px!important;line-height:1.5!important;box-shadow:none!important}
+#app .borrower-notice-fold-body .notice[role="alert"]{font-size:12px!important}
+#app .borrower-notice-fold-body .notice[role="alert"]>div:first-child{font-size:14px!important;margin-bottom:4px!important}
+#app .borrower-notice-fold-body .notice[role="alert"]>div:last-child{font-size:11px!important}
 </style></head>
 <body><main class="wrap">
 <div class="brand"><img class="logo brand-logo-img" src="/borrower-icon.svg?v=finance-logo-20261023" alt="Finance Master logo" width="44" height="44"><div class="brand-title"><b>Finance Master</b><small>PRIVATE BORROWER PORTAL</small></div><label class="language-wrap"><span id="languageLabel">Language</span><select id="languageSelect" aria-label="Language"><option value="my">မြန်မာ</option><option value="en">English</option><option value="th">ไทย</option></select></label></div>
@@ -1513,9 +1525,16 @@ function render(){
    (Number(a.monthlyTarget)>0?row("လစဉ်သတ်မှတ်ပေးငွေ",money(a.monthlyTarget,currency),"လစဉ်ပေးဆပ်ရန် သတ်မှတ်ထားသော ပမာဏ"):"")+
    (a.due?row("ပေးဆပ်ရမည့်ရက်",esc(a.due),"သတ်မှတ်ထားသော နောက်ဆုံးပေးချေရက်"):"")+
    '</section>'+
-   (a.note?'<section class="ledger-note"><b>Owner ၏ မှတ်ချက်</b><p>'+esc(a.note).replace(/\n/g,"<br>")+'</p></section>':'')+
-   (a.underpaymentMessage?'<section class="ledger-owner-alert"><b>Owner ထံမှ အသိပေးချက်</b><p>'+esc(a.underpaymentMessage).replace(/\n/g,"<br>")+'</p></section>':'')+
-   loanAlertMarkup(a)+
+   (()=>{
+    const alertHtml=loanAlertMarkup(a);
+    const hasNotes=!!(a.note||a.underpaymentMessage||alertHtml);
+    if(!hasNotes)return "";
+    const count=(a.note?1:0)+(a.underpaymentMessage?1:0)+(alertHtml?1:0);
+    return '<details class="borrower-notice-fold"><summary><span>🔔 သတိပေးချက်နှင့် Owner မှတ်ချက်</span><b>'+count+' ခု · ကြည့်ရန်＋</b></summary><div class="borrower-notice-fold-body">'+
+     (a.note?'<section class="ledger-note"><b>Owner ၏ မှတ်ချက်</b><p>'+esc(a.note).replace(/\n/g,"<br>")+'</p></section>':'')+
+     (a.underpaymentMessage?'<section class="ledger-owner-alert"><b>Owner ထံမှ အသိပေးချက်</b><p>'+esc(a.underpaymentMessage).replace(/\n/g,"<br>")+'</p></section>':'')+
+     alertHtml+'</div></details>';
+   })()+
    '<details class="ledger-details"><summary>ငွေပေးချေမှုနှင့် အတိုးမှတ်တမ်းအသေးစိတ် <span>ကြည့်ရန်＋</span></summary><div class="ledger-details-content"><h4>ငွေပေးချေမှုမှတ်တမ်း <small>'+paymentsList.length+' ကြိမ်</small></h4>'+paymentRows+'<h4>လစဉ်အတိုးမှတ်တမ်း <small>'+bucketsList.length+' လ</small></h4>'+interestRows+'</div></details>'+
    '<div class="loan-repay-action"><button type="button" class="customer-repay-button" data-repay-account="'+esc(a.accountId||share.accountId||"")+'">💳 ချေးငွေသွင်းရန်</button><small>ငွေသွင်းပြီးပါက Owner အတည်ပြုချက်ရယူပါမည်။</small></div>'+
   '</article>';
