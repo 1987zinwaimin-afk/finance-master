@@ -816,6 +816,21 @@ input,select,textarea{border-radius:11px!important}
 }
 </style>
 
+
+<style id="fm-dashboard-redesign-v1">
+.dashboard-hero{position:relative;overflow:hidden;min-height:178px;padding:28px 30px;border:1px solid rgba(217,182,111,.25);border-radius:22px;background:linear-gradient(112deg,#132541 0%,#1b3153 58%,#263c5b 100%);box-shadow:0 16px 38px rgba(15,31,56,.14);color:#fff}
+.dashboard-hero:after{content:"";position:absolute;width:280px;height:280px;border-radius:50%;right:8%;top:-170px;border:1px solid rgba(240,217,165,.22);box-shadow:0 0 0 28px rgba(240,217,165,.035),0 0 0 58px rgba(240,217,165,.025)}
+.dashboard-hero .eyebrow{color:#efd49a}.dashboard-hero h1{color:#fff!important;font-size:clamp(26px,3vw,36px);margin:9px 0 8px;letter-spacing:-1.1px}.dashboard-hero p{color:#c4d0e1;font-size:13px;margin:0}
+.dashboard-date{color:#e3c98f;font-size:12px;margin-top:18px;font-weight:650}
+.dashboard-hero-actions{position:relative;z-index:1;display:flex;flex-direction:column;align-items:flex-end;gap:16px}
+.dashboard-live{font-size:11px;color:#d4dfed;display:flex;align-items:center;gap:8px}.dashboard-live i{width:7px;height:7px;border-radius:50%;background:#65d3a5;box-shadow:0 0 0 4px rgba(101,211,165,.13)}
+.dashboard-hero .goldbtn{background:linear-gradient(135deg,#f0d9a5,#d4ad61)!important;color:#17243a!important;border:0!important;box-shadow:0 8px 20px rgba(0,0,0,.18)!important}
+.dashboard-currency-panel{overflow:hidden}.dashboard-currency-panel .panelhead{padding:19px 21px 14px}.dashboard-currency-panel .panelhead h2{font-size:17px;letter-spacing:-.2px}.dashboard-currency-panel .dashboard-metrics{padding:0 20px 20px}
+.dashboard-currency-panel .metric{border-radius:15px;transition:transform .18s ease,box-shadow .18s ease}.dashboard-currency-panel .metric:hover{transform:translateY(-2px);box-shadow:0 12px 24px rgba(20,38,65,.09)}
+@media(min-width:701px){.dashboard-hero{display:flex;justify-content:space-between;align-items:center;gap:20px}}
+@media(max-width:700px){.dashboard-hero{padding:22px 19px;min-height:0;border-radius:18px;gap:18px}.dashboard-hero-actions{align-items:flex-start;flex-direction:row;justify-content:space-between;flex-wrap:wrap}.dashboard-live{align-self:center}.dashboard-hero .goldbtn{padding:11px 13px}.dashboard-currency-panel .panelhead{padding:16px 15px 11px}.dashboard-currency-panel .dashboard-metrics{padding:0 14px 15px}}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -1072,7 +1087,8 @@ function dashboard(){
    metric('All-time income',fmt(inc,currency),'↗','Recorded total')+'</div></section>';
  };
  const recent=[...state.transactions].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
- return '<div class="welcome"><div class="welcome-copy"></div><button class="primary goldbtn" onclick="addTransaction(\'expense\')">＋ Quick entry</button></div>'+
+ const todayLabel=new Date().toLocaleDateString(undefined,{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+ return '<div class="welcome dashboard-hero"><div class="welcome-copy"><div class="eyebrow">FINANCIAL OVERVIEW</div><h1>Your money, in clear view.</h1><p>Track your cash flow, balances and financial goals in one place.</p><div class="dashboard-date">◷ &nbsp;'+todayLabel+'</div></div><div class="dashboard-hero-actions"><span class="dashboard-live"><i></i> Your records at a glance</span><button class="primary goldbtn" onclick="addTransaction(\'expense\')">＋ Quick entry</button></div></div>'+
  currencyPanel('THB')+currencyPanel('MMK')+
  '<div class="layout"><section class="panel"><div class="panelhead"><div><h2>Cash flow trend</h2><p>Last 6 months · Income vs expenses</p></div><div class="trend-actions"><select class="trend-currency" aria-label="Cash flow currency" onchange="setDashboardTrendCurrency(this.value)"><option value="THB" '+(dashboardTrendCurrency==='THB'?'selected':'')+'>THB ฿</option><option value="MMK" '+(dashboardTrendCurrency==='MMK'?'selected':'')+'>MMK K</option></select><button class="linkbtn" onclick="go(\'Reports\')">View reports ↗</button></div></div><div class="chart">'+bars+'</div><div class="legend"><span><i class="dot"></i>Income</span><span><i class="dot grey"></i>Expenses</span></div><p class="sub">Choose THB or MMK to view its trend. Currency totals are never combined.</p></section>'+
  '<section class="panel"><div class="panelhead"><div><h2>Quick actions</h2><p>Record it while it is fresh</p></div></div><div class="quick"><button onclick="addTransaction(\'income\')"><span class="qico">↗</span><span><b>Add income</b><small>Money received</small></span></button><button onclick="addTransaction(\'expense\')"><span class="qico">↘</span><span><b>Add expense</b><small>Money spent</small></span></button><button onclick="addLoan(\'loan\')"><span class="qico">⇄</span><span><b>Loan given</b><small>Track interest</small></span></button><button onclick="addPayment()"><span class="qico">✓</span><span><b>Record payment</b><small>Update a balance</small></span></button><button onclick="go(\'Payroll\')"><span class="qico">▦</span><span><b>Payroll</b><small>Salary records</small></span></button><button onclick="go(\'Reports\')"><span class="qico">▥</span><span><b>Reports</b><small>Monthly / yearly</small></span></button></div></section></div>'+
