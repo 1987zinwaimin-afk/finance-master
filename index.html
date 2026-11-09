@@ -880,6 +880,167 @@ body.fm-dark:not(.fm-login-mode) #content:has(.pagehead) .toolbar{background:#14
 body.fm-dark:not(.fm-login-mode) #content:has(.pagehead)>.cards .metric>strong{color:var(--ink)}
 </style>
 
+<style id="fm-secondary-pages-redesign-v1">
+/* Finance Master secondary pages — presentation only */
+#content .saving-goal-card,
+#content .account-card{
+  background:linear-gradient(145deg,var(--card),color-mix(in srgb,var(--gold) 4%,var(--card)));
+  border:1px solid color-mix(in srgb,var(--gold) 30%,var(--line));
+  border-radius:18px;padding:16px;margin:12px 0;
+  box-shadow:0 8px 24px rgba(14,29,55,.045);
+}
+#content .saving-goal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+#content .saving-goal-head b{font-size:15px;letter-spacing:.1px}
+#content .saving-goal-head small,
+#content .saving-goal-amounts small,
+#content .saving-goal-meta,
+#content .saving-days-left{color:var(--muted)}
+#content .saving-goal-amounts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:18px 0 12px}
+#content .saving-goal-amounts>div{min-width:0;padding:11px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+#content .saving-goal-amounts small{display:block;font-size:10px;margin-bottom:5px}
+#content .saving-goal-amounts strong{display:block;font-size:clamp(12px,2vw,16px);overflow-wrap:anywhere}
+#content .saving-remaining{color:var(--gold)!important}
+#content .saving-progress{height:9px;background:var(--line);border-radius:20px;overflow:hidden}
+#content .saving-progress>div{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--gold),#e6c77f)}
+#content .saving-goal-meta{display:flex;justify-content:space-between;gap:10px;font-size:11px;margin-top:8px}
+#content .saving-days-left{font-size:11px;margin:12px 0}
+#content .saving-goal-actions-bottom{display:flex;justify-content:flex-end;margin-top:12px}
+#content .account-panel .panelhead{align-items:center}
+#content .account-count{padding:6px 10px;border-radius:30px;background:color-mix(in srgb,var(--gold) 13%,var(--panel));color:var(--text);font-size:11px;font-weight:700}
+#content .account-list{display:grid;gap:11px}
+#content .account-card{padding:0;overflow:hidden}
+#content .account-open{display:flex;align-items:center;gap:13px;width:100%;padding:15px;background:transparent;border:0;color:var(--text);text-align:left;cursor:pointer}
+#content .account-avatar,.person-avatar{display:grid;place-items:center;flex:0 0 40px;width:40px;height:40px;border-radius:13px;background:linear-gradient(145deg,#142b50,#27466e);color:#f1d99e;font-weight:800}
+#content .account-main{display:flex;flex:1;min-width:0;flex-direction:column;gap:5px}
+#content .account-main>b{font-size:13px;overflow-wrap:anywhere}
+#content .account-main small,#content .account-openhint{font-size:10px;color:var(--muted)}
+#content .account-openhint span{color:var(--gold);font-size:17px;margin-left:4px}
+#content .account-balance{display:flex;flex-direction:column;align-items:flex-end;gap:4px;text-align:right}
+#content .account-balance b{font-size:13px;overflow-wrap:anywhere}
+#content .account-balance small,#content .account-balance em{font-size:10px;color:var(--muted);font-style:normal}
+#content .account-actions{display:flex;gap:8px;flex-wrap:wrap;padding:10px 14px;border-top:1px solid var(--line);background:color-mix(in srgb,var(--panel) 70%,transparent)}
+#content .person-head{padding:18px;margin-bottom:16px;border-radius:20px;border:1px solid color-mix(in srgb,var(--gold) 32%,var(--line));background:linear-gradient(125deg,#102544,#1c385c);color:#fff}
+#content .person-head .back-account{color:#f3d99d;background:transparent;border:0;margin-bottom:14px}
+#content .person-title-row{display:flex;align-items:center;gap:12px}
+#content .person-title h1{margin:0;font-size:clamp(20px,3vw,28px);color:#fff}
+#content .person-title p{margin:5px 0 0;color:#d5deeb;font-size:11px}
+#content .person-quick-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}
+#content .person-head .primary{background:linear-gradient(135deg,#e8ce91,#c49b4f);color:#172943;border:0}
+#content .toolbar{gap:10px;align-items:center}
+#content .toolbar select,#content .toolbar input{min-height:42px;border-radius:11px}
+#content .tablewrap{border:1px solid var(--line);border-radius:13px}
+#content .tablewrap table{min-width:620px}
+#content .tablewrap th{font-size:10px;letter-spacing:.45px;text-transform:uppercase;color:var(--muted);background:var(--panel)}
+#content .tablewrap td{font-size:12px;vertical-align:middle}
+#content .tablewrap tbody tr:hover{background:color-mix(in srgb,var(--gold) 6%,transparent)}
+#content .panel .notice{border-radius:13px}
+#content .settingsgrid .panel{border-radius:17px}
+#content .settingsgrid .field input,
+#content .settingsgrid .field select,
+#content .settingsgrid .field textarea{border-radius:11px}
+#content .settingsgrid .formgrid{gap:13px}
+#content .settingsgrid .owner-qr-preview{display:flex;align-items:center;justify-content:center;min-height:90px;padding:12px;border:1px dashed var(--line);border-radius:13px;background:var(--panel)}
+#content .layout>.panel{min-width:0}
+#content .layout>.panel>h2{letter-spacing:.1px}
+@media(max-width:680px){
+ #content .saving-goal-card{padding:13px}
+ #content .saving-goal-amounts{gap:6px}
+ #content .saving-goal-amounts>div{padding:8px}
+ #content .saving-goal-meta{font-size:10px}
+ #content .account-open{gap:9px;padding:12px}
+ #content .account-avatar{flex-basis:34px;width:34px;height:34px}
+ #content .account-balance b{font-size:11px}
+ #content .account-actions{padding:9px 11px}
+ #content .person-head{padding:14px}
+ #content .person-quick-actions>*{flex:1 1 145px}
+ #content .toolbar>*{flex:1 1 135px;min-width:0}
+ #content .tablewrap{overflow-x:auto}
+}
+</style>
+<style id="fm-borrower-portal-polish-v1">
+/* Owner-side borrower portal and messages: visual hierarchy only */
+#content .borrower-link-card,
+#content .borrower-request{
+  border:1px solid color-mix(in srgb,var(--gold) 28%,var(--line));
+  border-radius:16px;padding:15px;margin:11px 0;
+  background:linear-gradient(145deg,var(--card),color-mix(in srgb,var(--gold) 4%,var(--card)));
+  box-shadow:0 7px 22px rgba(14,29,55,.04);
+}
+#content .borrower-link-card h3{font-size:15px;margin:0 0 7px;color:var(--text)}
+#content .borrower-link-card p{font-size:11px;color:var(--muted);line-height:1.65;margin:6px 0}
+#content .borrower-link-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px;padding-top:11px;border-top:1px solid var(--line)}
+#content .borrower-link-actions button{min-height:38px}
+#content .borrower-request{position:relative;overflow:hidden}
+#content .borrower-request.pending{border-left:4px solid #d5a84f}
+#content .borrower-request.approved{border-left:4px solid #26966b}
+#content .borrower-request.rejected{border-left:4px solid #bd6262}
+#content .request-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+#content .request-top>b{font-size:14px;overflow-wrap:anywhere}
+#content .borrower-request p{font-size:11px;line-height:1.65;color:var(--muted)}
+#content .borrower-request button{min-height:38px}
+#content .borrower-link-card .tag,
+#content .borrower-request .tag{font-size:10px}
+#content .messages-list,
+#content .message-list{min-width:0}
+#content .panel .panelhead{gap:12px}
+#content .panel .panelhead h2{font-size:15px;letter-spacing:.1px}
+#content .panel .panelhead p{font-size:11px;line-height:1.6}
+@media(max-width:680px){
+ #content .borrower-link-card,#content .borrower-request{padding:12px}
+ #content .borrower-link-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+ #content .borrower-link-actions button{min-width:0;padding:9px 7px;font-size:11px}
+ #content .request-top{align-items:flex-start}
+}
+</style>
+<style id="fm-chat-account-polish-v1">
+/* Chat, borrower conversation and individual account detail presentation */
+#content .chat-list-panel{overflow:hidden;border-radius:18px}
+#content .chat-list-title{padding:16px 17px;border-bottom:1px solid var(--line)}
+#content .chat-list-title>b{font-size:16px;color:var(--text)}
+#content .chat-list-title>p{font-size:11px;color:var(--muted);margin:5px 0 0}
+#content .chat-contact{display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--text);text-align:left}
+#content .chat-contact:last-child{border-bottom:0}
+#content .chat-contact:hover{background:color-mix(in srgb,var(--gold) 7%,transparent)}
+#content .chat-avatar{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;border-radius:50%;background:linear-gradient(145deg,#142b50,#294a72);color:#f1d99b;font-weight:800}
+#content .chat-contact-text{display:flex;flex:1;min-width:0;flex-direction:column;gap:4px}
+#content .chat-contact-text b{font-size:13px;overflow-wrap:anywhere}
+#content .chat-contact-text small{font-size:10px;color:var(--muted)}
+#content .chat-chevron{font-size:22px;color:var(--gold)}
+#content .chat-window{overflow:hidden;border-radius:18px}
+#content .chat-window-head{display:flex;align-items:center;gap:11px;padding:13px 15px;background:linear-gradient(120deg,#102544,#1d3a60);color:#fff}
+#content .chat-window-head .chat-person-title{display:flex;flex-direction:column;gap:4px;min-width:0}
+#content .chat-window-head .chat-person-title b{font-size:14px;color:#fff}
+#content .chat-window-head .chat-person-title small{font-size:10px;color:#d7dfeb}
+#content .chat-window-head .chat-back{display:grid;place-items:center;flex:0 0 38px;width:38px;height:38px;border:1px solid #ffffff35;border-radius:11px;background:#ffffff12;color:#f2d99e}
+#content .chat-window-head .chat-back svg{width:19px;height:19px}
+#content .chat-messages{padding:16px;min-height:240px;max-height:min(58vh,620px);overflow-y:auto;background:color-mix(in srgb,var(--panel) 78%,var(--card))}
+#content .chat-compose{display:flex;align-items:flex-end;gap:8px;padding:12px;border-top:1px solid var(--line)}
+#content .chat-compose textarea{flex:1;min-width:0;resize:vertical;min-height:44px;max-height:130px;border-radius:12px}
+#content .chat-photo-button{display:grid;place-items:center;min-height:42px;padding:0 11px;border:1px solid var(--line);border-radius:11px;color:var(--text);font-size:11px;white-space:nowrap}
+#content .chat-compose button{min-height:42px}
+#content .person-tabs{display:flex;gap:7px;overflow-x:auto;padding:5px 0 12px}
+#content .person-tabs button{flex:1 0 105px;min-height:42px;border:1px solid var(--line);border-radius:11px;background:var(--card);color:var(--muted);font-size:11px}
+#content .person-tabs button.active{border-color:var(--gold);background:color-mix(in srgb,var(--gold) 13%,var(--card));color:var(--text);font-weight:800}
+#content .person-head .person-edit{margin-left:auto;flex:0 0 auto}
+#content .detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#content .detail-grid>*{min-width:0;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel);overflow-wrap:anywhere}
+#content .detail-panel .tablewrap{margin-top:10px}
+#content .target-warning{border-left:4px solid #c78c35}
+#content .ledger-table th,#content .ledger-table td{white-space:nowrap}
+@media(max-width:680px){
+ #content .chat-list-title{padding:13px}
+ #content .chat-contact{padding:12px}
+ #content .chat-avatar{flex-basis:38px;width:38px;height:38px}
+ #content .chat-messages{padding:11px;max-height:54vh}
+ #content .chat-compose{gap:6px;padding:9px}
+ #content .chat-photo-button{padding:0 8px;font-size:10px}
+ #content .chat-compose button{padding:9px 11px}
+ #content .detail-grid{grid-template-columns:1fr}
+ #content .person-head .person-title-row{flex-wrap:wrap}
+ #content .person-head .person-edit{margin-left:auto}
+ #content .person-tabs button{flex-basis:94px}
+}
+</style>
 </head>
 <body>
 <div class="app">
@@ -1416,171 +1577,13 @@ function selectedReportExpenses(){const period=reportMode==='year'?reportYear:re
 function exportExpenseReportCSV(){const rows=selectedReportExpenses(),cur=reportCurrency||state.currency||'THB',period=reportMode==='year'?reportYear:reportMonth,totalAmount=rows.reduce((n,t)=>n+Number(t.amount||0),0);const data=[['Finance Master - Expense Report'],['Period',period],['Currency',cur],['Total expenses',totalAmount],[],['Date','Expense name','For whom','Group','Category','Payment method','Amount','Note'],...rows.map(t=>[t.date||'',t.title||'',t.beneficiary||'',t.groupName||'',t.category||'',t.paymentMethod==='bank'?'Bank':t.paymentMethod==='card'?'Bank card':t.paymentMethod==='other'?'Other':t.paymentMethod==='cash'?'Cash':t.paymentMethod||'',Number(t.amount||0),t.note||''])];const csv=data.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');download(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),'finance-master-expenses-'+period+'-'+cur+'.csv');toast('Expense report CSV downloaded')}
 function downloadExpenseReportHTML(){const rows=selectedReportExpenses(),cur=reportCurrency||state.currency||'THB',period=reportMode==='year'?reportYear:reportMonth,totalAmount=rows.reduce((n,t)=>n+Number(t.amount||0),0),groups={},people={};rows.forEach(t=>{const g=t.groupName||'Ungrouped';groups[g]=(groups[g]||0)+Number(t.amount||0);const p=String(t.beneficiary||'').trim()||'Unspecified';people[p]=(people[p]||0)+Number(t.amount||0)});const esc=v=>escapeHtml(String(v??''));const pay=t=>t.paymentMethod==='bank'?'Bank':t.paymentMethod==='card'?'Bank card':t.paymentMethod==='other'?'Other':t.paymentMethod==='cash'?'Cash':t.paymentMethod||'—';const table=(headers,rows)=>'<table><thead><tr>'+headers.map(h=>'<th>'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'+rows+'</tbody></table>';const simple=map=>Object.entries(map).sort((a,b)=>b[1]-a[1]).map(([k,v])=>'<tr><td>'+esc(k)+'</td><td>'+v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})+' '+esc(cur)+'</td></tr>').join('');const detail=rows.map(t=>'<tr><td>'+esc(t.date||'')+'</td><td>'+esc(t.title||'')+'</td><td>'+esc(t.beneficiary||'—')+'</td><td>'+esc(t.groupName||'—')+'</td><td>'+esc(t.category||'—')+'</td><td>'+esc(pay(t))+'</td><td>'+Number(t.amount||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td>'+esc(t.note||'')+'</td></tr>').join('');const html='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Finance Master Expense Report '+esc(period)+'</title><style>body{font:14px Arial,sans-serif;color:#17233b;margin:24px}h1{color:#17233b}p{color:#596579}.total{font-size:25px;font-weight:bold;padding:18px;background:#f1f4fa;border-radius:10px}table{border-collapse:collapse;width:100%;margin:12px 0 26px}th,td{border:1px solid #d9e0eb;padding:7px;text-align:left;font-size:11px;overflow-wrap:anywhere}th{background:#f1f4fa}button{padding:12px 18px;margin:8px 0}@media print{body{margin:10mm}button{display:none}tr{break-inside:avoid}}</style></head><body><h1>Finance Master — Expense Report</h1><p>Period: '+esc(period)+' · Currency: '+esc(cur)+' · Created: '+esc(new Date().toLocaleString())+'</p><div class="total">Total expenses: '+totalAmount.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})+' '+esc(cur)+'<br><small>'+rows.length+' records</small></div><h2>Totals by person</h2>'+table(['Person','Total spent'],simple(people))+'<h2>Totals by group</h2>'+table(['Group','Total'],simple(groups))+'<h2>Expense details</h2>'+table(['Date','Expense','For whom','Group','Category','Payment','Amount','Note'],detail||'<tr><td colspan="8">No expenses for this period</td></tr>')+'<button onclick="window.print()">Print / Save as PDF</button></body></html>';download(new Blob([html],{type:'text/html;charset=utf-8'}),'finance-master-expense-report-'+period+'-'+cur+'.html');toast('Report downloaded. Open the HTML file and choose Print / Save as PDF.')}
 function saveExpenseReportPDF(){const rows=selectedReportExpenses(),cur=reportCurrency||state.currency||'THB',period=reportMode==='year'?reportYear:reportMonth,totalAmount=rows.reduce((n,t)=>n+Number(t.amount||0),0),groups={};rows.forEach(t=>{const key=t.groupName||'Ungrouped';groups[key]=(groups[key]||0)+Number(t.amount||0)});const escape=v=>escapeHtml(String(v??''));const payment=t=>t.paymentMethod==='bank'?'Bank':t.paymentMethod==='card'?'Bank card':t.paymentMethod==='other'?'Other':t.paymentMethod==='cash'?'Cash':t.paymentMethod||'—';const tableRows=rows.map(t=>'<tr><td>'+escape(t.date||'—')+'</td><td>'+escape(t.title||'—')+'</td><td>'+escape(t.beneficiary||'—')+'</td><td>'+escape(t.groupName||'—')+'</td><td>'+escape(t.category||'—')+'</td><td>'+escape(payment(t))+'</td><td class="amount">'+Number(t.amount||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td>'+escape(t.note||'')+'</td></tr>').join('');const groupRows=Object.entries(groups).sort((a,b)=>b[1]-a[1]).map(([g,n])=>'<tr><td>'+escape(g)+'</td><td class="amount">'+n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})+' '+cur+'</td></tr>').join('');const w=window.open('','_blank');if(!w){toast('Allow pop-ups to save the report as PDF');return}w.document.open();w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Expense report '+escape(period)+'</title><style>body{font:14px Arial,sans-serif;color:#18233a;margin:28px}h1{margin-bottom:4px}p{color:#596579}.summary{padding:16px;background:#f2f5fa;border-radius:10px;margin:18px 0}table{width:100%;border-collapse:collapse;margin:12px 0 24px;font-size:11px}th,td{border:1px solid #dce2ec;padding:7px;text-align:left;vertical-align:top;overflow-wrap:anywhere}th{background:#f2f5fa}.amount{text-align:right;white-space:nowrap}.total{font-size:24px;font-weight:bold;margin-top:6px}@media print{body{margin:12mm}button{display:none}tr{break-inside:avoid}}</style>
-<style id="fm-secondary-pages-redesign-v1">
-/* Finance Master secondary pages — presentation only */
-#content .saving-goal-card,
-#content .account-card{
-  background:linear-gradient(145deg,var(--card),color-mix(in srgb,var(--gold) 4%,var(--card)));
-  border:1px solid color-mix(in srgb,var(--gold) 30%,var(--line));
-  border-radius:18px;padding:16px;margin:12px 0;
-  box-shadow:0 8px 24px rgba(14,29,55,.045);
-}
-#content .saving-goal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
-#content .saving-goal-head b{font-size:15px;letter-spacing:.1px}
-#content .saving-goal-head small,
-#content .saving-goal-amounts small,
-#content .saving-goal-meta,
-#content .saving-days-left{color:var(--muted)}
-#content .saving-goal-amounts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:18px 0 12px}
-#content .saving-goal-amounts>div{min-width:0;padding:11px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
-#content .saving-goal-amounts small{display:block;font-size:10px;margin-bottom:5px}
-#content .saving-goal-amounts strong{display:block;font-size:clamp(12px,2vw,16px);overflow-wrap:anywhere}
-#content .saving-remaining{color:var(--gold)!important}
-#content .saving-progress{height:9px;background:var(--line);border-radius:20px;overflow:hidden}
-#content .saving-progress>div{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--gold),#e6c77f)}
-#content .saving-goal-meta{display:flex;justify-content:space-between;gap:10px;font-size:11px;margin-top:8px}
-#content .saving-days-left{font-size:11px;margin:12px 0}
-#content .saving-goal-actions-bottom{display:flex;justify-content:flex-end;margin-top:12px}
-#content .account-panel .panelhead{align-items:center}
-#content .account-count{padding:6px 10px;border-radius:30px;background:color-mix(in srgb,var(--gold) 13%,var(--panel));color:var(--text);font-size:11px;font-weight:700}
-#content .account-list{display:grid;gap:11px}
-#content .account-card{padding:0;overflow:hidden}
-#content .account-open{display:flex;align-items:center;gap:13px;width:100%;padding:15px;background:transparent;border:0;color:var(--text);text-align:left;cursor:pointer}
-#content .account-avatar,.person-avatar{display:grid;place-items:center;flex:0 0 40px;width:40px;height:40px;border-radius:13px;background:linear-gradient(145deg,#142b50,#27466e);color:#f1d99e;font-weight:800}
-#content .account-main{display:flex;flex:1;min-width:0;flex-direction:column;gap:5px}
-#content .account-main>b{font-size:13px;overflow-wrap:anywhere}
-#content .account-main small,#content .account-openhint{font-size:10px;color:var(--muted)}
-#content .account-openhint span{color:var(--gold);font-size:17px;margin-left:4px}
-#content .account-balance{display:flex;flex-direction:column;align-items:flex-end;gap:4px;text-align:right}
-#content .account-balance b{font-size:13px;overflow-wrap:anywhere}
-#content .account-balance small,#content .account-balance em{font-size:10px;color:var(--muted);font-style:normal}
-#content .account-actions{display:flex;gap:8px;flex-wrap:wrap;padding:10px 14px;border-top:1px solid var(--line);background:color-mix(in srgb,var(--panel) 70%,transparent)}
-#content .person-head{padding:18px;margin-bottom:16px;border-radius:20px;border:1px solid color-mix(in srgb,var(--gold) 32%,var(--line));background:linear-gradient(125deg,#102544,#1c385c);color:#fff}
-#content .person-head .back-account{color:#f3d99d;background:transparent;border:0;margin-bottom:14px}
-#content .person-title-row{display:flex;align-items:center;gap:12px}
-#content .person-title h1{margin:0;font-size:clamp(20px,3vw,28px);color:#fff}
-#content .person-title p{margin:5px 0 0;color:#d5deeb;font-size:11px}
-#content .person-quick-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}
-#content .person-head .primary{background:linear-gradient(135deg,#e8ce91,#c49b4f);color:#172943;border:0}
-#content .toolbar{gap:10px;align-items:center}
-#content .toolbar select,#content .toolbar input{min-height:42px;border-radius:11px}
-#content .tablewrap{border:1px solid var(--line);border-radius:13px}
-#content .tablewrap table{min-width:620px}
-#content .tablewrap th{font-size:10px;letter-spacing:.45px;text-transform:uppercase;color:var(--muted);background:var(--panel)}
-#content .tablewrap td{font-size:12px;vertical-align:middle}
-#content .tablewrap tbody tr:hover{background:color-mix(in srgb,var(--gold) 6%,transparent)}
-#content .panel .notice{border-radius:13px}
-#content .settingsgrid .panel{border-radius:17px}
-#content .settingsgrid .field input,
-#content .settingsgrid .field select,
-#content .settingsgrid .field textarea{border-radius:11px}
-#content .settingsgrid .formgrid{gap:13px}
-#content .settingsgrid .owner-qr-preview{display:flex;align-items:center;justify-content:center;min-height:90px;padding:12px;border:1px dashed var(--line);border-radius:13px;background:var(--panel)}
-#content .layout>.panel{min-width:0}
-#content .layout>.panel>h2{letter-spacing:.1px}
-@media(max-width:680px){
- #content .saving-goal-card{padding:13px}
- #content .saving-goal-amounts{gap:6px}
- #content .saving-goal-amounts>div{padding:8px}
- #content .saving-goal-meta{font-size:10px}
- #content .account-open{gap:9px;padding:12px}
- #content .account-avatar{flex-basis:34px;width:34px;height:34px}
- #content .account-balance b{font-size:11px}
- #content .account-actions{padding:9px 11px}
- #content .person-head{padding:14px}
- #content .person-quick-actions>*{flex:1 1 145px}
- #content .toolbar>*{flex:1 1 135px;min-width:0}
- #content .tablewrap{overflow-x:auto}
-}
-</style>
 
 
-<style id="fm-borrower-portal-polish-v1">
-/* Owner-side borrower portal and messages: visual hierarchy only */
-#content .borrower-link-card,
-#content .borrower-request{
-  border:1px solid color-mix(in srgb,var(--gold) 28%,var(--line));
-  border-radius:16px;padding:15px;margin:11px 0;
-  background:linear-gradient(145deg,var(--card),color-mix(in srgb,var(--gold) 4%,var(--card)));
-  box-shadow:0 7px 22px rgba(14,29,55,.04);
-}
-#content .borrower-link-card h3{font-size:15px;margin:0 0 7px;color:var(--text)}
-#content .borrower-link-card p{font-size:11px;color:var(--muted);line-height:1.65;margin:6px 0}
-#content .borrower-link-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px;padding-top:11px;border-top:1px solid var(--line)}
-#content .borrower-link-actions button{min-height:38px}
-#content .borrower-request{position:relative;overflow:hidden}
-#content .borrower-request.pending{border-left:4px solid #d5a84f}
-#content .borrower-request.approved{border-left:4px solid #26966b}
-#content .borrower-request.rejected{border-left:4px solid #bd6262}
-#content .request-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-#content .request-top>b{font-size:14px;overflow-wrap:anywhere}
-#content .borrower-request p{font-size:11px;line-height:1.65;color:var(--muted)}
-#content .borrower-request button{min-height:38px}
-#content .borrower-link-card .tag,
-#content .borrower-request .tag{font-size:10px}
-#content .messages-list,
-#content .message-list{min-width:0}
-#content .panel .panelhead{gap:12px}
-#content .panel .panelhead h2{font-size:15px;letter-spacing:.1px}
-#content .panel .panelhead p{font-size:11px;line-height:1.6}
-@media(max-width:680px){
- #content .borrower-link-card,#content .borrower-request{padding:12px}
- #content .borrower-link-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
- #content .borrower-link-actions button{min-width:0;padding:9px 7px;font-size:11px}
- #content .request-top{align-items:flex-start}
-}
-</style>
 
 
-<style id="fm-chat-account-polish-v1">
-/* Chat, borrower conversation and individual account detail presentation */
-#content .chat-list-panel{overflow:hidden;border-radius:18px}
-#content .chat-list-title{padding:16px 17px;border-bottom:1px solid var(--line)}
-#content .chat-list-title>b{font-size:16px;color:var(--text)}
-#content .chat-list-title>p{font-size:11px;color:var(--muted);margin:5px 0 0}
-#content .chat-contact{display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--text);text-align:left}
-#content .chat-contact:last-child{border-bottom:0}
-#content .chat-contact:hover{background:color-mix(in srgb,var(--gold) 7%,transparent)}
-#content .chat-avatar{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;border-radius:50%;background:linear-gradient(145deg,#142b50,#294a72);color:#f1d99b;font-weight:800}
-#content .chat-contact-text{display:flex;flex:1;min-width:0;flex-direction:column;gap:4px}
-#content .chat-contact-text b{font-size:13px;overflow-wrap:anywhere}
-#content .chat-contact-text small{font-size:10px;color:var(--muted)}
-#content .chat-chevron{font-size:22px;color:var(--gold)}
-#content .chat-window{overflow:hidden;border-radius:18px}
-#content .chat-window-head{display:flex;align-items:center;gap:11px;padding:13px 15px;background:linear-gradient(120deg,#102544,#1d3a60);color:#fff}
-#content .chat-window-head .chat-person-title{display:flex;flex-direction:column;gap:4px;min-width:0}
-#content .chat-window-head .chat-person-title b{font-size:14px;color:#fff}
-#content .chat-window-head .chat-person-title small{font-size:10px;color:#d7dfeb}
-#content .chat-window-head .chat-back{display:grid;place-items:center;flex:0 0 38px;width:38px;height:38px;border:1px solid #ffffff35;border-radius:11px;background:#ffffff12;color:#f2d99e}
-#content .chat-window-head .chat-back svg{width:19px;height:19px}
-#content .chat-messages{padding:16px;min-height:240px;max-height:min(58vh,620px);overflow-y:auto;background:color-mix(in srgb,var(--panel) 78%,var(--card))}
-#content .chat-compose{display:flex;align-items:flex-end;gap:8px;padding:12px;border-top:1px solid var(--line)}
-#content .chat-compose textarea{flex:1;min-width:0;resize:vertical;min-height:44px;max-height:130px;border-radius:12px}
-#content .chat-photo-button{display:grid;place-items:center;min-height:42px;padding:0 11px;border:1px solid var(--line);border-radius:11px;color:var(--text);font-size:11px;white-space:nowrap}
-#content .chat-compose button{min-height:42px}
-#content .person-tabs{display:flex;gap:7px;overflow-x:auto;padding:5px 0 12px}
-#content .person-tabs button{flex:1 0 105px;min-height:42px;border:1px solid var(--line);border-radius:11px;background:var(--card);color:var(--muted);font-size:11px}
-#content .person-tabs button.active{border-color:var(--gold);background:color-mix(in srgb,var(--gold) 13%,var(--card));color:var(--text);font-weight:800}
-#content .person-head .person-edit{margin-left:auto;flex:0 0 auto}
-#content .detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-#content .detail-grid>*{min-width:0;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel);overflow-wrap:anywhere}
-#content .detail-panel .tablewrap{margin-top:10px}
-#content .target-warning{border-left:4px solid #c78c35}
-#content .ledger-table th,#content .ledger-table td{white-space:nowrap}
-@media(max-width:680px){
- #content .chat-list-title{padding:13px}
- #content .chat-contact{padding:12px}
- #content .chat-avatar{flex-basis:38px;width:38px;height:38px}
- #content .chat-messages{padding:11px;max-height:54vh}
- #content .chat-compose{gap:6px;padding:9px}
- #content .chat-photo-button{padding:0 8px;font-size:10px}
- #content .chat-compose button{padding:9px 11px}
- #content .detail-grid{grid-template-columns:1fr}
- #content .person-head .person-title-row{flex-wrap:wrap}
- #content .person-head .person-edit{margin-left:auto}
- #content .person-tabs button{flex-basis:94px}
-}
-</style>
+
+
+
 
 </head><body><h1>Finance Master — Expense Report</h1><p>Period: '+escape(period)+' · Currency: '+escape(cur)+' · Generated: '+escape(new Date().toLocaleString())+'</p><div class="summary">Total expense records: <b>'+rows.length+'</b><div class="total">'+totalAmount.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})+' '+escape(cur)+'</div></div><h2>Expense groups</h2><table><thead><tr><th>Group</th><th>Total</th></tr></thead><tbody>'+groupRows+'</tbody></table><h2>Detailed expenses</h2><table><thead><tr><th>Date</th><th>Expense name</th><th>For whom</th><th>Group</th><th>Category</th><th>Payment</th><th>Amount</th><th>Note</th></tr></thead><tbody>'+(tableRows||'<tr><td colspan="8">No expense records for this period.</td></tr>')+'</tbody></table><p>THB and MMK are reported separately. Keep this report with your monthly records.</p><button onclick="window.print()">Print / Save as PDF</button><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body></html>');w.document.close();toast('Print dialog opened — choose Save as PDF')}
 function setReportCurrency(value){
