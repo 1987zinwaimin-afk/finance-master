@@ -1280,7 +1280,23 @@ main.wrap{margin-left:auto!important;margin-right:auto!important;padding-left:12
  #bankQrModal .bank-transfer-qr{width:min(42vw,340px)!important;max-height:38dvh!important}
 }
 </style>
-</head>
+<style id="fm-history-group-by-loan-v1">
+#app .customer-history-groups{display:grid;gap:16px}
+#app .customer-history-group{overflow:hidden;border:1px solid #e5e9ef;border-radius:16px;background:#fff;box-shadow:0 4px 14px #15243a08}
+#app .customer-history-group-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 15px;background:linear-gradient(120deg,#f7f4ec,#fff);border-bottom:1px solid #eee8dc}
+#app .customer-history-group-head>div{min-width:0}
+#app .customer-history-group-head small{display:block;margin-bottom:4px;color:#a1844b;font-size:9px;font-weight:900;letter-spacing:1px}
+#app .customer-history-group-head h3{margin:0;color:#1a2d49;font-size:14px;overflow-wrap:anywhere}
+#app .customer-history-group-head p{margin:5px 0 0;color:#7d8999;font-size:10px}
+#app .customer-history-group-head>strong{flex:0 0 auto;color:#16785d;font-size:13px;text-align:right}
+#app .customer-history-group-list{padding:0 13px}
+#app .customer-history-group-list .customer-history-item:last-child{border-bottom:0}
+@media(max-width:420px){
+ #app .customer-history-group-head{align-items:flex-start;padding:12px;gap:8px}
+ #app .customer-history-group-head>strong{font-size:12px;max-width:112px}
+ #app .customer-history-group-list{padding:0 10px}
+}
+</style></head>
 <body><main class="wrap">
 <div class="brand"><img class="logo brand-logo-img" src="/borrower-icon.svg?v=finance-logo-20261023" alt="Finance Master logo" width="44" height="44"><div class="brand-title"><b>Finance Master</b><small>PRIVATE BORROWER PORTAL</small></div><label class="language-wrap"><span id="languageLabel">Language</span><select id="languageSelect" aria-label="Language"><option value="my">မြန်မာ</option><option value="en">English</option><option value="th">ไทย</option></select></label></div>
 <div id="status" class="status muted">Loading your private account…</div>
@@ -1468,10 +1484,18 @@ function render(){
   '</section>';
  })();
  const historyMarkup=(()=>{
-  const entries=accounts.flatMap(a=>(Array.isArray(a.payments)?a.payments:[]).filter(p=>Number(p.amount)>0).map(p=>({...p,accountLabel:a.loanType||a.label||"ချေးငွေ",accountCurrency:p.currency||a.currency||"THB"}))).sort((a,b)=>String(b.date||"").localeCompare(String(a.date||"")));
-  const currencies=[...new Set(entries.map(p=>p.accountCurrency))];
+  const groups=accounts.map((a,index)=>{
+   const payments=(Array.isArray(a.payments)?a.payments:[]).filter(p=>Number(p.amount)>0).slice().sort((x,y)=>String(y.date||"").localeCompare(String(x.date||"")));
+   return {account:a,index,payments,currency:a.currency||"THB",total:payments.reduce((sum,p)=>sum+Math.max(0,Number(p.amount)||0),0)};
+  }).filter(g=>g.payments.length);
+  const entries=groups.reduce((sum,g)=>sum+g.payments.length,0);
+  const currencies=[...new Set(groups.map(g=>g.currency))];
   const filters=currencies.map(cur=>'<span class="history-currency-chip">'+esc(cur)+'</span>').join("");
-  return '<section class="panel share-page customer-history-page" data-share-page="history"><header class="customer-page-heading"><small>PAYMENT RECORDS</small><h2>ငွေပေးချေမှုမှတ်တမ်း</h2><p>Owner အတည်ပြုပြီး စာရင်းသွင်းထားသော ငွေပေးချေမှုအားလုံး</p></header><div class="history-summary"><div><small>စုစုပေါင်း မှတ်တမ်း</small><b>'+entries.length+' ကြိမ်</b></div><div class="history-currency-list">'+(filters||'<span class="history-currency-chip">မှတ်တမ်းမရှိသေးပါ</span>')+'</div></div>'+(entries.length?'<div class="customer-history-list">'+entries.map((p,i)=>'<article class="customer-history-item"><span class="history-index">'+(i+1)+'</span><div class="customer-history-main"><b>'+esc(p.accountLabel)+'</b><small>'+esc(p.date||"ရက်စွဲမရှိ")+' · '+esc(p.apply||p.type||"ငွေပေးချေမှု")+'</small>'+(p.note?'<p>'+esc(p.note)+'</p>':'')+'</div><strong>'+esc(money(p.amount,p.accountCurrency))+'</strong></article>').join("")+'</div>':'<div class="customer-empty-history"><span>▤</span><b>ငွေပေးချေမှုမှတ်တမ်း မရှိသေးပါ</b><p>Owner က ငွေပေးချေမှုကို အတည်ပြုပြီးနောက် ဒီနေရာမှာ ပြသပါမယ်။</p></div>')+'</section>';
+  const groupMarkup=groups.map(g=>{
+   const label=g.account.loanType||g.account.label||("ချေးငွေအကောင့် "+(g.index+1));
+   return '<section class="customer-history-group"><header class="customer-history-group-head"><div><small>LOAN ACCOUNT '+(g.index+1)+'</small><h3>'+esc(label)+'</h3><p>'+esc(g.currency)+' · '+g.payments.length+' ကြိမ် သွင်းထားသည်</p></div><strong>'+esc(money(g.total,g.currency))+'</strong></header><div class="customer-history-group-list">'+g.payments.map((p,i)=>'<article class="customer-history-item"><span class="history-index">'+(i+1)+'</span><div class="customer-history-main"><b>'+esc(p.apply||p.type||"ငွေပေးချေမှု")+'</b><small>'+esc(p.date||"ရက်စွဲမရှိ")+'</small>'+(p.note?'<p>'+esc(p.note)+'</p>':'')+'</div><strong>'+esc(money(p.amount,p.currency||g.currency))+'</strong></article>').join("")+'</div></section>';
+  }).join("");
+  return '<section class="panel share-page customer-history-page" data-share-page="history"><header class="customer-page-heading"><small>PAYMENT RECORDS</small><h2>ငွေပေးချေမှုမှတ်တမ်း</h2><p>ချေးငွေအကောင့်တစ်ခုချင်းစီအလိုက် သီးခြားခွဲပြထားပါသည်။</p></header><div class="history-summary"><div><small>စုစုပေါင်း မှတ်တမ်း</small><b>'+entries+' ကြိမ်</b></div><div class="history-currency-list">'+(filters||'<span class="history-currency-chip">မှတ်တမ်းမရှိသေးပါ</span>')+'</div></div>'+(entries?'<div class="customer-history-groups">'+groupMarkup+'</div>':'<div class="customer-empty-history"><span>▤</span><b>ငွေပေးချေမှုမှတ်တမ်း မရှိသေးပါ</b><p>Owner က ငွေပေးချေမှုကို အတည်ပြုပြီးနောက် ဒီနေရာမှာ ပြသပါမယ်။</p></div>')+'</section>';
  })();
  $("app").innerHTML=summaryMarkup+
  historyMarkup+
