@@ -1260,7 +1260,27 @@ main.wrap{margin-left:auto!important;margin-right:auto!important;padding-left:12
 .quick-repay-hint{text-align:center;font-size:10px;line-height:1.5;color:#7d8796;margin:12px 0 0}
 #bankQrModal #sendBankReceipt[hidden]{display:none!important}
 @media(max-width:380px){.quick-repay-card{padding:14px;border-radius:18px}.quick-repay-card header{padding:11px}.quick-repay-actions{grid-template-columns:1fr 1.2fr}}
-</style></head>
+</style><style id="fm-bank-qr-larger-v1">
+/* Make the payment QR easy to scan on phones while preserving its square ratio. */
+#bankQrModal .bank-transfer-qr{
+ display:block!important;
+ width:min(72vw,320px)!important;
+ height:auto!important;
+ max-width:min(100%,320px)!important;
+ max-height:34dvh!important;
+ object-fit:contain!important;
+ padding:7px!important;
+ margin:12px auto!important;
+}
+#bankQrModal #bankQrResult{overflow-y:auto!important}
+@media(max-height:740px){
+ #bankQrModal .bank-transfer-qr{width:min(68vw,280px)!important;max-height:27dvh!important;margin:8px auto!important}
+}
+@media(min-width:600px){
+ #bankQrModal .bank-transfer-qr{width:min(42vw,340px)!important;max-height:38dvh!important}
+}
+</style>
+</head>
 <body><main class="wrap">
 <div class="brand"><img class="logo brand-logo-img" src="/borrower-icon.svg?v=finance-logo-20261023" alt="Finance Master logo" width="44" height="44"><div class="brand-title"><b>Finance Master</b><small>PRIVATE BORROWER PORTAL</small></div><label class="language-wrap"><span id="languageLabel">Language</span><select id="languageSelect" aria-label="Language"><option value="my">မြန်မာ</option><option value="en">English</option><option value="th">ไทย</option></select></label></div>
 <div id="status" class="status muted">Loading your private account…</div>
