@@ -1041,6 +1041,25 @@ body.fm-dark:not(.fm-login-mode) #content:has(.pagehead)>.cards .metric>strong{c
  #content .person-tabs button{flex-basis:94px}
 }
 </style>
+
+<style id="fm-notice-polish-owner-v1">
+/* Owner: calm, compact and readable notice styling */
+#content .notice,#content .target-warning,#content [role="alert"],#content [role="status"]{
+ box-sizing:border-box;max-width:100%;overflow-wrap:anywhere;
+ border:1px solid #eadbb8;border-left:4px solid #c69b4d;
+ border-radius:12px;background:#fff9ec;color:#59451f;
+ padding:10px 12px;margin:8px 0;font-size:12px;line-height:1.55;
+ box-shadow:0 2px 8px rgba(24,38,61,.045)
+}
+#content .notice b,#content .target-warning b,#content [role="alert"] b{color:#6d5120;font-weight:800}
+#content .notice p,#content .target-warning p{margin:5px 0 0;color:#66583e;line-height:1.5}
+#content .target-warning{background:#fff5e9;border-color:#f0d7b7;border-left-color:#d18b43;color:#74451e}
+#content .account-target{gap:4px;padding-top:8px;font-size:11px;line-height:1.45}
+#content .account-target .target-warning{margin-top:5px}
+@media(max-width:680px){
+ #content .notice,#content .target-warning,#content [role="alert"],#content [role="status"]{padding:9px 10px;margin:7px 0;font-size:11px;line-height:1.5;border-radius:10px}
+}
+</style>
 </head>
 <body>
 <div class="app">
