@@ -1739,8 +1739,9 @@ async function boot(){
    try {
     let sessionId=sessionStorage.getItem('fm-borrower-push-session-v1');
     if(!sessionId){sessionId=(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+'-'+Math.random().toString(36).slice(2));sessionStorage.setItem('fm-borrower-push-session-v1',sessionId);}
-    if(!sessionStorage.getItem('fm-borrower-push-sent-v1')){
-     sessionStorage.setItem('fm-borrower-push-sent-v1','1');
+    const pushSentKey='fm-borrower-push-sent-v1:'+token;
+    if(!sessionStorage.getItem(pushSentKey)){
+     sessionStorage.setItem(pushSentKey,'1');
      fetch('/api/borrower-open',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token,sessionId})}).catch(()=>{});
     }
    } catch(pushNoticeError){console.warn('Borrower open notification dispatch skipped:',pushNoticeError);}
