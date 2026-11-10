@@ -1517,14 +1517,14 @@ function loanAlertMarkup(a){
  const shortfalls=statuses.filter(x=>x.under||Number(x.paid)+0.004<target);
  const consecutive=Number(a.consecutiveUnderpaidMonths)||0;
  let html="";
- if(paused) html+='<div class="notice"><b>အတိုးရပ်ထားသည်</b><br>အတိုးနှုန်းနှင့် အတိုးကျန်ငွေကို ယာယီဖျောက်ထားသည်။</div>';
+
  if(target>0){
 
  const ownerShortfalls=Array.isArray(a.monthlyTargetShortfalls)?a.monthlyTargetShortfalls.filter(x=>/^\d{4}-(0[1-9]|1[0-2])$/.test(String(x.month||''))&&Number(x.amount)>0):[];
  const underpaidMonthCount=new Set([...shortfalls.map(x=>x.month),...ownerShortfalls.map(x=>x.month)]).size;
  if(shortfalls.length||ownerShortfalls.length) html+='<div class="notice"><b>သတ်မှတ်ငွေ မပြည့်သောလများ · '+underpaidMonthCount+' လ</b>'+shortfalls.map(x=>'<p>'+esc(x.month)+' · သွင်းငွေ '+money(x.paid||0,a.currency||"THB")+' · လိုငွေ '+money(Math.max(0,target-Number(x.paid||0)),a.currency||"THB")+'</p>').join("")+ownerShortfalls.map(x=>'<p>'+esc((x.date||x.month).split('-').reverse().join('.'))+' · သွင်းငွေ '+money(Number(x.paid)||0,a.currency||"THB")+' · လိုငွေ '+money(Number(x.amount)||0,a.currency||"THB")+'</p>').join("")+'</div>';
- if(consecutive>=3) html+='<div class="notice" role="alert" style="margin:14px 0;padding:18px;border:3px solid #dc2626;background:#fff1f2;color:#991b1b;border-radius:14px;box-shadow:0 4px 16px rgba(220,38,38,.18);font-size:17px;line-height:1.7"><div style="font-size:24px;font-weight:900;margin-bottom:8px">⚠️ အရေးကြီး သတိပေးချက်</div><b>လစဉ်သတ်မှတ်ငွေ ၃ လတိတိ မပြည့်ပါက အတိုးအား ပုံမှန်အတိုင်း ပြန်လည်သတ်မှတ်ပါမည်။</b><div style="margin-top:8px;font-size:14px">သတ်မှတ်ငွေကို ၃ လဆက်တိုက် မပြည့်မီထားပါသည်။ အတိုးနှုန်းကို ပြန်လည်သတ်မှတ်နိုင်ကြောင်း သတိပြုပါ။</div></div>';
- else if(underpaidMonthCount>0) html+='<div class="notice" role="status" style="margin:12px 0;padding:14px;border:2px solid #d97706;background:#fffbeb;color:#92400e;border-radius:12px;font-weight:700">⚠️ သတိပေးချက် — သတ်မှတ်ငွေ မပြည့်သောလ '+underpaidMonthCount+' လ ရှိနေပါသည်။ '+(consecutive>0?'လက်ရှိ '+consecutive+' လ ဆက်တိုက် မပြည့်သေးပါ။ ':'')+'၃ လတိတိ ဆက်တိုက် မပြည့်ပါက အတိုးအား ပုံမှန်အတိုင်း ပြန်လည်သတ်မှတ်ပါမည်။</div>';
+
+
  }
  return html;
 }
