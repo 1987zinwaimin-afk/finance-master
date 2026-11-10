@@ -1919,9 +1919,9 @@ boot();;
   try{
    const ua=navigator.userAgent||'',model=navigator.userAgentData&&navigator.userAgentData.model;
    if(model&&String(model).trim())return String(model).trim();
-   const samsung=ua.match(/\\b(SM-[A-Z0-9-]+)\\b/i);if(samsung)return 'Samsung '+samsung[1].toUpperCase();
+   const samsung=ua.match(/\b(SM-[A-Z0-9-]+)\b/i);if(samsung)return 'Samsung '+samsung[1].toUpperCase();
    if(/iPhone/i.test(ua))return 'iPhone';if(/iPad/i.test(ua))return 'iPad';
-   if(/Pixel/i.test(ua)){const p=ua.match(/(Pixel\\s?[A-Za-z0-9 ]*)/i);return p?p[1].trim():'Google Pixel';}
+   if(/Pixel/i.test(ua)){const p=ua.match(/(Pixel\s?[A-Za-z0-9 ]*)/i);return p?p[1].trim():'Google Pixel';}
    if(/Android/i.test(ua))return 'Android phone (exact model hidden by browser)';
    return /Windows/i.test(ua)?'Windows device':/Macintosh|Mac OS/i.test(ua)?'Mac device':/Linux/i.test(ua)?'Linux device':'Device model unavailable';
   }catch(e){return 'Device model unavailable';}
