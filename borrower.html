@@ -2858,8 +2858,16 @@ html,body{overflow-x:hidden!important}
  }
  function loadOwnerNotice(loadedShare){
   const share=loadedShare||window.financeMasterBorrowerAccount?.getShare?.();
-  const remark=share?.ownerData?.remark;
-  ownerNotice=typeof remark==='string'?remark:'';
+  const snap=share?.snapshot||{};
+  const accounts=Array.isArray(snap.accounts)&&snap.accounts.length?snap.accounts:[snap];
+  const messages=[];
+  accounts.forEach((account,index)=>{
+   if(typeof account?.note==='string'&&account.note.trim())messages.push(account.note.trim());
+   if(typeof account?.underpaymentMessage==='string'&&account.underpaymentMessage.trim())messages.push(account.underpaymentMessage.trim());
+  });
+  const ownerRemark=share?.ownerData?.remark;
+  if(typeof ownerRemark==='string'&&ownerRemark.trim())messages.push(ownerRemark.trim());
+  ownerNotice=[...new Set(messages)].join('\\n\\n');
   renderNotice();
  }
  window.fmShowBorrowerOwnerNotice=loadOwnerNotice;
