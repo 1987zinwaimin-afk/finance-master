@@ -1924,7 +1924,8 @@ boot();;
   const name=String(share?.borrowerName||share?.snapshot?.person||document.querySelector('#app [data-share-page="summary"] .head h1')?.textContent?.trim()||'Borrower').trim();
   const model=getBorrowerDeviceModel();
   const loginTime=formatBorrowerLoginTime(borrowerSessionStartedAt);
-  const savedPhone=String(share?.borrowerPhone||share?.snapshot?.borrowerPhone||share?.snapshot?.accounts?.find(a=>a.borrowerPhone)?.borrowerPhone||'').trim();
+  const accountList=Array.isArray(share?.snapshot?.accounts)?share.snapshot.accounts:[];
+  const savedPhone=String(share?.borrowerPhone||share?.snapshot?.borrowerPhone||accountList.find(a=>a?.borrowerPhone)?.borrowerPhone||'').trim();
   const phoneDisplay=savedPhone||'ဖုန်းနံပါတ် မထည့်ရသေးပါ';
   const rows=[
    {icon:'👤',label:'Name',value:name},
@@ -1987,8 +1988,8 @@ boot();;
   }
   const copy=ev.target.closest('#copyBorrowerInstallLink');
   if(copy){const inp=document.getElementById('borrowerInstallLink');try{await navigator.clipboard.writeText(inp.value);copy.textContent='✓ Link ကူးယူပြီးပါပြီ';}catch(e){inp.focus();inp.select();try{document.execCommand('copy');copy.textContent='✓ Link ကူးယူပြီးပါပြီ';}catch(_){}}}
-  if(ev.target.closest('#openMyAccount')){refreshAccount();showPage('account');}
-  const tab=ev.target.closest('[data-share-tab]');if(tab&&['settings','account'].includes(tab.dataset.shareTab))showPage(tab.dataset.shareTab);
+  if(ev.target.closest('#openMyAccount')){showPage('account');refreshAccount();}
+  const tab=ev.target.closest('[data-share-tab]');if(tab&&['settings','account'].includes(tab.dataset.shareTab)){showPage(tab.dataset.shareTab);refreshAccount();}
  });
  window.addEventListener('borrower-share-loaded',refreshAccount);
  setTimeout(refreshAccount,700);
