@@ -698,6 +698,77 @@ body.fm-dark:not(.fm-login-mode) .trend-currency{background:#101a2b;color:var(--
 #app .account-panel .account-list>.account-card .group-currency-balance>small,#app .account-panel .account-list>.account-card .group-currency-balance>em{display:block!important;width:100%!important;font-size:11px!important;line-height:1.4!important;white-space:normal!important;overflow-wrap:anywhere!important}
 @media(max-width:700px){#app .account-panel .account-list{display:flex!important;flex-direction:column!important}#app .account-panel .account-list>.account-card{width:100%!important}#app .account-panel .account-list>.account-card .account-balance{grid-template-columns:repeat(2,minmax(0,1fr))!important}#app .account-panel .account-list>.account-card .group-currency-balance{padding:9px!important}#app .account-panel .account-list>.account-card .group-currency-balance>b{font-size:12px!important}}
 
+
+/* Finance Master — accessible Navy & Champagne Gold button/text palette only */
+:root{
+  --ink:#172743;
+  --muted:#59677d;
+  --gold:#c49a45;
+}
+button,.pill,.linkbtn,.mobile-nav button{
+  -webkit-tap-highlight-color:transparent;
+}
+.pill{
+  color:#172743;
+  border-color:#d8c28f;
+  background:#fffdf8;
+}
+.pill:hover{
+  color:#101c33;
+  border-color:#b58b3b;
+  background:#f8f1e3;
+}
+.primary{
+  color:#fff;
+  background:linear-gradient(135deg,#101c33,#203759);
+  border:1px solid #c49a45;
+  box-shadow:0 5px 14px #101c3326;
+}
+.primary:hover{
+  color:#fff;
+  background:linear-gradient(135deg,#203759,#2b4266);
+}
+.linkbtn{
+  color:#8a6727;
+}
+.linkbtn:hover{
+  color:#674b19;
+  background:#f6efdf;
+}
+.mobile-nav button{
+  color:#58657a;
+  font-weight:600;
+}
+.mobile-nav button span{
+  color:inherit;
+}
+.mobile-nav button.active{
+  color:#8a6727;
+  background:#f7f0e1;
+  font-weight:800;
+}
+.topactions #fmPushEnable{
+  color:#172743;
+  background:#fffaf0;
+  border:1px solid #c49a45;
+  font-weight:700;
+}
+.topactions #fmPushEnable:hover{
+  color:#101c33;
+  background:#f5ecd8;
+}
+.version-pill{
+  color:#172743;
+}
+.dashboard-currency-panel .panelhead h2,
+.metric strong,.metric b,.account-main>b,.account-balance>b{
+  color:#172743;
+}
+.eyebrow,.dashboard-date,.dashboard-hero p,
+.metric small,.account-main small,.account-balance small{
+  color:#59677d;
+}
+
 </style><style id="fm-accessibility-polish">
 /* Finance Master accessibility polish */
 :where(button,a,input,select,textarea,[role="button"],[tabindex]):focus-visible{
