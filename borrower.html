@@ -2858,16 +2858,18 @@ html,body{overflow-x:hidden!important}
  }
  function loadOwnerNotice(loadedShare){
   const share=loadedShare||window.financeMasterBorrowerAccount?.getShare?.();
-  const snap=share?.snapshot||{};
-  const accounts=Array.isArray(snap.accounts)&&snap.accounts.length?snap.accounts:[snap];
   const messages=[];
-  accounts.forEach((account,index)=>{
-   if(typeof account?.note==='string'&&account.note.trim())messages.push(account.note.trim());
-   if(typeof account?.underpaymentMessage==='string'&&account.underpaymentMessage.trim())messages.push(account.underpaymentMessage.trim());
-  });
-  const ownerRemark=share?.ownerData?.remark;
-  if(typeof ownerRemark==='string'&&ownerRemark.trim())messages.push(ownerRemark.trim());
-  ownerNotice=[...new Set(messages)].join('\\n\\n');
+  const seen=new Set();
+  function collect(value,depth){
+   if(!value||typeof value!=='object'||depth>6||seen.has(value))return;
+   seen.add(value);
+   if(typeof value.note==='string'&&value.note.trim())messages.push(value.note.trim());
+   if(typeof value.underpaymentMessage==='string'&&value.underpaymentMessage.trim())messages.push(value.underpaymentMessage.trim());
+   Object.values(value).forEach(child=>{if(child&&typeof child==='object')collect(child,depth+1);});
+  }
+  collect(share?.snapshot,0);
+  collect(share?.ownerData,0);
+  ownerNotice=[...new Set(messages)].join('\n\n');
   renderNotice();
  }
  window.fmShowBorrowerOwnerNotice=loadOwnerNotice;
