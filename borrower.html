@@ -1897,6 +1897,7 @@ boot();;
  window.addEventListener('beforeinstallprompt',ev=>{ev.preventDefault();borrowerInstallPrompt=ev;const b=document.getElementById('installBorrowerApp');if(b)b.textContent='📲 Install App';});
  window.addEventListener('appinstalled',()=>{borrowerInstallPrompt=null;const b=document.getElementById('installBorrowerApp');if(b)b.textContent='✓ Installed';const h=document.getElementById('borrowerInstallHelp');if(h)h.textContent='Home Screen မှာ Install လုပ်ပြီးပါပြီ။';});
  const escHtml=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const esc=escHtml; // Alias used by the My Account renderer.
  function showPage(page){
   document.querySelectorAll('.share-page').forEach(el=>{const on=el.dataset.sharePage===page;el.hidden=!on;el.style.display=on?'block':'none';});
   document.querySelectorAll('[data-share-tab]').forEach(el=>{const on=el.dataset.shareTab===page;el.classList.toggle('active',on);el.setAttribute('aria-current',on?'page':'false');});
