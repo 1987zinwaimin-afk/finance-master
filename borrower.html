@@ -2874,7 +2874,7 @@ html,body{overflow-x:hidden!important}
  }
  window.fmShowBorrowerOwnerNotice=loadOwnerNotice;
  select?.addEventListener('change',renderNotice);
- window.addEventListener('borrower-share-loaded',loadOwnerNotice);
+ window.addEventListener('borrower-share-loaded',()=>loadOwnerNotice());
  ack?.addEventListener('click',()=>{
   modal.hidden=true;document.body.style.overflow='';
  });
