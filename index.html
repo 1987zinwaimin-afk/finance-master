@@ -769,6 +769,114 @@ button,.pill,.linkbtn,.mobile-nav button{
   color:#59677d;
 }
 
+
+/* Global readability pass: stronger text contrast across every page */
+:root{
+  --ink:#14233d;
+  --muted:#526078;
+  --line:#dce3ed;
+}
+body{color:#17243b}
+p,small,label,.muted,.hint,.help,.subtext,.description,.metrichead,.metric small,
+.panel small,.field small,.formhint,.empty-state,.table-empty{
+  color:#526078;
+}
+h1,h2,h3,h4,h5,strong,b,th,.panelhead h2,.pagehead h1,.pagehead h2,
+.metric strong,.metric b,.account-main>b,.account-balance>b{
+  color:#14233d;
+}
+input,select,textarea{color:#17243b}
+input::placeholder,textarea::placeholder{color:#68768b;opacity:1}
+button,.pill,.linkbtn{font-weight:650}
+.linkbtn{color:#805d20}
+.eyebrow{color:#805d20}
+.crumb{color:#526078}
+.crumb strong{color:#14233d}
+.version-pill{color:#624918}
+.nav button{color:#d4dceb}
+.mobile-nav button{color:#53627a}
+.mobile-nav button.active{color:#805d20}
+.mobile-nav button span{color:inherit}
+.metrichead,.metric small{color:#526078}
+.table th,.table thead th{color:#34445d}
+.table td{color:#26364e}
+.badge,.status{font-weight:700}
+/* Compact, aligned mobile header controls */
+@media(max-width:700px){
+  .topbar{
+    height:auto!important;
+    min-height:0;
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
+    justify-content:flex-start;
+    gap:8px;
+    padding:10px 12px 9px;
+  }
+  .topbar .crumb{
+    width:100%;
+    min-height:38px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:13px;
+  }
+  .topbar .topactions{
+    width:100%;
+    min-width:0;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto auto auto;
+    grid-template-rows:auto auto;
+    align-items:center;
+    gap:7px;
+  }
+  .topactions #fmPushEnable{
+    grid-column:1/-1;
+    grid-row:1;
+    width:100%;
+    min-width:0;
+    min-height:42px;
+    padding:9px 12px;
+    justify-content:center;
+    font-size:12px;
+    white-space:nowrap;
+  }
+  .topactions .version-pill{
+    grid-column:2;
+    grid-row:2;
+    display:flex!important;
+    align-items:center;
+    justify-content:center;
+    min-height:40px;
+    white-space:nowrap;
+    padding:8px 10px;
+    font-size:10px;
+  }
+  .topactions .language-select{
+    grid-column:3;
+    grid-row:2;
+    display:block!important;
+    width:104px;
+    max-width:104px;
+    min-height:40px;
+    padding:8px 7px;
+    font-size:12px;
+  }
+  .topactions .avatar{
+    grid-column:4;
+    grid-row:2;
+    justify-self:end;
+    width:40px;
+    height:40px;
+  }
+  .topactions .theme-toggle,
+  .topactions button[onclick^="exportData"],
+  .topactions button[onclick^="go"],
+  .topactions .lang-label{
+    display:none!important;
+  }
+}
+
 </style><style id="fm-accessibility-polish">
 /* Finance Master accessibility polish */
 :where(button,a,input,select,textarea,[role="button"],[tabindex]):focus-visible{
