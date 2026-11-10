@@ -15,6 +15,12 @@ module.exports = async function handler(req, res) {
     const share = shareSnap.data();
     if (!share.ownerUid || !share.borrowerName) return res.status(400).json({ error: 'Borrower link details are incomplete.' });
 
+    const tokenSnap = await db.collection('users').doc(share.ownerUid).collection('pushTokens').where('active', '==', true).get();
+    const deviceTokens = [...new Set(tokenSnap.docs.map(d => d.data().token).filter(Boolean))].slice(0, 500);
+    if (!deviceTokens.length) return res.status(200).json({ ok: true, delivered: 0, reason: 'owner-device-not-registered' });
+
+    // Rate-limit only after confirming an Owner device is registered, so a failed
+    // first attempt cannot suppress the next valid notification.
     const rateRef = db.doc('borrowerPushRateLimits/' + hash(token));
     const now = Date.now();
     const allowed = await db.runTransaction(async tx => {
@@ -25,10 +31,6 @@ module.exports = async function handler(req, res) {
       return true;
     });
     if (!allowed) return res.status(200).json({ ok: true, throttled: true });
-
-    const tokenSnap = await db.collection('users').doc(share.ownerUid).collection('pushTokens').where('active', '==', true).get();
-    const deviceTokens = [...new Set(tokenSnap.docs.map(d => d.data().token).filter(Boolean))].slice(0, 500);
-    if (!deviceTokens.length) return res.status(200).json({ ok: true, delivered: 0, reason: 'owner-device-not-registered' });
 
     const borrowerName = String(share.borrowerName).slice(0, 100);
     const response = await admin.messaging().sendEachForMulticast({
