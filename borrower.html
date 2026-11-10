@@ -14,7 +14,7 @@
    if(saved){location.replace('/borrower.html?token='+encodeURIComponent(saved));return;}
   }
  }catch(e){}
- if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/borrower-service-worker.js?ownermk20261023-location-removed',{scope:'/'}).catch(()=>{}));}
+ if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js?fm-push-worker-v2',{scope:'/'}).catch(()=>{}));}
 })();
 </script>
 <title>Borrower Account · Finance Master</title>
@@ -1739,10 +1739,12 @@ async function boot(){
    try {
     let sessionId=sessionStorage.getItem('fm-borrower-push-session-v1');
     if(!sessionId){sessionId=(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+'-'+Math.random().toString(36).slice(2));sessionStorage.setItem('fm-borrower-push-session-v1',sessionId);}
-    const pushSentKey='fm-borrower-push-sent-v1:'+token;
+    const pushSentKey='fm-borrower-push-sent-v2:'+token;
     if(!sessionStorage.getItem(pushSentKey)){
-     sessionStorage.setItem(pushSentKey,'1');
-     fetch('/api/borrower-open',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token,sessionId})}).catch(()=>{});
+     const pushResponse=await fetch('/api/borrower-open',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token,sessionId})});
+     const pushResult=await pushResponse.json().catch(()=>({}));
+     if(pushResponse.ok && pushResult.ok) sessionStorage.setItem(pushSentKey,'1');
+     else console.warn('Borrower-open notification was not accepted:',pushResult.error||pushResponse.status);
     }
    } catch(pushNoticeError){console.warn('Borrower open notification dispatch skipped:',pushNoticeError);}
    setStatus("Live account loaded · changes from the owner update automatically.","success");
