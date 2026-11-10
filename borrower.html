@@ -1736,6 +1736,14 @@ async function boot(){
    if(!next.snapshot||!next.accountId||!next.ownerUid){setStatus("This account link is incomplete. Please contact the owner.","error");return;}
    if(Array.isArray(next.snapshot.accounts)&&next.snapshot.accounts.length>1&&!Array.isArray(next.accountIds))next.accountIds=next.snapshot.accounts.map(a=>a.accountId);
    share=next;
+   try {
+    let sessionId=sessionStorage.getItem('fm-borrower-push-session-v1');
+    if(!sessionId){sessionId=(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+'-'+Math.random().toString(36).slice(2));sessionStorage.setItem('fm-borrower-push-session-v1',sessionId);}
+    if(!sessionStorage.getItem('fm-borrower-push-sent-v1')){
+     sessionStorage.setItem('fm-borrower-push-sent-v1','1');
+     fetch('/api/borrower-open',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token,sessionId})}).catch(()=>{});
+    }
+   } catch(pushNoticeError){console.warn('Borrower open notification dispatch skipped:',pushNoticeError);}
    setStatus("Live account loaded · changes from the owner update automatically.","success");
    try{render();}catch(renderError){setStatus("Could not display the borrower account. "+(renderError?.message||String(renderError)),"error");console.error("Borrower render failed",renderError);return;}
    window.dispatchEvent(new Event('borrower-share-loaded'));
