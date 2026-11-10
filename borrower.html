@@ -2842,21 +2842,37 @@ html,body{overflow-x:hidden!important}
  const ack=document.getElementById('borrowerNoticeAck');
  const select=document.getElementById('languageSelect');
  const text={
-  my:{title:'အရေးကြီး သတိပေးချက်',copy:'<p>ဤစာမျက်နှာတွင် သင့်အတွက် သီးသန့်မျှဝေထားသော ချေးငွေစာရင်းနှင့် ငွေပေးချေမှုအချက်အလက်များ ပါဝင်ပါသည်။</p><ul><li>စာရင်းများကို မိမိ၏ ကိုယ်ပိုင်အချက်အလက်အဖြစ်သာ အသုံးပြုပါ။</li><li>အမည်၊ ချေးငွေပမာဏနှင့် ပေးချေမှုမှတ်တမ်းများကို သေချာစစ်ဆေးပါ။</li><li>မမှန်ကန်သောအချက်အလက် သို့မဟုတ် မရှင်းလင်းသည့်အရာရှိပါက Owner ကို ဆက်သွယ်ပါ။</li><li>ဤစာရင်းကို အခြားသူများထံ မမျှဝေပါနှင့်။</li></ul><p>အောက်ပါ “နားလည်ပါပြီ” ခလုတ်ကို နှိပ်ပြီးမှသာ သင့်စာရင်းများကို ကြည့်ရှုနိုင်ပါမည်။</p>',ack:'နားလည်ပါပြီ'},
-  en:{title:'Important Notice',copy:'<p>This page contains private loan and payment information shared specifically with you.</p><ul><li>Use these records only for your personal reference.</li><li>Carefully check your name, loan balance, and payment history.</li><li>Contact the Owner if any information looks incorrect or unclear.</li><li>Do not share this private account information with others.</li></ul><p>Press “I Understand” below to continue and view your account.</p>',ack:'I Understand'},
-  th:{title:'ประกาศสำคัญ',copy:'<p>หน้านี้มีข้อมูลเงินกู้และการชำระเงินส่วนตัวที่แชร์ให้คุณโดยเฉพาะ</p><ul><li>ใช้ข้อมูลนี้เพื่อการตรวจสอบส่วนตัวของคุณเท่านั้น</li><li>ตรวจสอบชื่อ ยอดเงินกู้ และประวัติการชำระเงินให้ถูกต้อง</li><li>หากพบข้อมูลไม่ถูกต้องหรือไม่ชัดเจน โปรดติดต่อเจ้าของบัญชี</li><li>อย่าแชร์ข้อมูลบัญชีส่วนตัวนี้ให้ผู้อื่น</li></ul><p>กด “เข้าใจแล้ว” ด้านล่างเพื่อดำเนินการและดูข้อมูลบัญชี</p>',ack:'เข้าใจแล้ว'}
+  my:{title:'Owner မှ သတိပေးစာ',loading:'Owner ထည့်ထားသော သတိပေးစာကို ဖတ်ရှုရန် ချိတ်ဆက်နေပါသည်…',empty:'Owner မှ သတိပေးစာ မထည့်ထားသေးပါ။',ack:'နားလည်ပါပြီ'},
+  en:{title:'Notice from the Owner',loading:'Loading the notice provided by the Owner…',empty:'The Owner has not added a notice yet.',ack:'I Understand'},
+  th:{title:'ประกาศจากเจ้าของบัญชี',loading:'กำลังโหลดประกาศจากเจ้าของบัญชี…',empty:'เจ้าของบัญชียังไม่ได้เพิ่มประกาศ',ack:'เข้าใจแล้ว'}
  };
- function applyLanguage(){
-  const lang=select?.value||'my';const v=text[lang]||text.my;
-  title.textContent=v.title;copy.innerHTML=v.copy;ack.textContent=v.ack;
+ let ownerNotice='';
+ function langText(){return text[select?.value||'my']||text.my;}
+ function renderNotice(){
+  const v=langText();
+  title.textContent=v.title;
+  copy.textContent=ownerNotice.trim()||v.empty;
+  copy.style.whiteSpace='pre-wrap';
+  ack.textContent=v.ack;
  }
- select?.addEventListener('change',applyLanguage);
+ function loadOwnerNotice(){
+  const share=window.financeMasterBorrowerAccount?.getShare?.();
+  const remark=share?.ownerData?.remark;
+  if(typeof remark==='string'){
+   ownerNotice=remark;
+   renderNotice();
+  }
+ }
+ select?.addEventListener('change',renderNotice);
+ window.addEventListener('borrower-share-loaded',loadOwnerNotice);
  ack?.addEventListener('click',()=>{
   modal.hidden=true;document.body.style.overflow='';
-  document.getElementById('status')?.focus?.();
  });
  document.body.style.overflow='hidden';
- applyLanguage();
+ title.textContent=langText().title;
+ copy.textContent=langText().loading;
+ ack.textContent=langText().ack;
+ loadOwnerNotice();
  ack?.focus({preventScroll:true});
 })();
 </script>
