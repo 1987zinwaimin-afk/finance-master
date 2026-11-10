@@ -1728,7 +1728,7 @@ async function boot(){
  if(!token){setStatus("This borrower link is missing its secure access token. Open the complete private link shared by the owner; a name alone cannot safely identify a private account.","error");return;}
  try{
   if(stopShareDoc)stopShareDoc();
-  stopShareDoc=onSnapshot(doc(db,"borrowerShares",token),snap=>{
+  stopShareDoc=onSnapshot(doc(db,"borrowerShares",token),async snap=>{
    if(!snap.exists()){setStatus("This link is invalid, unavailable, or has been revoked.","error");return;}
    const next={id:snap.id,...snap.data()};
    if(requestedNameKey && normalizeBorrowerName(requestedNameKey)!==normalizeBorrowerName(next.borrowerName||next.snapshot?.person||"")){setStatus("Borrower name does not match this private link. Please use the exact link shared by the owner.","error");return;}
