@@ -1077,7 +1077,7 @@ body.fm-dark:not(.fm-login-mode) #content:has(.pagehead)>.cards .metric>strong{c
   <div class="sidefoot"><strong>✦ Your financial clarity</strong><br>Small daily records. Better long-term decisions.<br><br><span id="saveStatus">● Saved on this device</span></div>
 </aside>
 <main class="main">
-<header class="topbar"><div class="crumb"><button class="mobilemenu" onclick="toggleMobile()">☰</button><span>Workspace&nbsp; / &nbsp;<strong id="crumbPage">Dashboard</strong></span></div><div class="topactions"><button class="pill theme-toggle" id="themeToggle" type="button" onclick="toggleTheme()" aria-label="Switch theme" title="Switch Light/Dark mode">☾ Dark</button><span id="appVersion" class="pill version-pill" title="Current website update">Update v8</span><label class="lang-label" for="languageSelect">Language</label><select id="languageSelect" class="pill language-select" aria-label="Language"><option value="my">မြန်မာ</option><option value="en">English</option><option value="th">ไทย</option></select><button class="pill" onclick="exportData()">⇩ Export data</button><button class="pill" onclick="go('Settings')">⚙ Settings</button><div class="avatar">FM</div></div></header>
+<header class="topbar"><div class="crumb"><button class="mobilemenu" onclick="toggleMobile()">☰</button><span>Workspace&nbsp; / &nbsp;<strong id="crumbPage">Dashboard</strong></span></div><div class="topactions"><button class="pill" id="fmPushEnable" type="button" hidden>🔔 Enable notifications</button><button class="pill theme-toggle" id="themeToggle" type="button" onclick="toggleTheme()" aria-label="Switch theme" title="Switch Light/Dark mode">☾ Dark</button><span id="appVersion" class="pill version-pill" title="Current website update">Update v8</span><label class="lang-label" for="languageSelect">Language</label><select id="languageSelect" class="pill language-select" aria-label="Language"><option value="my">မြန်မာ</option><option value="en">English</option><option value="th">ไทย</option></select><button class="pill" onclick="exportData()">⇩ Export data</button><button class="pill" onclick="go('Settings')">⚙ Settings</button><div class="avatar">FM</div></div></header>
 <div class="content" id="content"></div>
 </main>
 </div>
@@ -1966,6 +1966,7 @@ window.fmApp={render:()=>render(),getState:()=>state,replaceState:(next)=>{state
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, deleteDoc as firestoreDeleteDoc, onSnapshot, serverTimestamp, collection, query, where, addDoc, updateDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import { getMessaging, getToken, isSupported } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-messaging.js";
 const firebaseConfig = {
   apiKey: "AIzaSyDCNyu8OFTZ2gAxq5lCbpTDd_bUTyO8Rr0",
   authDomain: "finance-master-8d227.firebaseapp.com",
@@ -1982,6 +1983,34 @@ let authPersistenceReady = true;
 try { await setPersistence(auth, browserLocalPersistence); }
 catch (e) { authPersistenceReady = false; console.warn("Firebase persistent login unavailable:", e?.code || e?.message || e); }
 const db = getFirestore(app);
+const FM_VAPID_PUBLIC_KEY = "BPdupnKrtY08z2GQHv2cGyHTqYBlAn-VkXJrZALxXXXPdTbqUI_xO6wwwgNdvQkvIGcK4e2ekoSI4PFp0uT9Zt0";
+let fmMessagingInstance = null;
+const fmPushButton = document.getElementById('fmPushEnable');
+if (fmPushButton) {
+ fmPushButton.hidden = true;
+ fmPushButton.addEventListener('click', async () => {
+  fmPushButton.disabled = true;
+  try {
+   if (!currentUser || !isOwnerUser(currentUser)) throw new Error('Sign in with the Owner Gmail first.');
+   if (!('Notification' in window) || !('serviceWorker' in navigator)) throw new Error('This browser does not support web push notifications.');
+   const permission = await Notification.requestPermission();
+   if (permission !== 'granted') throw new Error('Notification permission was not granted. Allow notifications for this site in Android settings.');
+   if (!(await isSupported())) throw new Error('Firebase Web Messaging is not supported in this browser.');
+   const registration = await navigator.serviceWorker.register('/sw.js');
+   await navigator.serviceWorker.ready;
+   fmMessagingInstance = fmMessagingInstance || getMessaging(app);
+   const fcmToken = await getToken(fmMessagingInstance, { vapidKey: FM_VAPID_PUBLIC_KEY, serviceWorkerRegistration: registration });
+   if (!fcmToken) throw new Error('Could not obtain an FCM registration token.');
+   const idToken = await currentUser.getIdToken();
+   const response = await fetch('/api/register-push', {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+idToken},body:JSON.stringify({token:fcmToken})});
+   const result = await response.json().catch(()=>({}));
+   if (!response.ok) throw new Error(result.error || 'Could not save this device for notifications.');
+   fmPushButton.textContent = '✓ Notifications enabled';
+   if (window.fmApp?.toast) window.fmApp.toast('Owner notifications enabled on this device'); else alert('Owner notifications enabled on this device.');
+  } catch(error) { alert('Notification setup failed: '+(error?.message||String(error))); }
+  finally { fmPushButton.disabled = false; }
+ });
+}
 // Only this verified Gmail may open the Owner finance workspace. Other accounts remain data-blind.
 // Owner Gmail must be explicitly provided by the user; deny access until configured.
 const OWNER_EMAIL = '1987zinwaimin@gmail.com';
@@ -2357,6 +2386,7 @@ window.fmSheetsBackupNow=async(scheduled=false)=>{
 
 onAuthStateChanged(auth, user => {
   currentUser=user;
+  if(fmPushButton) fmPushButton.hidden = !(user && isOwnerUser(user));
   if(syncTimer){clearTimeout(syncTimer);syncTimer=null;}
   localDirty=false;
   startCloudListener(user);
