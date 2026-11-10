@@ -2805,18 +2805,16 @@ html,body{overflow-x:hidden!important}
 
 
 <style id="borrower-entry-notice-style">
-#borrowerEntryNotice{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(8,20,39,.78);backdrop-filter:blur(7px)}
+#borrowerEntryNotice{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(8,20,39,.78);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 #borrowerEntryNotice[hidden]{display:none!important}
-#borrowerEntryNotice .notice-card{width:min(100%,460px);max-height:min(88vh,760px);overflow:auto;background:#fff;border:1px solid #d8c28f;border-radius:22px;padding:24px 22px 20px;box-shadow:0 24px 80px rgba(0,0,0,.34);color:#172743}
-#borrowerEntryNotice .notice-mark{width:54px;height:54px;margin:0 auto 13px;border-radius:17px;display:grid;place-items:center;background:#f7f0e1;color:#8a6727;font-size:27px}
-#borrowerEntryNotice h2{margin:0 0 14px;text-align:center;font-size:21px;line-height:1.35;color:#14233d}
-#borrowerEntryNotice .notice-copy{font-size:14px;line-height:1.8;color:#40516a}
-#borrowerEntryNotice .notice-copy p{margin:0 0 11px}
-#borrowerEntryNotice .notice-copy ul{padding-left:21px;margin:8px 0 16px}
-#borrowerEntryNotice .notice-copy li{margin:5px 0}
-#borrowerEntryNotice .notice-ack{width:100%;min-height:48px;border:1px solid #b58b3b;border-radius:13px;background:linear-gradient(135deg,#101c33,#203759);color:#fff;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 7px 18px rgba(16,28,51,.2)}
+#borrowerEntryNotice .notice-card{width:min(100%,460px);max-height:84vh;max-height:84dvh;display:flex;flex-direction:column;overflow:hidden;background:#fff;border:1px solid #d8c28f;border-radius:22px;padding:22px 21px 17px;box-shadow:0 24px 80px rgba(0,0,0,.34);color:#172743}
+#borrowerEntryNotice .notice-mark{width:48px;height:48px;flex:0 0 48px;margin:0 auto 11px;border-radius:15px;display:grid;place-items:center;background:#f7f0e1;color:#8a6727;font-size:24px}
+#borrowerEntryNotice h2{flex:0 0 auto;margin:0 0 13px;text-align:center;font-size:20px;line-height:1.35;color:#14233d;letter-spacing:-.2px}
+#borrowerEntryNotice .notice-copy{min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:2px 2px 14px;font-size:14px;line-height:1.72;color:#34445d;white-space:pre-wrap;overflow-wrap:anywhere;word-break:normal}
+#borrowerEntryNotice .notice-copy:empty{display:none}
+#borrowerEntryNotice .notice-ack{flex:0 0 auto;width:100%;min-height:49px;margin-top:9px;padding:10px 14px;border:1px solid #b58b3b;border-radius:13px;background:linear-gradient(135deg,#101c33,#203759);color:#fff;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 5px 14px rgba(16,28,51,.18)}
 #borrowerEntryNotice .notice-ack:focus-visible{outline:3px solid #d8b56d;outline-offset:3px}
-@media(max-width:480px){#borrowerEntryNotice{padding:13px}#borrowerEntryNotice .notice-card{padding:21px 17px 17px;border-radius:19px}#borrowerEntryNotice h2{font-size:19px}#borrowerEntryNotice .notice-copy{font-size:13px}}
+@media(max-width:480px){#borrowerEntryNotice{padding:12px}#borrowerEntryNotice .notice-card{max-height:82vh;max-height:82dvh;padding:19px 16px 15px;border-radius:19px}#borrowerEntryNotice h2{font-size:19px;margin-bottom:10px}#borrowerEntryNotice .notice-copy{font-size:14px;line-height:1.7;padding-bottom:10px}#borrowerEntryNotice .notice-ack{min-height:48px}}
 </style>
 <div id="borrowerEntryNotice" role="dialog" aria-modal="true" aria-labelledby="borrowerNoticeTitle">
  <section class="notice-card">
@@ -2879,7 +2877,7 @@ html,body{overflow-x:hidden!important}
     if(uniqueRows.length)sections.push('⚠️ သတ်မှတ်ငွေ မပြည့်သောလများ · '+uniqueRows.length+' လ'+accountLabel+'\n'+uniqueRows.join('\n'));
    }
   });
-  ownerNotice=sections.join('\n\n──────────────\n\n');
+  ownerNotice=sections.join('\n\n');
   renderNotice();
  }
  window.fmShowBorrowerOwnerNotice=loadOwnerNotice;
