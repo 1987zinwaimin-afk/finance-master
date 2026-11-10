@@ -1447,6 +1447,17 @@ const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
 const money=(v,c)=>{try{return new Intl.NumberFormat("en-US",{style:"currency",currency:["THB","MMK","USD","SGD"].includes(c)?c:"THB",maximumFractionDigits:2}).format(Number(v)||0)}catch(e){return String(v??0)}};
 const today=()=>new Date().toISOString().slice(0,10);
 let share=null,stopChat=null,stopShareDoc=null,shareListenersStarted=false,chatMessages=[];
+window.financeMasterBorrowerAccount={
+ getShare:()=>share,
+ formatMoney:money,
+ savePhone:async phone=>{
+  if(!token||!share?.id)throw new Error("Borrower share is not loaded.");
+  await updateDoc(doc(db,"borrowerShares",token),{borrowerPhone:phone});
+  share.borrowerPhone=phone;
+  if(share.snapshot)share.snapshot.borrowerPhone=phone;
+  return true;
+ }
+};
 function setStatus(text,type="muted"){ $("status").className="status "+type;$("status").textContent=text;}
 function selectedMonth(){return $("monthFilter")?.value||"";}
 function formatRequestTime(v){try{if(v&&typeof v.toDate==="function")return v.toDate().toLocaleString();if(v)return new Date(v).toLocaleString();}catch(e){}return "";}
@@ -1897,7 +1908,7 @@ boot();;
  window.addEventListener('beforeinstallprompt',ev=>{ev.preventDefault();borrowerInstallPrompt=ev;const b=document.getElementById('installBorrowerApp');if(b)b.textContent='📲 Install App';});
  window.addEventListener('appinstalled',()=>{borrowerInstallPrompt=null;const b=document.getElementById('installBorrowerApp');if(b)b.textContent='✓ Installed';const h=document.getElementById('borrowerInstallHelp');if(h)h.textContent='Home Screen မှာ Install လုပ်ပြီးပါပြီ။';});
  const escHtml=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const esc=escHtml; // Alias used by the My Account renderer.
+ const api=()=>window.financeMasterBorrowerAccount||null;
  function showPage(page){
   document.querySelectorAll('.share-page').forEach(el=>{const on=el.dataset.sharePage===page;el.hidden=!on;el.style.display=on?'block':'none';});
   document.querySelectorAll('[data-share-tab]').forEach(el=>{const on=el.dataset.shareTab===page;el.classList.toggle('active',on);el.setAttribute('aria-current',on?'page':'false');});
@@ -1906,13 +1917,11 @@ boot();;
  const borrowerSessionStartedAt=new Date();
  function getBorrowerDeviceModel(){
   try{
-   const ua=navigator.userAgent||'';
-   const model=navigator.userAgentData&&navigator.userAgentData.model;
+   const ua=navigator.userAgent||'',model=navigator.userAgentData&&navigator.userAgentData.model;
    if(model&&String(model).trim())return String(model).trim();
-   const samsung=ua.match(/\b(SM-[A-Z0-9-]+)\b/i);if(samsung)return 'Samsung '+samsung[1].toUpperCase();
-   if(/iPhone/i.test(ua))return 'iPhone';
-   if(/iPad/i.test(ua))return 'iPad';
-   if(/Pixel/i.test(ua)){const p=ua.match(/(Pixel\s?[A-Za-z0-9 ]*)/i);return p?p[1].trim():'Google Pixel';}
+   const samsung=ua.match(/\\b(SM-[A-Z0-9-]+)\\b/i);if(samsung)return 'Samsung '+samsung[1].toUpperCase();
+   if(/iPhone/i.test(ua))return 'iPhone';if(/iPad/i.test(ua))return 'iPad';
+   if(/Pixel/i.test(ua)){const p=ua.match(/(Pixel\\s?[A-Za-z0-9 ]*)/i);return p?p[1].trim():'Google Pixel';}
    if(/Android/i.test(ua))return 'Android phone (exact model hidden by browser)';
    return /Windows/i.test(ua)?'Windows device':/Macintosh|Mac OS/i.test(ua)?'Mac device':/Linux/i.test(ua)?'Linux device':'Device model unavailable';
   }catch(e){return 'Device model unavailable';}
@@ -1922,55 +1931,57 @@ boot();;
   catch(e){return date.toLocaleString();}
  }
  function accountMarkup(){
-  const name=String(share?.borrowerName||share?.snapshot?.person||document.querySelector('#app [data-share-page="summary"] .head h1')?.textContent?.trim()||'Borrower').trim();
-  const model=getBorrowerDeviceModel();
-  const loginTime=formatBorrowerLoginTime(borrowerSessionStartedAt);
-  const accountList=Array.isArray(share?.snapshot?.accounts)?share.snapshot.accounts:[];
-  const savedPhone=String(share?.borrowerPhone||share?.snapshot?.borrowerPhone||accountList.find(a=>a?.borrowerPhone)?.borrowerPhone||'').trim();
-  const phoneDisplay=savedPhone||'ဖုန်းနံပါတ် မထည့်ရသေးပါ';
+  const state=api(),currentShare=state?.getShare?.()||null,money=state?.formatMoney||((v)=>String(v??0));
+  const name=String(currentShare?.borrowerName||currentShare?.snapshot?.person||document.querySelector('#app [data-share-page="summary"] .head h1')?.textContent?.trim()||'Borrower').trim();
+  const model=getBorrowerDeviceModel(),loginTime=formatBorrowerLoginTime(borrowerSessionStartedAt);
+  const accountList=Array.isArray(currentShare?.snapshot?.accounts)?currentShare.snapshot.accounts:[];
+  const savedPhone=String(currentShare?.borrowerPhone||currentShare?.snapshot?.borrowerPhone||accountList.find(a=>a?.borrowerPhone)?.borrowerPhone||'').trim();
   const rows=[
-   {icon:'👤',label:'Name',value:name},
-   {icon:'📱',label:'Model',value:model},
+   {icon:'👤',label:'Name',value:name},{icon:'📱',label:'Model',value:model},
    {icon:'🕒',label:'Login Time',value:loginTime},
-   {icon:'🟢',label:'Session status',value:'Active · လက်ရှိ Share Link ကို ဖွင့်ထားသည်',status:true},
-   {icon:'☎️',label:'Phone',value:phoneDisplay,muted:!savedPhone}
+   {icon:'🟢',label:'Session status',value:currentShare?'Active · လက်ရှိ Share Link ကို ဖွင့်ထားသည်':'အကောင့်အချက်အလက်ကို ဖွင့်နေသည်',status:!!currentShare},
+   {icon:'☎️',label:'Phone',value:savedPhone||'ဖုန်းနံပါတ် မထည့်ရသေးပါ',muted:!savedPhone}
   ];
-  const rowHtml=rows.map((r,i)=>'<div style="display:grid;grid-template-columns:38px minmax(0,1fr);gap:11px;align-items:center;padding:13px 2px;'+(i===rows.length-1?'':'border-bottom:1px solid #e8edf4;')+'"><div style="width:36px;height:36px;border-radius:12px;background:'+(r.status?'#e8f8f1':'#f0f4fa')+';display:flex;align-items:center;justify-content:center;font-size:18px">'+r.icon+'</div><div style="min-width:0"><div style="font-size:12px;letter-spacing:.2px;font-weight:700;color:#728096;margin-bottom:4px">'+esc(r.label)+'</div><div style="font-size:14px;font-weight:750;line-height:1.5;color:'+(r.status?'#087f66':r.muted?'#8792a3':'#172b49')+';overflow-wrap:anywhere">'+esc(r.value)+'</div></div></div>').join('');
-  const accounts=Array.isArray(share?.snapshot?.accounts)&&share.snapshot.accounts.length?share.snapshot.accounts:[share?.snapshot||{}];
+  const rowHtml=rows.map((r,i)=>'<div style="display:grid;grid-template-columns:38px minmax(0,1fr);gap:11px;align-items:center;padding:13px 2px;'+(i===rows.length-1?'':'border-bottom:1px solid #e8edf4;')+'"><div style="width:36px;height:36px;border-radius:12px;background:'+(r.status?'#e8f8f1':'#f0f4fa')+';display:flex;align-items:center;justify-content:center;font-size:18px">'+r.icon+'</div><div style="min-width:0"><div style="font-size:12px;letter-spacing:.2px;font-weight:700;color:#728096;margin-bottom:4px">'+escHtml(r.label)+'</div><div style="font-size:14px;font-weight:750;line-height:1.5;color:'+(r.status?'#087f66':r.muted?'#8792a3':'#172b49')+';overflow-wrap:anywhere">'+escHtml(r.value)+'</div></div></div>').join('');
+  const accounts=Array.isArray(currentShare?.snapshot?.accounts)&&currentShare.snapshot.accounts.length?currentShare.snapshot.accounts:[currentShare?.snapshot||{}];
   const validAccounts=accounts.filter(a=>a&&(a.accountId||a.loanType||a.principal!==undefined||a.principalOutstanding!==undefined));
-  const currencyTotals=[...new Set(validAccounts.map(a=>a.currency||share?.currency||'THB'))].map(currency=>{
-   const list=validAccounts.filter(a=>(a.currency||share?.currency||'THB')===currency);
+  const currencyTotals=[...new Set(validAccounts.map(a=>a.currency||currentShare?.currency||'THB'))].map(currency=>{
+   const list=validAccounts.filter(a=>(a.currency||currentShare?.currency||'THB')===currency);
    const original=list.reduce((n,a)=>n+Math.max(0,Number(a.principal)||0),0);
    const paid=list.reduce((n,a)=>n+(Array.isArray(a.payments)?a.payments:[]).reduce((m,p)=>m+Math.max(0,Number(p.amount)||0),0),0);
    const remaining=list.reduce((n,a)=>n+Math.max(0,Number(a.principalOutstanding)||0)+Math.max(0,Number(a.interestOutstanding)||0),0);
-   return '<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:10px"><div style="background:#f5f7fb;border-radius:10px;padding:9px;min-width:0"><small style="display:block;color:#718096;font-size:10px">မူရင်းချေးငွေ</small><b style="display:block;color:#1c3452;font-size:12px;overflow-wrap:anywhere">'+esc(money(original,currency))+'</b></div><div style="background:#edf8f3;border-radius:10px;padding:9px;min-width:0"><small style="display:block;color:#53806d;font-size:10px">ပြန်ဆပ်ပြီးငွေ</small><b style="display:block;color:#087f66;font-size:12px;overflow-wrap:anywhere">'+esc(money(paid,currency))+'</b></div><div style="background:#fff7e8;border-radius:10px;padding:9px;min-width:0"><small style="display:block;color:#8a6a32;font-size:10px">ကျန်ငွေ</small><b style="display:block;color:#6d5120;font-size:12px;overflow-wrap:anywhere">'+esc(money(remaining,currency))+'</b></div></div>';
+   return '<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:10px"><div style="background:#f5f7fb;border-radius:10px;padding:9px;min-width:0"><small style="display:block;color:#718096;font-size:10px">မူရင်းချေးငွေ</small><b style="display:block;color:#1c3452;font-size:12px;overflow-wrap:anywhere">'+escHtml(money(original,currency))+'</b></div><div style="background:#edf8f3;border-radius:10px;padding:9px;min-width:0"><small style="display:block;color:#53806d;font-size:10px">ပြန်ဆပ်ပြီးငွေ</small><b style="display:block;color:#087f66;font-size:12px;overflow-wrap:anywhere">'+escHtml(money(paid,currency))+'</b></div><div style="background:#fff7e8;border-radius:10px;padding:9px;min-width:0"><small style="display:block;color:#8a6a32;font-size:10px">ကျန်ငွေ</small><b style="display:block;color:#6d5120;font-size:12px;overflow-wrap:anywhere">'+escHtml(money(remaining,currency))+'</b></div></div>';
   }).join('');
   const loanCards=validAccounts.map((a,i)=>{
-   const currency=a.currency||share?.currency||'THB',paid=(Array.isArray(a.payments)?a.payments:[]).reduce((n,p)=>n+Math.max(0,Number(p.amount)||0),0);
+   const currency=a.currency||currentShare?.currency||'THB',paid=(Array.isArray(a.payments)?a.payments:[]).reduce((n,p)=>n+Math.max(0,Number(p.amount)||0),0);
    const remaining=Math.max(0,Number(a.principalOutstanding)||0)+Math.max(0,Number(a.interestOutstanding)||0);
    const loanName=a.loanType||a.label||a.type||a.category||a.accountName||a.name||a.title||('ချေးငွေအကောင့် '+(i+1));
-   return '<article style="border:1px solid #e4eaf2;border-radius:13px;background:#fff;padding:12px;margin-top:9px"><b style="display:block;color:#1c3452;font-size:13px;line-height:1.45">'+esc(loanName)+'</b><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px"><div><small style="display:block;color:#7b8798;font-size:10px">မူရင်းချေးငွေ</small><b style="font-size:12px;color:#253b58">'+esc(money(a.principal||0,currency))+'</b></div><div><small style="display:block;color:#7b8798;font-size:10px">ပြန်ဆပ်ပြီးငွေ</small><b style="font-size:12px;color:#087f66">'+esc(money(paid,currency))+'</b></div><div style="grid-column:1/-1;border-top:1px solid #edf0f4;padding-top:7px"><small style="display:block;color:#7b8798;font-size:10px">လက်ရှိကျန်ငွေ (အရင်း + အတိုး)</small><b style="font-size:14px;color:#8a6426">'+esc(money(remaining,currency))+'</b></div></div></article>';
+   return '<article style="border:1px solid #e4eaf2;border-radius:13px;background:#fff;padding:12px;margin-top:9px"><b style="display:block;color:#1c3452;font-size:13px;line-height:1.45">'+escHtml(loanName)+'</b><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px"><div><small style="display:block;color:#7b8798;font-size:10px">မူရင်းချေးငွေ</small><b style="font-size:12px;color:#253b58">'+escHtml(money(a.principal||0,currency))+'</b></div><div><small style="display:block;color:#7b8798;font-size:10px">ပြန်ဆပ်ပြီးငွေ</small><b style="font-size:12px;color:#087f66">'+escHtml(money(paid,currency))+'</b></div><div style="grid-column:1/-1;border-top:1px solid #edf0f4;padding-top:7px"><small style="display:block;color:#7b8798;font-size:10px">လက်ရှိကျန်ငွေ (အရင်း + အတိုး)</small><b style="font-size:14px;color:#8a6426">'+escHtml(money(remaining,currency))+'</b></div></div></article>';
   }).join('');
   const financialHtml=validAccounts.length?'<section style="margin-top:12px;border:1px solid #dfe7f0;border-radius:16px;padding:13px;background:#f9fbfe"><h4 style="margin:0;color:#1c3452;font-size:14px">💰 ချေးငွေအကောင့် အချက်အလက်</h4><p style="margin:4px 0 0;color:#78869a;font-size:11px">ချေးငွေအကောင့် '+validAccounts.length+' ခု · ငွေကြေးအမျိုးအစားအလိုက် စာရင်းခွဲထားသည်</p>'+currencyTotals+loanCards+'</section>':'<section style="margin-top:12px;border:1px solid #e2e8f0;border-radius:14px;padding:12px;color:#718096;font-size:12px">ချေးငွေအကောင့် အချက်အလက် မရရှိသေးပါ။</section>';
-  return '<section style="border:1px solid #e2e8f0;border-radius:18px;padding:5px 16px;background:linear-gradient(145deg,#fff,#f8faff);box-shadow:0 8px 24px rgba(18,39,70,.07)">'+rowHtml+'</section>'+financialHtml+'<section style="margin-top:10px;border:1px solid #e2e8f0;border-radius:16px;padding:14px;background:#fff"><p style="margin:0 0 10px;font-size:12px;color:#728096;line-height:1.5">Phone နံပါတ်ကို ဒီနေရာမှာ ထည့်/ပြင်နိုင်ပါတယ်။ Browser က Google Drive/Google Account ထဲက ကိုယ်ရေးဖုန်းနံပါတ်ကို အလိုအလျောက် မဖတ်နိုင်ပါ။</p><form id="borrowerPhoneEditForm"><div class="field"><label for="borrowerPhoneEdit">Phone</label><input id="borrowerPhoneEdit" name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="32" value="'+esc(savedPhone)+'" placeholder="+66 / 09xxxxxxxx"></div><button class="btn" id="saveBorrowerPhone" type="submit" style="margin-top:10px;width:100%">ဖုန်းနံပါတ် သိမ်းမည်</button><div id="borrowerPhoneSaveStatus" aria-live="polite" style="margin-top:8px;font-size:12px"></div></form></section>';
+  return '<section style="border:1px solid #e2e8f0;border-radius:18px;padding:5px 16px;background:linear-gradient(145deg,#fff,#f8faff);box-shadow:0 8px 24px rgba(18,39,70,.07)">'+rowHtml+'</section>'+financialHtml+'<section style="margin-top:10px;border:1px solid #e2e8f0;border-radius:16px;padding:14px;background:#fff"><p style="margin:0 0 10px;font-size:12px;color:#728096;line-height:1.5">Phone နံပါတ်ကို ဒီနေရာမှာ ထည့်/ပြင်နိုင်ပါတယ်။ Browser က Google Drive/Google Account ထဲက ကိုယ်ရေးဖုန်းနံပါတ်ကို အလိုအလျောက် မဖတ်နိုင်ပါ။</p><form id="borrowerPhoneEditForm"><div class="field"><label for="borrowerPhoneEdit">Phone</label><input id="borrowerPhoneEdit" name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="32" value="'+escHtml(savedPhone)+'" placeholder="+66 / 09xxxxxxxx"></div><button class="btn" id="saveBorrowerPhone" type="submit" style="margin-top:10px;width:100%">ဖုန်းနံပါတ် သိမ်းမည်</button><div id="borrowerPhoneSaveStatus" aria-live="polite" style="margin-top:8px;font-size:12px"></div></form></section>';
  }
- function refreshAccount(){const html=accountMarkup();const a=document.getElementById('borrowerMyAccountDetails');const b=document.getElementById('borrowerMyAccountFull');if(a)a.innerHTML=html;if(b)b.innerHTML=html;}
+ function refreshAccount(){
+  const target=document.getElementById('borrowerMyAccountDetails');
+  if(!target)return;
+  try{target.innerHTML=accountMarkup();}
+  catch(err){console.error('My Account render failed',err);target.innerHTML='<div class="error">My Account ကို ဖော်ပြမရပါ။ '+escHtml(err?.message||String(err))+'</div>';}
+ }
  document.addEventListener('submit',async ev=>{
   if(ev.target?.id!=='borrowerPhoneEditForm')return;
   ev.preventDefault();
   const input=document.getElementById('borrowerPhoneEdit'),button=document.getElementById('saveBorrowerPhone'),msg=document.getElementById('borrowerPhoneSaveStatus');
-  const phone=String(input?.value||'').trim();
+  const phone=String(input?.value||'').trim(),state=api();
   if(phone.length>32){if(msg)msg.textContent='ဖုန်းနံပါတ်ကို စာလုံး ၃၂ လုံးထက် မပိုစေရပါ။';return;}
-  if(!share?.id||!token){if(msg)msg.textContent='Share Link မမှန်ပါ။';return;}
+  if(!state?.getShare?.()?.id){if(msg)msg.textContent='Share Link မမှန်ပါ။';return;}
   if(button)button.disabled=true;if(msg)msg.textContent='Saving…';
   try{
-   await updateDoc(doc(db,'borrowerShares',token),{borrowerPhone:phone});
-   share.borrowerPhone=phone;
-   if(share.snapshot)share.snapshot.borrowerPhone=phone;
-   if(msg){msg.textContent='ဖုန်းနံပါတ် သိမ်းဆည်းပြီးပါပြီ။';msg.style.color='#087f66';}
+   await state.savePhone(phone);
    refreshAccount();
-  }catch(err){if(msg){msg.textContent='သိမ်းဆည်းမရပါ။ Share Link ကို ပြန်ဖွင့်ပြီး ထပ်ကြိုးစားပါ။';msg.style.color='#b42318';}}
-  finally{if(button)button.disabled=false;}
+   const status=document.getElementById('borrowerPhoneSaveStatus');
+   if(status){status.textContent='ဖုန်းနံပါတ် သိမ်းဆည်းပြီးပါပြီ။';status.style.color='#087f66';}
+  }catch(err){if(msg){msg.textContent='သိမ်းဆည်းမရပါ။ '+(err?.message||'Share Link ကို ပြန်ဖွင့်ပြီး ထပ်ကြိုးစားပါ။');msg.style.color='#b42318';}}
+  finally{const b=document.getElementById('saveBorrowerPhone');if(b)b.disabled=false;}
  });
  document.addEventListener('click',async ev=>{
   const install=ev.target.closest('#installBorrowerApp');
@@ -1979,22 +1990,19 @@ boot();;
    const help=document.getElementById('borrowerInstallHelp');
    if(borrowerInstallPrompt){
     try{borrowerInstallPrompt.prompt();const choice=await borrowerInstallPrompt.userChoice;borrowerInstallPrompt=null;if(help)help.textContent=choice&&choice.outcome==='accepted'?'Home Screen မှာ Install လုပ်ရန် လက်ခံပြီးပါပြီ။':'Install မလုပ်ရသေးပါ။ Install ခလုတ်ကို ထပ်နှိပ်နိုင်ပါသည်။';}catch(e){if(help)help.textContent='Install Prompt မရသေးပါ။ Chrome မီနူးမှ Install app ကို ရွေးပါ။'}
-   }else{
-    if(/iPhone|iPad|iPod/i.test(navigator.userAgent)){
-     if(help)help.textContent='iPhone မှာ Safari → Share → Add to Home Screen ကို ရွေးပါ။ Browser က ခွင့်မပြုလို့ ဝဘ်ဆိုက်ကနေ အလိုအလျောက် Home Screen ထဲထည့်ပေးလို့ မရပါ။';
-    }else if(/Android/i.test(navigator.userAgent)){
-     if(help)help.textContent='Install အတည်ပြု Prompt မရသေးပါ။ ဒီခလုတ်က Home page ကို ပြန်မဖွင့်တော့ပါ။ Chrome ညာဘက်အပေါ် ⋮ ကိုနှိပ်ပြီး Install app (သို့) Add to Home screen ကို ရွေးပါ။';
-    }else if(help)help.textContent='ဒီ Browser မှာ Install prompt မရနိုင်သေးပါ။ Browser menu မှ Install app / Add to Home screen ကို ရွေးပါ။';
-   }
+   }else if(/iPhone|iPad|iPod/i.test(navigator.userAgent)){if(help)help.textContent='iPhone မှာ Safari → Share → Add to Home Screen ကို ရွေးပါ။'}
+   else if(/Android/i.test(navigator.userAgent)){if(help)help.textContent='Chrome ညာဘက်အပေါ် ⋮ ကိုနှိပ်ပြီး Install app (သို့) Add to Home screen ကို ရွေးပါ။'}
+   else if(help)help.textContent='Browser menu မှ Install app / Add to Home screen ကို ရွေးပါ။';
   }
   const copy=ev.target.closest('#copyBorrowerInstallLink');
   if(copy){const inp=document.getElementById('borrowerInstallLink');try{await navigator.clipboard.writeText(inp.value);copy.textContent='✓ Link ကူးယူပြီးပါပြီ';}catch(e){inp.focus();inp.select();try{document.execCommand('copy');copy.textContent='✓ Link ကူးယူပြီးပါပြီ';}catch(_){}}}
-  if(ev.target.closest('#openMyAccount')){showPage('account');refreshAccount();}
-  const tab=ev.target.closest('[data-share-tab]');if(tab&&['settings','account'].includes(tab.dataset.shareTab)){showPage(tab.dataset.shareTab);refreshAccount();}
+  const tab=ev.target.closest('[data-share-tab]');
+  if(tab&&tab.dataset.shareTab==='settings'){showPage('settings');refreshAccount();}
  });
  window.addEventListener('borrower-share-loaded',refreshAccount);
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',refreshAccount);
  setTimeout(refreshAccount,700);
-})();
+})();;
 </script>
 
 <style id="finance-master-final-customer-contrast">
