@@ -1077,7 +1077,7 @@ body.fm-dark:not(.fm-login-mode) #content:has(.pagehead)>.cards .metric>strong{c
   <div class="sidefoot"><strong>✦ Your financial clarity</strong><br>Small daily records. Better long-term decisions.<br><br><span id="saveStatus">● Saved on this device</span></div>
 </aside>
 <main class="main">
-<header class="topbar"><div class="crumb"><button class="mobilemenu" onclick="toggleMobile()">☰</button><span>Workspace&nbsp; / &nbsp;<strong id="crumbPage">Dashboard</strong></span></div><div class="topactions"><button class="pill" id="fmPushEnable" type="button" hidden>🔔 Enable notifications</button><button class="pill theme-toggle" id="themeToggle" type="button" onclick="toggleTheme()" aria-label="Switch theme" title="Switch Light/Dark mode">☾ Dark</button><span id="appVersion" class="pill version-pill" title="Current website update">Update v8</span><label class="lang-label" for="languageSelect">Language</label><select id="languageSelect" class="pill language-select" aria-label="Language"><option value="my">မြန်မာ</option><option value="en">English</option><option value="th">ไทย</option></select><button class="pill" onclick="exportData()">⇩ Export data</button><button class="pill" onclick="go('Settings')">⚙ Settings</button><div class="avatar">FM</div></div></header>
+<header class="topbar"><div class="crumb"><button class="mobilemenu" onclick="toggleMobile()">☰</button><span>Workspace&nbsp; / &nbsp;<strong id="crumbPage">Dashboard</strong></span></div><div class="topactions"><button class="pill" id="fmPushEnable" type="button">🔔 Enable notifications</button><button class="pill theme-toggle" id="themeToggle" type="button" onclick="toggleTheme()" aria-label="Switch theme" title="Switch Light/Dark mode">☾ Dark</button><span id="appVersion" class="pill version-pill" title="Current website update">Update v8</span><label class="lang-label" for="languageSelect">Language</label><select id="languageSelect" class="pill language-select" aria-label="Language"><option value="my">မြန်မာ</option><option value="en">English</option><option value="th">ไทย</option></select><button class="pill" onclick="exportData()">⇩ Export data</button><button class="pill" onclick="go('Settings')">⚙ Settings</button><div class="avatar">FM</div></div></header>
 <div class="content" id="content"></div>
 </main>
 </div>
@@ -1987,7 +1987,7 @@ const FM_VAPID_PUBLIC_KEY = "BPdupnKrtY08z2GQHv2cGyHTqYBlAn-VkXJrZALxXXXPdTbqUI_
 let fmMessagingInstance = null;
 const fmPushButton = document.getElementById('fmPushEnable');
 if (fmPushButton) {
- fmPushButton.hidden = true;
+ fmPushButton.hidden = false;
  fmPushButton.addEventListener('click', async () => {
   fmPushButton.disabled = true;
   try {
@@ -2386,7 +2386,7 @@ window.fmSheetsBackupNow=async(scheduled=false)=>{
 
 onAuthStateChanged(auth, user => {
   currentUser=user;
-  if(fmPushButton) fmPushButton.hidden = !(user && isOwnerUser(user));
+  if(fmPushButton) { fmPushButton.hidden = false; fmPushButton.title = user ? (isOwnerUser(user) ? 'Enable notifications on this Owner device' : 'Signed in with '+(user.email||'a non-Owner account')) : 'Sign in with the Owner Gmail first'; }
   if(syncTimer){clearTimeout(syncTimer);syncTimer=null;}
   localDirty=false;
   startCloudListener(user);
