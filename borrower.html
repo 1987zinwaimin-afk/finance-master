@@ -2857,19 +2857,29 @@ html,body{overflow-x:hidden!important}
   ack.textContent=v.ack;
  }
  function loadOwnerNotice(loadedShare){
-  const share=loadedShare||window.financeMasterBorrowerAccount?.getShare?.();
-  const messages=[];
-  const seen=new Set();
-  function collect(value,depth){
-   if(!value||typeof value!=='object'||depth>6||seen.has(value))return;
-   seen.add(value);
-   if(typeof value.note==='string'&&value.note.trim())messages.push(value.note.trim());
-   if(typeof value.underpaymentMessage==='string'&&value.underpaymentMessage.trim())messages.push(value.underpaymentMessage.trim());
-   Object.values(value).forEach(child=>{if(child&&typeof child==='object')collect(child,depth+1);});
-  }
-  collect(share?.snapshot,0);
-  collect(share?.ownerData,0);
-  ownerNotice=[...new Set(messages)].join('\n\n');
+  const share=loadedShare||window.financeMasterBorrowerAccount?.getShare?.()||{};
+  const snapshot=share.snapshot||{};
+  const accounts=Array.isArray(snapshot.accounts)&&snapshot.accounts.length?snapshot.accounts:[snapshot];
+  const sections=[];
+  const fmt=(value,currency)=>String(currency||'THB')+' '+(Number(value)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  accounts.forEach((account,index)=>{
+   if(!account||typeof account!=='object')return;
+   const accountLabel=accounts.length>1?'\n['+(account.name||account.loanName||account.accountName||('အကောင့် '+(index+1)))+']':'';
+   const ownerMessage=typeof account.underpaymentMessage==='string'?account.underpaymentMessage.trim():'';
+   if(ownerMessage)sections.push('🔔 Owner ထံမှ အသိပေးချက်'+accountLabel+'\n'+ownerMessage);
+   const target=Math.max(0,Number(account.monthlyTarget)||0);
+   if(target>0){
+    const statuses=Array.isArray(account.monthlyTargetStatuses)?account.monthlyTargetStatuses:[];
+    const statusRows=statuses.filter(x=>x&&(x.under||Number(x.paid)+0.004<target));
+    const ownerRows=Array.isArray(account.monthlyTargetShortfalls)?account.monthlyTargetShortfalls.filter(x=>/^\d{4}-(0[1-9]|1[0-2])$/.test(String(x.month||''))&&Number(x.amount)>0):[];
+    const rows=[];
+    statusRows.forEach(x=>rows.push(String(x.month||'')+' · သွင်းငွေ '+fmt(x.paid,account.currency)+' · လိုငွေ '+fmt(Math.max(0,target-(Number(x.paid)||0)),account.currency)));
+    ownerRows.forEach(x=>rows.push(String(x.date||x.month||'')+' · သွင်းငွေ '+fmt(x.paid,account.currency)+' · လိုငွေ '+fmt(x.amount,account.currency)));
+    const uniqueRows=[...new Set(rows)];
+    if(uniqueRows.length)sections.push('⚠️ သတ်မှတ်ငွေ မပြည့်သောလများ · '+uniqueRows.length+' လ'+accountLabel+'\n'+uniqueRows.join('\n'));
+   }
+  });
+  ownerNotice=sections.join('\n\n──────────────\n\n');
   renderNotice();
  }
  window.fmShowBorrowerOwnerNotice=loadOwnerNotice;
