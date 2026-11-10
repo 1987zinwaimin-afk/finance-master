@@ -1736,6 +1736,7 @@ async function boot(){
    if(!next.snapshot||!next.accountId||!next.ownerUid){setStatus("This account link is incomplete. Please contact the owner.","error");return;}
    if(Array.isArray(next.snapshot.accounts)&&next.snapshot.accounts.length>1&&!Array.isArray(next.accountIds))next.accountIds=next.snapshot.accounts.map(a=>a.accountId);
    share=next;
+   window.fmShowBorrowerOwnerNotice?.(next);
    try {
     let sessionId=sessionStorage.getItem('fm-borrower-push-session-v1');
     if(!sessionId){sessionId=(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+'-'+Math.random().toString(36).slice(2));sessionStorage.setItem('fm-borrower-push-session-v1',sessionId);}
@@ -2855,14 +2856,13 @@ html,body{overflow-x:hidden!important}
   copy.style.whiteSpace='pre-wrap';
   ack.textContent=v.ack;
  }
- function loadOwnerNotice(){
-  const share=window.financeMasterBorrowerAccount?.getShare?.();
+ function loadOwnerNotice(loadedShare){
+  const share=loadedShare||window.financeMasterBorrowerAccount?.getShare?.();
   const remark=share?.ownerData?.remark;
-  if(typeof remark==='string'){
-   ownerNotice=remark;
-   renderNotice();
-  }
+  ownerNotice=typeof remark==='string'?remark:'';
+  renderNotice();
  }
+ window.fmShowBorrowerOwnerNotice=loadOwnerNotice;
  select?.addEventListener('change',renderNotice);
  window.addEventListener('borrower-share-loaded',loadOwnerNotice);
  ack?.addEventListener('click',()=>{
