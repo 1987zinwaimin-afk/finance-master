@@ -292,7 +292,8 @@
     const cancel=document.createElement('button');cancel.type='button';cancel.className='payroll-status-cancel';cancel.textContent='ပိတ်မည်';cancel.addEventListener('click',()=>backdrop.remove());menu.appendChild(cancel);
     backdrop.addEventListener('click',e=>{if(e.target===backdrop)backdrop.remove();});backdrop.appendChild(menu);document.body.appendChild(backdrop);
   };
-\n    window.setPayrollAttendance=function(id,day,value,el){const e=monthRecord(selectedMonth).employees.find(x=>x.id===id);if(!e)return;e.attendance[day]=['present','absent','off'].includes(value)?value:'';if(value==='unmarked')delete e.attendance[day];if(el){el.classList.remove('payroll-status-unmarked','payroll-status-present','payroll-status-absent','payroll-status-off');el.classList.add('payroll-status-'+(['present','absent','off'].includes(value)?value:'unmarked'));}persist();};
+
+  window.setPayrollAttendance=function(id,day,value,el){const e=monthRecord(selectedMonth).employees.find(x=>x.id===id);if(!e)return;e.attendance[day]=['present','absent','off'].includes(value)?value:'';if(value==='unmarked')delete e.attendance[day];if(el){el.classList.remove('payroll-status-unmarked','payroll-status-present','payroll-status-absent','payroll-status-off');el.classList.add('payroll-status-'+(['present','absent','off'].includes(value)?value:'unmarked'));}persist();};
   window.setPayrollName=function(id,value){const e=monthRecord(selectedMonth).employees.find(x=>x.id===id);if(!e)return;e.name=String(value||'').trim()||'Employee';persist();};
   window.setPayrollRate=function(id,value){const e=monthRecord(selectedMonth).employees.find(x=>x.id===id);if(!e)return;e.dailyRate=Math.max(0,Number(value)||0);persist();};
   window.setPayrollOverride=function(id,value){const e=monthRecord(selectedMonth).employees.find(x=>x.id===id);if(!e)return;e.salaryOverride=value===''?'':Math.max(0,Number(value)||0);persist();};
