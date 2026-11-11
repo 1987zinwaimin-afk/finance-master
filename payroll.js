@@ -2,6 +2,77 @@
 (function(){
   const payrollTabStyle=document.createElement('style');
   payrollTabStyle.textContent='.payroll-employee-tabs{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 12px;margin:16px 0 8px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}.payroll-employee-tab{flex:0 0 150px;min-width:150px;display:flex;flex-direction:column;align-items:flex-start;gap:7px;padding:14px 12px;border:1px solid var(--line);border-radius:14px;background:#fff;color:var(--text,#172033);text-align:left;scroll-snap-align:start;cursor:pointer}.payroll-employee-tab.active{border:2px solid var(--navy,#1c2b4a);background:#edf3ff;box-shadow:0 3px 12px rgba(25,48,90,.10)}.payroll-tab-avatar{font-size:20px;line-height:1.2}.payroll-tab-name{font-weight:800;line-height:1.35;overflow-wrap:anywhere}.payroll-employee-tab small{font-size:11px;color:#23836f;font-weight:750}.payroll-people{display:block;margin:8px 0 16px}.payroll-person{width:100%}';
+
+  payrollTabStyle.textContent += `
+  /* Payroll page: clean mobile-first layout */
+  .payroll-period{padding:20px;margin-bottom:18px}
+  .payroll-period>.panelhead{align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  .payroll-period>.panelhead>div{min-width:0;flex:1 1 220px}
+  .payroll-period>.panelhead h2{font-size:19px;line-height:1.4;margin:0 0 6px}
+  .payroll-period>.panelhead p{font-size:13px;line-height:1.65;color:#647188;margin:0}
+  .payroll-period .formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+  .payroll-period .field{min-width:0}
+  .payroll-period .field label{display:block;font-size:13px;line-height:1.55;color:#53627a;font-weight:750;margin-bottom:7px}
+  .payroll-period input,.payroll-period select{width:100%;min-width:0;min-height:48px;border-radius:13px}
+  .payroll-period .notice{padding:13px 15px;border-radius:13px;line-height:1.65}
+  .payroll-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0 0 16px}
+  .payroll-summary .metric{min-width:0;padding:15px;border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 3px 12px rgba(20,35,61,.04)}
+  .payroll-summary .metrichead{font-size:12px;line-height:1.45;color:#65738a;font-weight:700}
+  .payroll-summary .metric strong{display:block;font-size:21px;line-height:1.3;color:#172743;margin-top:7px;overflow-wrap:anywhere}
+  .payroll-employee-tabs{gap:9px;margin:12px 0;padding-bottom:10px}
+  .payroll-employee-tab{flex-basis:145px;min-width:145px;padding:12px;border-radius:13px}
+  .payroll-person{padding:17px;border-radius:18px}
+  .payroll-person>.panelhead{align-items:center;gap:10px;flex-wrap:wrap}
+  .payroll-person>.panelhead h2{font-size:18px;line-height:1.4}
+  .payroll-person .toolbar{display:flex;flex-wrap:wrap;gap:8px}
+  .payroll-person .formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .payroll-person .field{min-width:0}
+  .payroll-person input{width:100%;min-width:0}
+  .payroll-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .payroll-stats .metric{min-width:0;padding:12px;border-radius:13px;background:#f8f9fc}
+  .payroll-stats .metrichead{font-size:11px;line-height:1.45;color:#647188}
+  .payroll-stats .metric strong{font-size:18px;line-height:1.35;overflow-wrap:anywhere}
+  .payroll-attendance{margin-top:14px;padding:10px;border:1px solid #dce3ed;border-radius:15px;background:#fff}
+  .payroll-attendance summary{padding:13px 14px;border-radius:12px;background:#f1f4fb;color:#263d68;font-size:13px;line-height:1.5}
+  .payroll-attendance .tablewrap{overflow:visible}
+  .payroll-attendance table{width:100%;min-width:0;table-layout:fixed;border-collapse:separate;border-spacing:0}
+  .payroll-attendance th,.payroll-attendance td{padding:11px 9px;vertical-align:middle;overflow-wrap:anywhere}
+  .payroll-attendance th{font-size:11px;letter-spacing:.02em;color:#647188;background:#f5f7fb}
+  .payroll-attendance td:first-child{width:39%;font-size:13px;color:#26364e}
+  .payroll-attendance td:last-child{width:61%}
+  .payroll-status{display:block;width:100%;min-width:0;max-width:100%;min-height:44px;padding:8px 25px 8px 9px;border-radius:11px;font-size:11px;line-height:1.35;white-space:normal}
+  .payroll-status-present{border-color:#9bd5b2;background:#eaf8ef;color:#176b43}
+  .payroll-status-absent{border-color:#efc5a4;background:#fff3e9;color:#98501c}
+  .payroll-status-off{border-color:#b8c9ee;background:#eef3ff;color:#35558e}
+  .payroll-status-unmarked{border-color:#d5dbe5;background:#f5f6f8;color:#596579}
+  .payroll-period .tag{white-space:nowrap}
+  @media(max-width:700px){
+    .payroll-period{padding:15px;border-radius:18px}
+    .payroll-period>.panelhead{display:flex;flex-direction:column;align-items:flex-start}
+    .payroll-period>.panelhead h2{font-size:17px}
+    .payroll-period .formgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .payroll-period .field label{font-size:11px;line-height:1.5;min-height:34px}
+    .payroll-period input,.payroll-period select{min-height:45px;padding:9px 10px;font-size:13px}
+    .payroll-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+    .payroll-summary .metric{padding:12px}
+    .payroll-summary .metric strong{font-size:19px}
+    .payroll-person{padding:13px}
+    .payroll-person .formgrid{grid-template-columns:1fr;gap:10px}
+    .payroll-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .payroll-attendance{padding:7px}
+    .payroll-attendance table{min-width:0!important}
+    .payroll-attendance td:first-child{width:36%;font-size:12px}
+    .payroll-attendance td:last-child{width:64%}
+    .payroll-status{font-size:10px;padding:7px 19px 7px 7px;min-height:42px}
+    .payroll-person .toolbar button{flex:1 1 140px}
+  }
+  @media(max-width:370px){
+    .payroll-period .formgrid{grid-template-columns:1fr}
+    .payroll-attendance td{padding:8px 5px}
+    .payroll-attendance td:first-child{width:34%}
+    .payroll-attendance td:last-child{width:66%}
+  }`;
+
   document.head.appendChild(payrollTabStyle);
   const DEFAULT_PEOPLE = ['Zin Wai Min','Khom','Zin Min Thu'];
   let selectedMonth = new Date().toISOString().slice(0,7);
