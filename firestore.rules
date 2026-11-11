@@ -164,6 +164,8 @@ service cloud.firestore {
         && resource.data.active == true
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['attendance','updatedAt'])
         && request.resource.data.attendance is map
+        && request.resource.data.attendance.size() <= 370
+        && request.resource.data.attendance.values().hasOnly(['present','absent','off'])
         && request.resource.data.updatedAt == request.time
       );
       allow delete: if request.auth != null && request.auth.uid == resource.data.ownerUid;
