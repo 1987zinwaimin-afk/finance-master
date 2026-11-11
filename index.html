@@ -2519,6 +2519,15 @@ window.fmPayrollShare={
   await setDoc(doc(db,'payrollShares',token),payload);
   return new URL('payroll-employee.html?token='+encodeURIComponent(token),location.origin).href;
  },
+ async syncAttendance(){
+  if(!currentUser||!isOwnerUser(currentUser))throw new Error('Owner login required.');
+  const snap=await getDocs(query(collection(db,'payrollShares'),where('ownerUid','==',currentUser.uid),where('active','==',true)));
+  const appApi=window.fmApp;if(!appApi||typeof appApi.getState!=='function'||typeof appApi.replaceState!=='function')throw new Error('Payroll data is not ready.');
+  const next=appApi.getState();let changed=0;
+  snap.docs.forEach(d=>{const share=d.data();const rec=next.payroll?.[share.month];const emp=rec?.employees?.find(e=>e.id===share.employeeId);if(!emp||!share.attendance||typeof share.attendance!=='object')return;const a=share.attendance;if(JSON.stringify(emp.attendance||{})!==JSON.stringify(a)){emp.attendance={...a};changed++;}});
+  if(changed){appApi.replaceState(next);if(appApi.render)appApi.render();}
+  return changed;
+ },
  async list(){
   if(!currentUser||!isOwnerUser(currentUser))throw new Error('Owner login required.');
   const snap=await getDocs(query(collection(db,'payrollShares'),where('ownerUid','==',currentUser.uid)));
