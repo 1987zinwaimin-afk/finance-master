@@ -141,5 +141,33 @@ service cloud.firestore {
       // Only the signed-in owner may delete a request card. This does not reverse an already recorded payment.
       allow delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
     }
+    // Payroll employee share links: public access is limited to one random-token document.
+    // Employees may change attendance only; salary, wage, owner and identity fields stay owner-controlled.
+    match /payrollShares/{token} {
+      allow get: if resource.data.active == true
+        || (request.auth != null && request.auth.uid == resource.data.ownerUid);
+      allow list: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+      allow create: if request.auth != null
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.active == true
+        && request.resource.data.employeeId is string
+        && request.resource.data.employeeName is string
+        && request.resource.data.month is string
+        && request.resource.data.attendance is map
+        && request.resource.data.schemaVersion == 1;
+      allow update: if (
+        request.auth != null
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == resource.data.ownerUid
+      ) || (
+        request.auth == null
+        && resource.data.active == true
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['attendance','updatedAt'])
+        && request.resource.data.attendance is map
+        && request.resource.data.updatedAt == request.time
+      );
+      allow delete: if request.auth != null && request.auth.uid == resource.data.ownerUid;
+    }
+
   }
 }
