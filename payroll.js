@@ -6,8 +6,11 @@
   payrollTabStyle.textContent += `
   /* Payroll page: clean mobile-first layout */
   .payroll-period{padding:20px;margin-bottom:18px}
-  .payroll-period>.panelhead{align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:18px}
-  .payroll-period>.panelhead>div{min-width:0;flex:1 1 220px}
+  .payroll-period>.panelhead{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:12px;margin:0 0 18px;min-height:0;height:auto}
+  .payroll-period>.panelhead>div{min-width:0;min-height:0;height:auto;flex:none}
+  .payroll-period>.panelhead>.tag{justify-self:start;align-self:start;margin:0}
+  .payroll-period>.panelhead p{max-width:42ch}
+
   .payroll-period>.panelhead h2{font-size:19px;line-height:1.4;margin:0 0 6px}
   .payroll-period>.panelhead p{font-size:13px;line-height:1.65;color:#647188;margin:0}
   .payroll-period .formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
