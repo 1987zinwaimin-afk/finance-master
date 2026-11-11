@@ -51,7 +51,19 @@
   .payroll-period .tag{white-space:nowrap}
   @media(max-width:700px){
     .payroll-period{padding:15px;border-radius:18px}
-    .payroll-period>.panelhead{display:flex;flex-direction:column;align-items:flex-start}
+    .payroll-period>.panelhead{
+      display:flex!important;flex-direction:column!important;align-items:flex-start!important;
+      justify-content:flex-start!important;align-content:flex-start!important;
+      gap:12px!important;margin:0 0 18px!important;padding:0!important;
+      height:auto!important;min-height:0!important;max-height:none!important;
+    }
+    .payroll-period>.panelhead>*{
+      flex:0 0 auto!important;position:static!important;
+      width:auto!important;height:auto!important;min-height:0!important;
+      max-height:none!important;margin:0!important;transform:none!important;
+    }
+    .payroll-period>.panelhead>div{display:block!important}
+    .payroll-period>.panelhead>.tag{align-self:flex-start!important}
     .payroll-period>.panelhead h2{font-size:17px}
     .payroll-period .formgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
     .payroll-period .field label{font-size:11px;line-height:1.5;min-height:34px}
