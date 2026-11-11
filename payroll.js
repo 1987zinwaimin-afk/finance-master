@@ -167,6 +167,26 @@
     .payroll-person{padding:9px!important}
   }
   `;
+
+  payrollTabStyle.textContent += `
+  .payroll-status{appearance:none;-webkit-appearance:none;display:flex!important;align-items:center;justify-content:space-between;gap:7px;text-align:left;border:1px solid #d7deea;background:#f5f7fb;color:#43516a;font-weight:750;cursor:pointer}
+  .payroll-status-present{background:#e8f6ed!important;border-color:#b6dfc5!important;color:#176b43!important}
+  .payroll-status-absent{background:#fff0ed!important;border-color:#f0c4bd!important;color:#a6423a!important}
+  .payroll-status-off{background:#edf2fc!important;border-color:#c6d4f0!important;color:#35558e!important}
+  .payroll-status-unmarked{background:#f3f5f8!important;border-color:#d9dfe8!important;color:#596579!important}
+  .payroll-status-chevron{font-size:17px;line-height:1;opacity:.65}
+  .payroll-status-backdrop{position:fixed;inset:0;z-index:99999;background:rgba(12,25,46,.42);display:flex;align-items:center;justify-content:center;padding:20px}
+  .payroll-status-menu{width:min(100%,360px);background:#fff;border:1px solid #e1e6ef;border-radius:20px;box-shadow:0 18px 55px rgba(12,25,46,.24);padding:14px}
+  .payroll-status-menu h3{font-size:15px;color:#182944;margin:2px 4px 12px}
+  .payroll-status-option{width:100%;display:flex;align-items:center;gap:12px;border:1px solid transparent;border-radius:13px;padding:12px;margin:5px 0;text-align:left;font-weight:750;background:#f5f7fa;color:#26364e}
+  .payroll-status-option .dot{width:11px;height:11px;border-radius:50%;flex:none}
+  .payroll-status-option.is-current{border-color:#d9bd78;background:#fffaf0}
+  .payroll-status-option[data-value="present"] .dot{background:#27945c}
+  .payroll-status-option[data-value="absent"] .dot{background:#c9574e}
+  .payroll-status-option[data-value="off"] .dot{background:#5275b8}
+  .payroll-status-option[data-value="unmarked"] .dot{background:#8a95a5}
+  .payroll-status-cancel{width:100%;margin-top:7px;padding:10px;border:0;border-radius:12px;background:#172b4b;color:#fff;font-weight:750}
+  `;
   document.head.appendChild(payrollTabStyle);
   const DEFAULT_PEOPLE = ['Zin Wai Min','Khom','Zin Min Thu'];
   let selectedMonth = new Date().toISOString().slice(0,7);
@@ -232,7 +252,8 @@
     const rows=days.map(day=>{
       const value=emp.attendance[day]||'unmarked';
       const weekday=new Date(day+'T00:00:00').toLocaleDateString(undefined,{weekday:'short'});
-      return '<tr><td>'+esc(day)+'<br><small class="sub">'+esc(weekday)+'</small></td><td><select class="payroll-status payroll-status-' + value + '" aria-label="'+esc(emp.name)+' '+esc(day)+'" onchange="setPayrollAttendance(\''+esc(emp.id)+'\',\''+day+'\',this.value,this)"><option value="unmarked" '+(value==='unmarked'?'selected':'')+'>Not marked / မမှတ်ရသေး</option><option value="present" '+(value==='present'?'selected':'')+'>Attend / အလုပ်ဆင်း</option><option value="absent" '+(value==='absent'?'selected':'')+'>Absent / ပျက်ရက်</option><option value="off" '+(value==='off'?'selected':'')+'>Day Off / နားရက်</option></select></td></tr>';
+      const labels={unmarked:'မမှတ်ရသေး',present:'အလုပ်ဆင်း',absent:'ပျက်ရက်',off:'နားရက်'};
+      return '<tr><td>'+esc(day)+'<br><small class="sub">'+esc(weekday)+'</small></td><td><button type="button" class="payroll-status payroll-status-'+value+'" aria-label="'+esc(emp.name)+' '+esc(day)+'" onclick="showPayrollStatusMenu(\\''+esc(emp.id)+'\\',\\''+day+'\\',this)"><span>'+labels[value]+'</span><span class="payroll-status-chevron">⌄</span></button></td></tr>';
     }).join('');
     return '<section class="panel payroll-person"><div class="panelhead"><div><h2>👤 '+esc(emp.name)+'</h2><p>Employee '+(index+1)+' · '+esc(selectedMonth)+'</p></div><span class="tag">'+st.present+' attend</span></div><div class="toolbar"><button type="button" class="pill" onclick="exportSelectedPayrollImage(&quot;'+esc(emp.id)+'&quot;)">🖼 Save '+esc(emp.name)+' as image</button></div><div class="formgrid"><div class="field"><label>Employee name / အမည်</label><input value="'+esc(emp.name)+'" maxlength="80" onchange="setPayrollName(\''+esc(emp.id)+'\',this.value)"></div><div class="field"><label>Daily wage / တစ်ရက်လစာ</label><input type="number" min="0" step="0.01" value="'+Number(emp.dailyRate||0)+'" onchange="setPayrollRate(\''+esc(emp.id)+'\',this.value)"></div><div class="field"><label>Manual monthly salary (optional) / သတ်မှတ်လစာ</label><input type="number" min="0" step="0.01" placeholder="Auto-calculate from attend days" value="'+(emp.salaryOverride===''?'':Number(emp.salaryOverride||0))+'" onchange="setPayrollOverride(\''+esc(emp.id)+'\',this.value)"></div><div class="field"><label>Final salary / ရမည့်လစာ</label><input readonly value="'+esc(money(st.salary,currency))+'"></div></div><div class="cards payroll-stats"><div class="metric"><div class="metrichead">Attend days / ဆင်းရက်</div><strong>'+st.present+'</strong></div><div class="metric"><div class="metrichead">Absent days / ပျက်ရက်</div><strong>'+st.absent+'</strong></div><div class="metric"><div class="metrichead">Day off / နားရက်</div><strong>'+st.off+'</strong></div><div class="metric"><div class="metrichead">Not marked / မမှတ်ရသေး</div><strong>'+st.unmarked+'</strong></div><div class="metric"><div class="metrichead">Salary / လစာ</div><strong>'+esc(money(st.salary,currency))+'</strong></div></div><details class="payroll-attendance"><summary>Attendance calendar / နေ့စဉ်အလုပ်ဆင်းရက် မှတ်ရန် ('+days.length+' days)</summary><div class="tablewrap"><table><thead><tr><th>Date</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table></div></details></section>';
   }
@@ -256,7 +277,22 @@
       '<section class="panel"><div class="panelhead"><div><h2>Previous months / အရင်လစာရင်း</h2><p>Saved months remain available after you move to another month.</p></div></div><div class="tablewrap"><table><thead><tr><th>Month</th><th>Period</th><th>Employees</th><th>Total salary</th><th>Action</th></tr></thead><tbody>'+history+'</tbody></table></div></section>';
   };
   window.selectPayrollEmployee=function(id){if(!monthRecord(selectedMonth).employees.some(e=>e.id===id))return;selectedEmployeeId=id;render();};
-  window.setPayrollAttendance=function(id,day,value,el){const e=monthRecord(selectedMonth).employees.find(x=>x.id===id);if(!e)return;e.attendance[day]=['present','absent','off'].includes(value)?value:'';if(value==='unmarked')delete e.attendance[day];if(el){el.classList.remove('payroll-status-unmarked','payroll-status-present','payroll-status-absent','payroll-status-off');el.classList.add('payroll-status-'+(['present','absent','off'].includes(value)?value:'unmarked'));}persist();};
+  window.showPayrollStatusMenu=function(id,day,trigger){
+    const current=monthRecord(selectedMonth).employees.find(e=>e.id===id)?.attendance?.[day]||'unmarked';
+    const backdrop=document.createElement('div');backdrop.className='payroll-status-backdrop';
+    const menu=document.createElement('div');menu.className='payroll-status-menu';menu.setAttribute('role','dialog');menu.setAttribute('aria-modal','true');
+    const title=document.createElement('h3');title.textContent=day+' · အလုပ်ဆင်းအခြေအနေ';menu.appendChild(title);
+    const choices=[['unmarked','မမှတ်ရသေး'],['present','အလုပ်ဆင်း'],['absent','ပျက်ရက်'],['off','နားရက်']];
+    choices.forEach(([value,label])=>{
+      const b=document.createElement('button');b.type='button';b.className='payroll-status-option'+(value===current?' is-current':'');b.dataset.value=value;
+      const dot=document.createElement('span');dot.className='dot';const text=document.createElement('span');text.textContent=label;b.append(dot,text);
+      b.addEventListener('click',()=>{window.setPayrollAttendance(id,day,value,trigger);trigger.querySelector('span:first-child').textContent=label;trigger.classList.remove('payroll-status-unmarked','payroll-status-present','payroll-status-absent','payroll-status-off');trigger.classList.add('payroll-status-'+value);backdrop.remove();});
+      menu.appendChild(b);
+    });
+    const cancel=document.createElement('button');cancel.type='button';cancel.className='payroll-status-cancel';cancel.textContent='ပိတ်မည်';cancel.addEventListener('click',()=>backdrop.remove());menu.appendChild(cancel);
+    backdrop.addEventListener('click',e=>{if(e.target===backdrop)backdrop.remove();});backdrop.appendChild(menu);document.body.appendChild(backdrop);
+  };
+\n    window.setPayrollAttendance=function(id,day,value,el){const e=monthRecord(selectedMonth).employees.find(x=>x.id===id);if(!e)return;e.attendance[day]=['present','absent','off'].includes(value)?value:'';if(value==='unmarked')delete e.attendance[day];if(el){el.classList.remove('payroll-status-unmarked','payroll-status-present','payroll-status-absent','payroll-status-off');el.classList.add('payroll-status-'+(['present','absent','off'].includes(value)?value:'unmarked'));}persist();};
   window.setPayrollName=function(id,value){const e=monthRecord(selectedMonth).employees.find(x=>x.id===id);if(!e)return;e.name=String(value||'').trim()||'Employee';persist();};
   window.setPayrollRate=function(id,value){const e=monthRecord(selectedMonth).employees.find(x=>x.id===id);if(!e)return;e.dailyRate=Math.max(0,Number(value)||0);persist();};
   window.setPayrollOverride=function(id,value){const e=monthRecord(selectedMonth).employees.find(x=>x.id===id);if(!e)return;e.salaryOverride=value===''?'':Math.max(0,Number(value)||0);persist();};
