@@ -128,6 +128,45 @@
     .toolbar:has(button[onclick*="savePayrollMonth"]){gap:7px!important}
   }
   `;
+
+  payrollTabStyle.textContent += `
+  /* Tighter spacing across all payroll blocks and controls */
+  .payroll-period,.payroll-person,.payroll-people,.payroll-attendance{box-sizing:border-box}
+  .payroll-period{padding:12px!important;margin-bottom:9px!important}
+  .payroll-period>.panelhead{margin:0 0 9px!important;padding:0!important;gap:6px!important}
+  .payroll-period>.panelhead h2{margin:0!important}
+  .payroll-period .formgrid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;column-gap:10px!important;row-gap:8px!important;align-items:start!important;margin:0!important;padding:0!important}
+  .payroll-period .field{display:flex!important;flex-direction:column!important;justify-content:flex-start!important;gap:4px!important;min-width:0!important;margin:0!important;padding:0!important}
+  .payroll-period .field label{display:block!important;margin:0!important;padding:0!important;min-height:0!important;line-height:1.25!important;font-size:11px!important}
+  .payroll-period .field input,.payroll-period .field select{display:block!important;margin:0!important;min-height:39px!important;height:39px!important;padding:6px 9px!important;line-height:1.2!important}
+  .payroll-period .notice{margin:8px 0 0!important;padding:8px 10px!important}
+  .payroll-summary{gap:7px!important;margin:0 0 9px!important}
+  .payroll-summary .metric{padding:9px 10px!important;min-height:0!important}
+  .payroll-summary .metrichead{margin:0!important}
+  .payroll-summary .metric strong{margin:4px 0 0!important}
+  .toolbar:has(button[onclick*="savePayrollMonth"]){gap:6px!important;margin:8px 0!important}
+  .toolbar:has(button[onclick*="savePayrollMonth"]) button{min-height:39px!important;padding:7px 6px!important}
+  .payroll-employee-tabs{margin:7px 0 5px!important;padding:0 0 5px!important}
+  .payroll-person{padding:10px!important;margin:0 0 8px!important}
+  .payroll-person>.panelhead{margin:0 0 8px!important;padding:0!important}
+  .payroll-person .formgrid{row-gap:7px!important;column-gap:8px!important}
+  .payroll-person .field{margin:0!important;padding:0!important;gap:4px!important}
+  .payroll-person .field label{margin:0!important;line-height:1.25!important}
+  .payroll-person .field input,.payroll-person .field select{margin:0!important;min-height:38px!important;height:38px!important;padding:6px 8px!important}
+  .payroll-stats{gap:6px!important}
+  .payroll-stats .metric{padding:8px!important}
+  .payroll-attendance{margin-top:7px!important;padding:6px!important}
+  .payroll-attendance summary{padding:8px 9px!important}
+  .payroll-attendance th,.payroll-attendance td{padding:6px 5px!important}
+  .payroll-attendance .payroll-status{min-height:35px!important;height:auto!important;padding:6px!important}
+  @media(max-width:700px){
+    .payroll-period{padding:11px!important}
+    .payroll-period .formgrid{row-gap:7px!important;column-gap:8px!important}
+    .payroll-period .field label{font-size:10px!important}
+    .payroll-summary .metric{padding:8px!important}
+    .payroll-person{padding:9px!important}
+  }
+  `;
   document.head.appendChild(payrollTabStyle);
   const DEFAULT_PEOPLE = ['Zin Wai Min','Khom','Zin Min Thu'];
   let selectedMonth = new Date().toISOString().slice(0,7);
