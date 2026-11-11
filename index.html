@@ -2505,6 +2505,39 @@ function startBorrowerListeners(user){
  stopBorrowerShares=onSnapshot(query(borrowerSharesRef,where('ownerUid','==',user.uid)),snap=>{borrowerShares=snap.docs.map(d=>({id:d.id,...d.data(),createdAtText:borrowerTime(d.data().createdAt)}));publishBorrowerState();if(['Borrower Portal','Borrower Messages'].includes(document.getElementById('crumbPage')?.textContent))render();},e=>status('Borrower links unavailable: '+e.message,true));
  stopBorrowerRequests=onSnapshot(query(borrowerRequestsRef,where('ownerUid','==',user.uid)),snap=>{borrowerRequests=snap.docs.map(d=>({id:d.id,...d.data(),createdAtText:borrowerTime(d.data().createdAt)})).sort((a,b)=>(a.status==='pending'?-1:0)-(b.status==='pending'?-1:0)||String(b.date||'').localeCompare(String(a.date||'')));publishBorrowerState();if(document.getElementById('crumbPage')?.textContent==='Borrower Portal')render();},e=>status('Payment request notifications unavailable: '+e.message,true));
 }
+window.fmPayrollShare={
+ get ready(){return !!currentUser&&isOwnerUser(currentUser);},
+ async create(employee,monthRecord){
+  if(!currentUser||!isOwnerUser(currentUser))throw new Error('Owner login required.');
+  const token=Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,'0')).join('');
+  const days={...(employee.attendance||{})};
+  const salaryOverride=employee.salaryOverride===''||employee.salaryOverride==null?'':Number(employee.salaryOverride)||0;
+  const rate=Math.max(0,Number(employee.dailyRate)||0);
+  const present=Object.values(days).filter(v=>v==='present').length;
+  const salary=salaryOverride!==''?salaryOverride:present*rate;
+  const payload={ownerUid:currentUser.uid,employeeId:String(employee.id),employeeName:String(employee.name||'Employee').slice(0,80),month:String(monthRecord.month),periodStart:String(monthRecord.periodStart||''),periodEnd:String(monthRecord.periodEnd||''),currency:String(monthRecord.currency||'THB'),dailyRate:rate,salary,attendance:days,active:true,createdAt:serverTimestamp(),updatedAt:serverTimestamp(),schemaVersion:1};
+  await setDoc(doc(db,'payrollShares',token),payload);
+  return new URL('payroll-employee.html?token='+encodeURIComponent(token),location.origin).href;
+ },
+ async list(){
+  if(!currentUser||!isOwnerUser(currentUser))throw new Error('Owner login required.');
+  const snap=await getDocs(query(collection(db,'payrollShares'),where('ownerUid','==',currentUser.uid)));
+  return snap.docs.map(d=>({id:d.id,...d.data()}));
+ },
+ async revoke(token){
+  if(!currentUser||!isOwnerUser(currentUser))throw new Error('Owner login required.');
+  const ref=doc(db,'payrollShares',String(token));const snap=await getDoc(ref);
+  if(!snap.exists()||snap.data().ownerUid!==currentUser.uid)throw new Error('Share link not found.');
+  await updateDoc(ref,{active:false,revokedAt:serverTimestamp(),updatedAt:serverTimestamp()});
+ },
+ async refresh(token,employee,monthRecord){
+  if(!currentUser||!isOwnerUser(currentUser))throw new Error('Owner login required.');
+  const ref=doc(db,'payrollShares',String(token));const snap=await getDoc(ref);
+  if(!snap.exists()||snap.data().ownerUid!==currentUser.uid)throw new Error('Share link not found.');
+  const old=snap.data();const attendance=old.attendance||{};
+  await updateDoc(ref,{employeeName:String(employee.name||'Employee').slice(0,80),month:String(monthRecord.month),periodStart:String(monthRecord.periodStart||''),periodEnd:String(monthRecord.periodEnd||''),currency:String(monthRecord.currency||'THB'),dailyRate:Math.max(0,Number(employee.dailyRate)||0),salary:Math.max(0,Number(employee.salaryOverride)||0)||Object.values(attendance).filter(v=>v==='present').length*Math.max(0,Number(employee.dailyRate)||0),updatedAt:serverTimestamp()});
+ }
+};
 window.fmBorrowerCloud={
  get ready(){return !!currentUser;},
  get shares(){return borrowerShares;},
