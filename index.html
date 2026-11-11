@@ -2515,7 +2515,7 @@ window.fmPayrollShare={
   const rate=Math.max(0,Number(employee.dailyRate)||0);
   const present=Object.values(days).filter(v=>v==='present').length;
   const salary=salaryOverride!==''?salaryOverride:present*rate;
-  const payload={ownerUid:currentUser.uid,employeeId:String(employee.id),employeeName:String(employee.name||'Employee').slice(0,80),month:String(monthRecord.month),periodStart:String(monthRecord.periodStart||''),periodEnd:String(monthRecord.periodEnd||''),currency:String(monthRecord.currency||'THB'),dailyRate:rate,salary,attendance:days,active:true,createdAt:serverTimestamp(),updatedAt:serverTimestamp(),schemaVersion:1};
+  const payload={ownerUid:currentUser.uid,employeeId:String(employee.id),employeeName:String(employee.name||'Employee').slice(0,80),month:String(monthRecord.month),periodStart:String(monthRecord.periodStart||''),periodEnd:String(monthRecord.periodEnd||''),currency:String(monthRecord.currency||'THB'),dailyRate:rate,salaryOverride,salary,attendance:days,active:true,createdAt:serverTimestamp(),updatedAt:serverTimestamp(),schemaVersion:1};
   await setDoc(doc(db,'payrollShares',token),payload);
   return new URL('payroll-employee.html?token='+encodeURIComponent(token),location.origin).href;
  },
