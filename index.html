@@ -1574,14 +1574,14 @@ function dashboard(){
   const inc=total('income',currency),exp=total('expense',currency),net=inc-exp;
   const receivable=outstanding(state.loans,currency),payable=outstanding(state.debts,currency);
   const savings=state.savings.filter(x=>recordCurrency(x)===currency).reduce((n,x)=>n+Number(x.saved||0),0);
-  const accrued=state.loans.filter(x=>recordCurrency(x)===currency).reduce((n,x)=>n+Number(interest(x)||0),0);
+  const accrued=state.loans.filter(x=>recordCurrency(x)===currency).reduce((n,x)=>n+Number(interest(x)||0),0);\n  const debtAccrued=state.debts.filter(x=>recordCurrency(x)===currency).reduce((n,x)=>n+Number(interest(x)||0),0);
   return '<section class="panel dashboard-currency-panel" style="margin-bottom:18px"><div class="panelhead"><div><h2>'+currencyLabel(currency)+'</h2></div><button class="linkbtn" onclick="go(\'Reports\')">Monthly report ↗</button></div><div class="cards dashboard-metrics">'+
    metric('This month income',fmt(monthly('income',currency),currency),'↗','Current calendar month')+
    metric('This month expenses',fmt(monthly('expense',currency),currency),'↘','Current calendar month')+
    metric('Transaction surplus / deficit',fmt(net,currency),'◈','Income less recorded transactions')+
    metric('Loans receivable',fmt(receivable,currency),'⇄',state.loans.filter(x=>recordCurrency(x)===currency).length+' account(s)')+
    metric('Debts to repay',fmt(payable,currency),'▤',state.debts.filter(x=>recordCurrency(x)===currency).length+' account(s)')+
-   metric('Interest outstanding',fmt(accrued,currency),'％','Loan ledger estimate')+
+   metric('Loan interest outstanding',fmt(accrued,currency),'％','Interest owed to you')+metric('Debt interest outstanding',fmt(debtAccrued,currency),'％','Interest you may owe')+
    metric('Savings balance',fmt(savings,currency),'◎',state.savings.filter(x=>recordCurrency(x)===currency).length+' goal(s)')+
    metric('All-time income',fmt(inc,currency),'↗','Recorded total')+'</div></section>';
  };
