@@ -2369,7 +2369,12 @@ window.fmUploadLocal = async () => {
   try {
     window.fmApp.exportBackup();
     const ref=cloudRef(currentUser.uid), snap=await getDoc(ref);
-    if (snap.exists() && !confirm('Cloud data already exists. Replace it with this device’s complete data? The existing cloud copy should be preserved separately before continuing. Cancel to keep the cloud copy.')) return;
+    if(snap.exists()){
+      if(!confirm('Cloud data already exists. Finance Master will download a separate JSON safety backup of the current cloud copy before replacing it. Continue?'))return;
+      const existingCloud=snap.data()?.data;
+      if(!existingCloud||!Array.isArray(existingCloud.transactions))return status('Existing cloud backup format is invalid. It was not replaced. Download or inspect the cloud copy before trying again.',true);
+      downloadCloudSafetyBackup(existingCloud);
+    }
     const data=window.fmApp.getState();
     const payloadBytes=cloudPayloadBytes(data);
     if(payloadBytes>CLOUD_DOC_SOFT_LIMIT)return status('Upload stopped: this finance backup is '+payloadBytes.toLocaleString()+' bytes and is too large for safe single-document cloud storage. Your local data and existing cloud copy were kept. Export a full JSON backup before planning a collection-based migration.',true);
@@ -2490,6 +2495,7 @@ const cloudSnapshotWouldDropLocalData = (local, remote) => {
 };
 const CLOUD_DOC_SOFT_LIMIT=850000;
 const cloudPayloadBytes=value=>new Blob([JSON.stringify(value)]).size;
+const downloadCloudSafetyBackup=(value)=>{const createdAt=new Date().toISOString(),snapshot={...value,exportedAt:createdAt,formatVersion:2,backupSummary:{createdAt,source:'cloud-before-upload'}};download(new Blob([JSON.stringify(snapshot,null,2)],{type:'application/json'}),'finance-master-cloud-before-upload-'+today()+'.json');};
 const stateSignature = value => {
   const normalized=normalizeState(value);
   return JSON.stringify(Object.keys(normalized).sort().reduce((out,key)=>{out[key]=normalized[key];return out;},{}));
