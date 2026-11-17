@@ -2435,7 +2435,7 @@ const normalizeState = payload => ({
 });
 const cloudSnapshotWouldDropLocalData = (local, remote) => {
   const ignored=new Set(['exportedAt','formatVersion','backupSummary']);
-  const nonEmpty=value=>Array.isArray(value)?value.length>0:!!(value&&typeof value==='object'?Object.keys(value).length:value!==undefined&&value!==null&&value!=='');
+  const nonEmpty=value=>Array.isArray(value)?value.length>0:!!(value&&typeof value==='object'?Object.keys(value).length:value!==undefined&&value!==null&&value!==''&&value!==false);
   const hasAllLocalItems=(left,right)=>{
     if(Array.isArray(left)){
       if(!Array.isArray(right))return left.length>0;
@@ -2450,7 +2450,7 @@ const cloudSnapshotWouldDropLocalData = (local, remote) => {
       if(!right||typeof right!=='object'||Array.isArray(right))return Object.keys(left).length>0;
       return Object.keys(left).some(key=>nonEmpty(left[key])&&!Object.prototype.hasOwnProperty.call(right,key)) || Object.keys(left).some(key=>nonEmpty(left[key])&&Object.prototype.hasOwnProperty.call(right,key)&&hasAllLocalItems(left[key],right[key]));
     }
-    return left!==undefined&&left!==null&&left!==''&&(right===undefined||right===null||right==='');
+    return nonEmpty(left)&&!nonEmpty(right);
   };
   const keys=new Set([...Object.keys(local||{}),...Object.keys(remote||{})]);
   for(const key of keys){if(ignored.has(key))continue;if(nonEmpty(local?.[key])&&hasAllLocalItems(local[key],remote?.[key]))return key;}
