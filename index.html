@@ -1457,6 +1457,31 @@ body.fm-dark:not(.fm-login-mode) .mobile-nav button.active{
 body.fm-dark:not(.fm-login-mode) .mobile-nav button.active span{color:#f2d28b!important}
 </style>
 
+
+<style id="fm-dark-surface-text-contrast-v5">
+/* Force readable text on premium navy hero panels across all Owner pages */
+body:not(.fm-login-mode) #content .pagehead,
+body:not(.fm-login-mode) #content .dashboard-hero{
+ color:#f7f9fd!important
+}
+body:not(.fm-login-mode) #content .pagehead :is(h1,h2,h3,h4,h5,h6,p,small,label,span,strong,b,em),
+body:not(.fm-login-mode) #content .dashboard-hero :is(h1,h2,h3,h4,h5,h6,p,small,label,span,strong,b,em){
+ color:#f7f9fd!important;
+ opacity:1!important;
+ text-shadow:none!important
+}
+body:not(.fm-login-mode) #content .pagehead p,
+body:not(.fm-login-mode) #content .dashboard-hero p{
+ color:#dce7f5!important
+}
+body:not(.fm-login-mode) #content .pagehead .primary,
+body:not(.fm-login-mode) #content .dashboard-hero .primary,
+body:not(.fm-login-mode) #content .pagehead .goldbtn,
+body:not(.fm-login-mode) #content .dashboard-hero .goldbtn{
+ color:#17243a!important
+}
+</style>
+
 </head>
 <body>
 <div class="app">
