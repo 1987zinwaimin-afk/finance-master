@@ -1905,7 +1905,32 @@ function editLoan(kind,id){
   save();const activeShare=(window.fmBorrowerCloud?.shares||[]).filter(sh=>sh.active&&(sh.accountId===id||(Array.isArray(sh.accountIds)&&sh.accountIds.includes(id)))).sort((a,b)=>(Array.isArray(b.accountIds)?b.accountIds.length:1)-(Array.isArray(a.accountIds)?a.accountIds.length:1))[0];if(activeShare&&window.fmBorrowerCloud?.updateShare){const snapshot=borrowerSnapshotForShare(activeShare);if(snapshot)window.fmBorrowerCloud.updateShare(activeShare.id,snapshot).catch(err=>toast('Account saved; borrower snapshot refresh failed: '+String(err?.message||err)));}closeModal();render();toast('Account updated');
  };
 }
-function deleteLoan(kind,id){if(!confirm('Delete this account? Related payment history will remain but may show Account removed.'))return;state[kind==='loan'?'loans':'debts']=state[kind==='loan'?'loans':'debts'].filter(x=>x.id!==id);if(current==='PersonDetail'&&personDetail.id===id)current=kind==='loan'?'Loans':'Debts';save();render();toast('Account deleted')}
+async function deleteLoan(kind,id){
+ const list=kind==='loan'?state.loans:state.debts,account=list.find(x=>x.id===id);
+ if(!account){toast('Account not found');return}
+ const linkedShares=kind==='loan'?(window.fmBorrowerCloud?.shares||[]).filter(sh=>sh.active&&(sh.accountId===id||(Array.isArray(sh.accountIds)&&sh.accountIds.includes(id)))):[];
+ const shareMessage=linkedShares.length?' This account is included in '+linkedShares.length+' active borrower Share Link(s); those links will be updated or closed before deletion.':'';
+ if(!confirm('Delete this account? Related payment history will remain as historical records.'+shareMessage+' A full JSON safety backup will be downloaded first.'))return;
+ try{
+  exportData();
+  for(const sh of linkedShares){
+   const ids=(Array.isArray(sh.accountIds)&&sh.accountIds.length?sh.accountIds:[sh.accountId]).filter(accountId=>accountId&&accountId!==id);
+   const remaining=state.loans.filter(l=>ids.includes(l.id));
+   if(remaining.length){
+    const snapshot=borrowerSnapshotForPerson(remaining[0],ids);
+    await window.fmBorrowerCloud.updateShare(sh.id,snapshot);
+   }else{
+    await window.fmBorrowerCloud.revokeShare(sh.id);
+   }
+  }
+  state[kind==='loan'?'loans':'debts']=list.filter(x=>x.id!==id);
+  if(current==='PersonDetail'&&personDetail.id===id)current=kind==='loan'?'Loans':'Debts';
+  save();render();
+  toast(linkedShares.length?'Account deleted; borrower links were updated or closed.':'Account deleted');
+ }catch(error){
+  toast('Account was not deleted because backup or Share Link protection failed: '+String(error?.message||error));
+ }
+}
 function ownerDataSafe(){const d=state.ownerData&&typeof state.ownerData==='object'?state.ownerData:{};return {phone:String(d.phone||''),guarantorPhone:String(d.guarantorPhone||''),address:String(d.address||''),bankName:String(d.bankName||''),bankAccountName:String(d.bankAccountName||''),bankQr:String(d.bankQr||''),remark:String(d.remark||'')};}
 function previewOwnerBankQr(event){const file=event.target.files?.[0],box=document.getElementById('ownerBankQrPreview');if(!file||!box)return;if(!file.type.startsWith('image/')){box.innerHTML='<span class="error">Please select an image file.</span>';event.target.value='';return;}box.innerHTML='<span class="sub">Compressing QR image…</span>';compressChatImage(file).then(src=>{box.innerHTML='<img src="'+src+'" alt="Bank QR preview" style="max-width:220px;max-height:220px;object-fit:contain;border-radius:12px">';box.dataset.pendingQr=src;delete box.dataset.clearQr;}).catch(err=>{box.innerHTML='<span class="error">'+escapeHtml(err.message||'Could not read QR image')+'</span>';event.target.value='';});}
 function clearOwnerBankQr(){const box=document.getElementById('ownerBankQrPreview');if(box){box.innerHTML='<span class="sub">Bank QR will be removed when you save.</span>';box.dataset.pendingQr='';box.dataset.clearQr='true';}const input=document.getElementById('ownerBankQr');if(input)input.value='';}
