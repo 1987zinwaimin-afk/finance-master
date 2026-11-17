@@ -1944,6 +1944,46 @@ body.fm-dark:not(.fm-login-mode) #content .person-head :is(.person-title,.person
 }
 </style>
 
+
+<style id="fm-owner-header-breadcrumb-language-only-v1">
+/* Minimal Owner header: Workspace / Current page on left, language on right */
+.topbar{
+ box-sizing:border-box!important;width:100%;min-width:0;
+ display:flex!important;flex-direction:row!important;align-items:center!important;
+ justify-content:space-between!important;flex-wrap:nowrap!important;
+ gap:10px!important;min-height:52px!important;height:auto!important;
+ padding:7px 14px!important;
+}
+.topbar .crumb{display:flex!important;align-items:center!important;gap:8px!important;
+ flex:1 1 auto!important;min-width:0!important;width:auto!important;
+ min-height:36px!important;white-space:nowrap!important;font-size:14px!important}
+.topbar .crumb>span{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.topbar .topactions{display:flex!important;flex:0 0 auto!important;align-items:center!important;
+ justify-content:flex-end!important;flex-wrap:nowrap!important;width:auto!important;
+ min-width:0!important;margin:0!important;gap:0!important}
+.topbar .topactions #languageSelect{display:block!important;flex:0 0 auto!important;
+ width:104px!important;min-width:104px!important;max-width:104px!important;
+ min-height:36px!important;padding:6px 9px!important;font-size:12px!important;
+ border-radius:10px!important}
+@media(max-width:700px){
+ .topbar{min-height:48px!important;padding:6px 9px!important;gap:6px!important}
+ .topbar .crumb{flex:1 1 auto!important;min-width:0!important;gap:6px!important;font-size:12px!important}
+ .topbar .mobilemenu{display:inline-grid!important;flex:0 0 34px!important;
+  width:34px!important;height:34px!important;min-width:34px!important;
+  margin:0!important;border-radius:9px!important;font-size:17px!important}
+ .topbar .crumb>span{font-size:12px!important;min-width:0!important}
+ .topbar .topactions #languageSelect{width:92px!important;min-width:92px!important;
+  max-width:92px!important;min-height:34px!important;padding:5px 6px!important;font-size:11px!important}
+}
+@media(max-width:360px){
+ .topbar{padding-left:6px!important;padding-right:6px!important;gap:4px!important}
+ .topbar .mobilemenu{flex-basis:31px!important;width:31px!important;height:31px!important;min-width:31px!important}
+ .topbar .crumb{font-size:11px!important;gap:4px!important}
+ .topbar .crumb>span{font-size:11px!important}
+ .topbar .topactions #languageSelect{width:82px!important;min-width:82px!important;max-width:82px!important}
+}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -1961,7 +2001,7 @@ body.fm-dark:not(.fm-login-mode) #content .person-head :is(.person-title,.person
   <div class="sidefoot"><strong>✦ Your financial clarity</strong><br>Small daily records. Better long-term decisions.<br><br><span id="saveStatus">● Saved on this device</span></div>
 </aside>
 <main class="main">
-<header class="topbar"><div class="crumb"><button class="mobilemenu" onclick="toggleMobile()">☰</button><span>Workspace&nbsp; / &nbsp;<strong id="crumbPage">Dashboard</strong></span></div><div class="topactions"><button class="pill theme-toggle" id="themeToggle" type="button" onclick="toggleTheme()" aria-label="Switch theme" title="Switch Light/Dark mode">☾ Dark</button><span id="appVersion" class="pill version-pill" title="Current website update">Update v8</span><label class="lang-label" for="languageSelect">Language</label><select id="languageSelect" class="pill language-select" aria-label="Language"><option value="my">မြန်မာ</option><option value="en">English</option><option value="th">ไทย</option></select><button class="pill" onclick="exportData()">⇩ Export data</button><button class="pill" onclick="go('Settings')">⚙ Settings</button><div class="avatar">FM</div></div></header>
+<header class="topbar"><div class="crumb"><button class="mobilemenu" onclick="toggleMobile()">☰</button><span>Workspace&nbsp; / &nbsp;<strong id="crumbPage">Dashboard</strong></span></div><div class="topactions"><select id="languageSelect" class="pill language-select" aria-label="Language"><option value="my">မြန်မာ</option><option value="en">English</option><option value="th">ไทย</option></select></div></header>
 <div class="content" id="content"></div>
 </main>
 </div>
