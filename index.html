@@ -1621,7 +1621,8 @@ function loansPage(kind){
  const cur=state.currency||'THB';
  const totalBal=list.filter(l=>recordCurrency(l)===cur).reduce((sum,l)=>sum+loanLedger(kind,l).principalOutstanding,0);
  const interestDue=list.filter(l=>recordCurrency(l)===cur).reduce((sum,l)=>sum+loanLedger(kind,l).interestOutstanding,0);
- const unpaidMonths=list.reduce((sum,l)=>sum+loanLedger(kind,l).unpaidMonths,0);\n const overdueCount=list.filter(l=>l.due&&String(l.due).slice(0,10)<today()&&loanLedger(kind,l).principalOutstanding>0.004).length;
+ const unpaidMonths=list.reduce((sum,l)=>sum+loanLedger(kind,l).unpaidMonths,0);
+ const overdueCount=list.filter(l=>l.due&&String(l.due).slice(0,10)<today()&&loanLedger(kind,l).principalOutstanding>0.004).length;
  return pageHead(kind==='loan'?'Loans given':'My debts',kind==='loan'?'Choose a person to open their complete loan account.':'Choose a person to open their complete debt account.',kind==='loan'?'Add loan':'Add debt',`addLoan('${kind}')`)+
  '<div class="cards">'+metric(kind==='loan'?'Total principal lent':'Total debt principal',fmt(list.filter(l=>recordCurrency(l)===cur).reduce((sum,l)=>sum+Number(l.principal||0),0),cur),'⇄',list.filter(l=>recordCurrency(l)===cur).length+' '+cur+' accounts')+
  metric('Principal remaining',fmt(totalBal),'◈','After principal payments')+
