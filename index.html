@@ -1634,6 +1634,134 @@ body.fm-dark:not(.fm-login-mode) #content .person-head :is(.person-title,.person
 }
 </style>
 
+
+<style id="fm-owner-compact-layout-v2">
+/* Second compact pass: reduce visual bulk across every Owner workspace card.
+   Keep readable type, safe tap targets, navigation, data and business logic unchanged. */
+#content{min-width:0}
+#content :is(.pagehead,.person-head,.dashboard-hero,.welcome,.panel,.metric,.account-card,
+ .account-panel,.detail-panel,.target-panel,.saving-goal-card,.chat-list-panel,.setting,
+ .notice,.expense-group-manager,.expense-person-summary,.dashboard-currency-panel){
+ box-sizing:border-box;min-width:0
+}
+#content .pagehead{
+ padding:12px 15px!important;margin:0 0 11px!important;gap:8px!important;
+ border-radius:14px!important;min-height:0!important
+}
+#content .pagehead-copy h1{
+ font-size:clamp(19px,2.1vw,23px)!important;line-height:1.18!important;
+ margin:0 0 4px!important
+}
+#content .pagehead-copy p{
+ font-size:11px!important;line-height:1.4!important;margin:0!important
+}
+#content .pagehead>.primary{
+ min-height:38px!important;padding:8px 12px!important;font-size:11px!important;
+ border-radius:10px!important
+}
+#content .person-head{
+ padding:12px!important;margin:0 0 11px!important;border-radius:15px!important
+}
+#content .person-head .back-account{min-height:30px;padding:2px 0 7px!important;font-size:11px}
+#content .person-title-row{gap:9px!important}
+#content .person-avatar{width:42px;height:42px;flex:0 0 42px;font-size:18px}
+#content .person-title h1{font-size:clamp(19px,2.2vw,23px)!important;line-height:1.18!important;margin:0 0 3px!important}
+#content .person-title p{font-size:11px!important;line-height:1.35!important;margin:0!important}
+#content .person-quick-actions{gap:7px!important;margin-top:10px!important}
+#content .person-quick-actions>*{
+ min-height:40px!important;padding:8px 10px!important;font-size:11px!important;
+ border-radius:10px!important;line-height:1.25!important
+}
+#content .cards{gap:9px!important;margin:0 0 11px!important}
+#content .metric{padding:11px!important;border-radius:13px!important}
+#content .metrichead{font-size:11px!important;gap:6px!important}
+#content .metric strong{font-size:clamp(14px,1.55vw,19px)!important;margin:8px 0 5px!important;line-height:1.2!important}
+#content .metric .sub{font-size:10px!important;line-height:1.35!important}
+#content .ico{width:29px;height:29px;border-radius:9px;font-size:14px}
+#content .panel{padding:13px!important;border-radius:14px!important}
+#content .panelhead{gap:7px!important;margin-bottom:10px!important}
+#content .panelhead :is(h2,h3){font-size:15px!important;line-height:1.25!important;margin:0!important}
+#content .panelhead p{font-size:11px!important;line-height:1.4!important;margin:3px 0 0!important}
+#content .layout{gap:10px!important;margin:0 0 11px!important}
+#content .detail-grid{gap:8px!important}
+#content .detail-item{padding:9px!important}
+#content .account-card{padding:11px!important;border-radius:13px!important}
+#content .account-list{gap:8px!important}
+#content .account-avatar{width:38px;height:38px;flex:0 0 38px}
+#content .account-main{gap:3px!important}
+#content .account-open{min-height:34px!important;padding:7px 9px!important}
+#content .account-openhint{font-size:10px!important}
+#content .account-balance{font-size:13px!important}
+#content .saving-goal-card{padding:12px!important;border-radius:13px!important}
+#content .saving-goal-head{gap:7px!important}
+#content .saving-goal-actions{gap:6px!important}
+#content .saving-goal-actions>*{min-height:34px!important;padding:6px 8px!important}
+#content .setting{padding:12px!important;border-radius:12px!important}
+#content .settingsgrid{gap:9px!important}
+#content .toolbar{gap:7px!important;margin:0 0 10px!important;padding:8px!important}
+#content .toolbar :is(input,select){min-height:38px!important;font-size:12px!important}
+#content .field{gap:5px!important}
+#content .field label{font-size:11px!important}
+#content .formgrid{gap:9px!important}
+#content :is(.field input,.field select,.field textarea){min-height:40px!important;padding:8px 10px!important;font-size:12px!important}
+#content .formactions{gap:7px!important;margin-top:11px!important}
+#content .formactions>*{min-height:40px!important;padding:8px 11px!important;font-size:11px!important}
+#content button.primary{min-height:39px!important;padding:8px 12px!important;font-size:11px!important}
+#content button.pill{min-height:35px!important;padding:7px 9px!important;font-size:10px!important}
+#content button.linkbtn{min-height:30px!important;padding:4px 6px!important;font-size:10px!important}
+#content .notice{padding:9px 11px!important;margin:0 0 9px!important;border-radius:10px!important;font-size:11px!important}
+#content .empty{padding:16px 11px!important;font-size:11px!important}
+#content .tablewrap th{padding:8px!important;font-size:10px!important}
+#content .tablewrap td{padding:8px!important;font-size:11px!important}
+#content .tablewrap td button{min-height:30px!important;padding:5px 7px!important;font-size:10px!important}
+#content .expense-group-manager{padding:11px!important;border-radius:12px!important}
+#content .expense-group-chips{gap:6px!important}
+#content .expense-group-chip{padding:6px 8px!important;font-size:10px!important}
+#content .person-tabs{gap:5px!important;margin:9px 0!important}
+#content .person-tabs>*{min-height:34px!important;padding:6px 8px!important;font-size:10px!important}
+#content .modal{padding:14px!important;border-radius:15px!important;max-width:min(94vw,620px)}
+#content .modalhead{margin-bottom:10px!important}
+#content .modalhead h2{font-size:17px!important}
+.mobile-more-panel{padding:8px!important;gap:6px!important}
+.mobile-more-panel button{min-height:52px!important;padding:7px 4px!important;font-size:10px!important}
+@media(max-width:700px){
+ #content{padding:12px 10px calc(94px + env(safe-area-inset-bottom))!important}
+ #content .pagehead{padding:10px 12px!important;margin-bottom:9px!important;gap:7px!important}
+ #content .pagehead-copy{flex:1 1 100%;min-width:0}
+ #content .pagehead-copy h1{font-size:19px!important}
+ #content .pagehead-copy p{font-size:10px!important}
+ #content .pagehead>.primary{width:100%;flex:1 1 100%;min-height:40px!important}
+ #content .person-head{padding:10px!important;margin-bottom:9px!important}
+ #content .person-quick-actions{gap:6px!important;margin-top:8px!important}
+ #content .person-quick-actions>*{flex:1 1 calc(50% - 6px);min-height:42px!important;padding:8px!important}
+ #content .cards{gap:8px!important;margin-bottom:9px!important}
+ #content .metric{padding:10px 9px!important}
+ #content .metric strong{font-size:14px!important}
+ #content .panel{padding:11px!important;margin-bottom:9px!important}
+ #content .panelhead{margin-bottom:8px!important}
+ #content .layout{gap:8px!important;margin-bottom:9px!important}
+ #content .formgrid{grid-template-columns:1fr;gap:8px!important}
+ #content .field.full{grid-column:1}
+ #content .formactions{justify-content:stretch}
+ #content .formactions>*{flex:1 1 calc(50% - 6px);min-width:0;min-height:42px!important}
+ #content .tablewrap{max-width:100%;overflow-x:auto}
+ #content .account-actions>*,
+ #content .request-actions>*,
+ #content .saving-goal-actions>*{min-height:36px!important}
+ .mobile-nav{min-height:62px!important;padding:5px 3px calc(5px + env(safe-area-inset-bottom))!important}
+ .mobile-nav button{min-height:48px!important;padding:4px 2px!important;gap:3px!important;font-size:10px!important}
+ .mobile-nav button span{font-size:16px!important}
+ .mobile-more-panel{bottom:calc(70px + env(safe-area-inset-bottom))!important}
+}
+@media(max-width:380px){
+ #content{padding-left:8px!important;padding-right:8px!important}
+ #content .person-quick-actions>*{flex-basis:100%}
+ #content .formactions>*{flex-basis:100%}
+ #content .metric{padding:9px 7px!important}
+ .mobile-nav button{font-size:9px!important}
+}
+</style>
+
 </head>
 <body>
 <div class="app">
