@@ -1525,7 +1525,7 @@ function monthlyTargetStatus(l,kind='loan',asOf=today()){
  const currentMonth=String(asOf).slice(0,7),start=String(l.monthlyTargetSince||l.start||l.created||asOf).slice(0,10),startMonth=start.slice(0,7),months=[];let cursor=startMonth;
  const completedThrough=String(asOf).slice(8,10)==='01'?(()=>{const [y,m]=currentMonth.split('-').map(Number);return new Date(Date.UTC(y,m-1,0)).toISOString().slice(0,7)})():(()=>{const [y,m]=currentMonth.split('-').map(Number);return new Date(Date.UTC(y,m-1,0)).toISOString().slice(0,7)})();
  for(let guard=0;cursor<=completedThrough&&guard<600;guard++){months.push(cursor);const [y,m]=cursor.split('-').map(Number);cursor=new Date(Date.UTC(y,m,1)).toISOString().slice(0,7);}
- const targetCurrency=['THB','MMK','USD','SGD'].includes(l?.monthlyTargetCurrency)?l.monthlyTargetCurrency:'THB';if(targetCurrency!==(recordCurrency(l)||'THB'))return {target,targetCurrency,currencyMismatch:true,underpaidMonths:0,consecutive:0,paidThisMonth:0,warning:false,statuses:[]};const monthPaid=month=>(state.payments||[]).filter(p=>p.kind===kind&&p.account===l.id&&String(p.date||'').slice(0,7)===month&&recordCurrency(p)===targetCurrency).reduce((sum,p)=>sum+Math.max(0,Number(p.amount)||0),0);
+ const targetCurrency=['THB','MMK','USD','SGD'].includes(l?.monthlyTargetCurrency)?l.monthlyTargetCurrency:'THB';if(targetCurrency!==(recordCurrency(l)||'THB'))return {target,targetCurrency,currencyMismatch:true,underpaidMonths:0,consecutive:0,paidThisMonth:0,warning:false,statuses:[]};const monthPaid=month=>(state.payments||[]).filter(p=>p.kind===kind&&p.account===l.id&&String(p.date||'').slice(0,7)===month&&(recordCurrency(p)||recordCurrency(l)||'THB')===targetCurrency).reduce((sum,p)=>sum+Math.max(0,Number(p.amount)||0),0);
  const statuses=months.map(month=>{const paid=monthPaid(month);return {month,paid,under:paid+0.004<target};});
  let consecutive=0;for(let i=statuses.length-1;i>=0&&statuses[i].under;i--)consecutive++;
  return {target,targetCurrency,currencyMismatch:false,underpaidMonths:statuses.filter(x=>x.under).length,consecutive,paidThisMonth:monthPaid(currentMonth),warning:consecutive>=3,statuses};
@@ -1842,7 +1842,7 @@ function reportsPage(){
  const receivable=outstanding(state.loans,cur),payable=outstanding(state.debts,cur);
  const interestReceivable=state.loans.filter(x=>recordCurrency(x)===cur).reduce((n,x)=>n+Number(loanLedger('loan',x).interestOutstanding||0),0);const interestPayable=state.debts.filter(x=>recordCurrency(x)===cur).reduce((n,x)=>n+Number(loanLedger('debt',x).interestOutstanding||0),0);
  const savings=state.savings.filter(x=>recordCurrency(x)===cur).reduce((n,x)=>n+Number(x.saved||0),0);
- const payments=(state.payments||[]).filter(p=>recordCurrency(p)===cur&&matchesPeriod(p.date)).reduce((n,p)=>n+Number(p.amount||0),0);
+ const payments=(state.payments||[]).filter(p=>{const account=(state[p.kind==='loan'?'loans':'debts']||[]).find(x=>x.id===p.account);return (recordCurrency(p)||recordCurrency(account))===cur&&matchesPeriod(p.date)}).reduce((n,p)=>n+Number(p.amount||0),0);
  const unclassifiedPayrollCount=Object.entries(state.payroll||{}).filter(([key,rec])=>(reportMode==='year'?key.startsWith(reportYear):key===reportMonth)&&rec&&!['THB','MMK','USD','SGD'].includes(rec.currency)).length;
  const payrollTotal=Object.entries(state.payroll||{}).filter(([key,rec])=>(reportMode==='year'?key.startsWith(reportYear):key===reportMonth)&&rec&&rec.currency===cur).reduce((sum,[key,rec])=>{
   const employees=Array.isArray(rec.employees)?rec.employees:[];
