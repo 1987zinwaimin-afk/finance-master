@@ -2460,35 +2460,39 @@ const cloudSnapshotWouldDropLocalData = (local, remote) => {
   const inspect = (left, right, path) => {
     if (Array.isArray(left)) {
       if (!Array.isArray(right) || right.length < left.length) return path;
-      for (let i=0;i<left.length;i++) {
-        const item=left[i];
-        if (item && typeof item==='object' && !Array.isArray(item) && item.id!=null) {
-          const match=right.find(candidate=>candidate && typeof candidate==='object' && String(candidate.id)===String(item.id));
-          if (!match) return path+' (record '+String(item.id)+')';
-          const nested=inspect(item,match,path+'['+String(item.id)+']');
+      const idBased = left.every(item => item && typeof item === 'object' && !Array.isArray(item) && item.id != null);
+      for (let i = 0; i < left.length; i++) {
+        const item = left[i];
+        if (idBased) {
+          const match = right.find(candidate => candidate && typeof candidate === 'object' && !Array.isArray(candidate) && String(candidate.id) === String(item.id));
+          if (!match) return path + ' (record ' + String(item.id) + ')';
+          const nested = inspect(item, match, path + '[' + String(item.id) + ']');
           if (nested) return nested;
-        } else if (item && typeof item==='object' && !Array.isArray(item)) {
-          const nested=inspect(item,right[i],path+'['+i+']');
+        } else if (item && typeof item === 'object' && !Array.isArray(item)) {
+          const nested = inspect(item, right[i], path + '[' + i + ']');
           if (nested) return nested;
+        } else if (meaningful(item) && !right.some(candidate => Object.is(candidate, item))) {
+          return path + '[' + i + ']';
         }
       }
       return '';
     }
-    if (left && typeof left==='object') {
-      if (!right || typeof right!=='object' || Array.isArray(right)) return meaningful(left)?path:'';
+    if (left && typeof left === 'object') {
+      if (!right || typeof right !== 'object' || Array.isArray(right)) return meaningful(left) ? path : '';
       for (const key of Object.keys(left)) {
         if (!meaningful(left[key])) continue;
-        if (!Object.prototype.hasOwnProperty.call(right,key)) return path?path+'.'+key:key;
-        const nested=inspect(left[key],right[key],path?path+'.'+key:key);
+        if (!Object.prototype.hasOwnProperty.call(right, key)) return path ? path + '.' + key : key;
+        const nested = inspect(left[key], right[key], path ? path + '.' + key : key);
         if (nested) return nested;
       }
+      return '';
     }
-    return '';
+    return meaningful(left) && !meaningful(right) ? path : '';
   };
-  const ignored=new Set(['updatedAt','exportedAt','formatVersion','backupSummary']);
-  for (const key of Object.keys(local||{})) {
+  const ignored = new Set(['updatedAt', 'exportedAt', 'formatVersion', 'backupSummary']);
+  for (const key of Object.keys(local || {})) {
     if (ignored.has(key)) continue;
-    const loss=inspect(local[key],remote?.[key],key);
+    const loss = inspect(local[key], remote?.[key], key);
     if (loss) return loss;
   }
   return '';
