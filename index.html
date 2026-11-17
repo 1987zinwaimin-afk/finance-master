@@ -1330,6 +1330,69 @@ body.fm-dark:not(.fm-login-mode) #content:has(.pagehead)>.cards .metric>strong{c
  #content .notice,#content .target-warning,#content [role="alert"],#content [role="status"]{padding:9px 10px;margin:7px 0;font-size:11px;line-height:1.5;border-radius:10px}
 }
 </style>
+
+<style id="owner-readable-contrast-v2">
+/* Owner readability: color-only overrides; no application data or behavior changes */
+body:not(.fm-dark):not(.fm-login-mode){
+  --ink:#14233d;--text:#17243b;--muted:#526078;--line:#d5deea;
+  color:#17243b;
+}
+body:not(.fm-dark):not(.fm-login-mode) #content,
+body:not(.fm-dark):not(.fm-login-mode) #content :is(.panel,.card,.metric,.account-card,.saving-goal-card,.borrower-link-card,.borrower-request,.modal,.settingsgrid){
+  color:#26364e;
+}
+body:not(.fm-dark):not(.fm-login-mode) #content :is(h1,h2,h3,h4,h5,strong,b,th,.panelhead h2,.pagehead h1,.pagehead h2,.metric strong,.metric b,.account-main>b,.account-balance>b,.txname b,.chat-contact-text b,.saving-goal-head b){
+  color:#14233d;
+}
+body:not(.fm-dark):not(.fm-login-mode) #content :is(p,small,label,.muted,.hint,.help,.description,.sub,.metrichead,.formhint,.field small,.panel p,.panel small,.pagehead p,.empty,.empty-state,.table-empty,.account-main small,.account-balance small,.saving-goal-meta,.saving-days-left,.chat-contact-text small){
+  color:#526078;
+}
+body:not(.fm-dark):not(.fm-login-mode) #content :is(input,select,textarea,.toolbar input,.toolbar select){
+  color:#17243b;background-color:#fff;border-color:#bdcada;
+}
+body:not(.fm-dark):not(.fm-login-mode) #content :is(input,textarea)::placeholder{color:#68778c;opacity:1}
+body:not(.fm-dark):not(.fm-login-mode) #content select option{color:#17243b;background:#fff}
+body:not(.fm-dark):not(.fm-login-mode) #content :is(.tablewrap,table) td{color:#26364e}
+body:not(.fm-dark):not(.fm-login-mode) #content :is(.tablewrap,table) th{color:#34445d}
+body:not(.fm-dark):not(.fm-login-mode) #content .linkbtn{color:#76551b}
+body:not(.fm-dark):not(.fm-login-mode) #content .eyebrow{color:#805d20}
+body:not(.fm-dark):not(.fm-login-mode) .topbar .crumb{color:#526078}
+body:not(.fm-dark):not(.fm-login-mode) .topbar .crumb strong{color:#14233d}
+body:not(.fm-dark):not(.fm-login-mode) .mobile-nav button{color:#d6dfed}
+body:not(.fm-dark):not(.fm-login-mode) .mobile-nav button.active{color:#f5dda5}
+body.fm-dark:not(.fm-login-mode){
+  --ink:#f1f5fc;--text:#e8eef8;--muted:#c0ccdd;--line:#3c4d66;
+  color:#e8eef8;
+}
+body.fm-dark:not(.fm-login-mode) #content,
+body.fm-dark:not(.fm-login-mode) #content :is(.panel,.card,.metric,.account-card,.saving-goal-card,.borrower-link-card,.borrower-request,.modal,.settingsgrid){
+  color:#e1e9f5;
+}
+body.fm-dark:not(.fm-login-mode) #content :is(h1,h2,h3,h4,h5,strong,b,th,.panelhead h2,.pagehead h1,.pagehead h2,.metric strong,.metric b,.account-main>b,.account-balance>b,.txname b,.chat-contact-text b,.saving-goal-head b){
+  color:#f1f5fc;
+}
+body.fm-dark:not(.fm-login-mode) #content :is(p,small,label,.muted,.hint,.help,.description,.sub,.metrichead,.formhint,.field small,.panel p,.panel small,.pagehead p,.empty,.empty-state,.table-empty,.account-main small,.account-balance small,.saving-goal-meta,.saving-days-left,.chat-contact-text small){
+  color:#c0ccdd;
+}
+body.fm-dark:not(.fm-login-mode) #content :is(input,select,textarea,.toolbar input,.toolbar select){
+  color:#f1f5fc;background-color:#111e32;border-color:#52647e;
+}
+body.fm-dark:not(.fm-login-mode) #content :is(input,textarea)::placeholder{color:#b5c2d5;opacity:1}
+body.fm-dark:not(.fm-login-mode) #content select option{color:#f1f5fc;background:#111e32}
+body.fm-dark:not(.fm-login-mode) #content :is(.tablewrap,table) td{color:#e1e9f5}
+body.fm-dark:not(.fm-login-mode) #content :is(.tablewrap,table) th{color:#e0e9f6}
+body.fm-dark:not(.fm-login-mode) #content .linkbtn,
+body.fm-dark:not(.fm-login-mode) #content .eyebrow{color:#f0d28d}
+body.fm-dark:not(.fm-login-mode) .topbar .crumb{color:#c0ccdd}
+body.fm-dark:not(.fm-login-mode) .topbar .crumb strong{color:#f1f5fc}
+body.fm-dark:not(.fm-login-mode) #content :is(.notice,.target-warning,[role="alert"],[role="status"]){color:#f7e8c6}
+body.fm-dark:not(.fm-login-mode) #content :is(.notice,.target-warning,[role="alert"],[role="status"]) :is(b,p){color:#f7e8c6}
+body:not(.fm-login-mode) #content :is(input,select,textarea,button):focus-visible{outline:3px solid #c49a45aa!important;outline-offset:2px}
+@media(max-width:700px){
+ body:not(.fm-login-mode) #content :is(p,small,label,.muted,.hint,.help,.description,.sub,.metrichead,.formhint){line-height:1.55}
+}
+</style>
+
 </head>
 <body>
 <div class="app">
