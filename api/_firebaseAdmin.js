@@ -34,11 +34,16 @@ function parseServiceAccount(raw) {
           break;
         }
         if (typeof parsed === 'string') {
-          const nested = JSON.parse(parsed);
-          if (nested && typeof nested === 'object' && !Array.isArray(nested)) {
-            serviceAccount = nested;
-            break;
+          for (const nestedInput of [parsed, repairPemNewlines(parsed)]) {
+            try {
+              const nested = JSON.parse(nestedInput);
+              if (nested && typeof nested === 'object' && !Array.isArray(nested)) {
+                serviceAccount = nested;
+                break;
+              }
+            } catch (_) {}
           }
+          if (serviceAccount) break;
         }
       } catch (_) {}
     }
