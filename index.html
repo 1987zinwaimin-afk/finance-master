@@ -1500,7 +1500,7 @@ function addExpenseGroup(){const value=prompt('အုပ်စုအမည်ထ
 function renameExpenseGroup(oldName){const value=prompt('အုပ်စုအမည် ပြောင်းရန်:',oldName);if(value===null)return;const name=value.trim().replace(/\s+/g,' ');if(!name)return toast('အုပ်စုအမည် ထည့်ပေးပါ');if(state.expenseGroups.some(g=>g!==oldName&&g.toLocaleLowerCase()===name.toLocaleLowerCase()))return toast('အမည်တူအုပ်စု ရှိပြီးသားပါ');state.expenseGroups=state.expenseGroups.map(g=>g===oldName?name:g);if(state.expenseGroupItems&&Object.prototype.hasOwnProperty.call(state.expenseGroupItems,oldName)){state.expenseGroupItems[name]=state.expenseGroupItems[oldName];delete state.expenseGroupItems[oldName]}state.transactions.forEach(t=>{if(t.type==='expense'&&t.groupName===oldName)t.groupName=name});save();render();toast('အုပ်စုအမည် ပြောင်းပြီးပါပြီ')}
 function deleteExpenseGroup(name){if(!confirm('“'+name+'” အုပ်စုကို ဖယ်ရှားမလား။ အသုံးစရိတ်မှတ်တမ်းများကို မဖျက်ဘဲ Group မသတ်မှတ်ထားသောစာရင်းအဖြစ် ပြောင်းပါမည်။'))return;state.expenseGroups=state.expenseGroups.filter(g=>g!==name);if(state.expenseGroupItems)delete state.expenseGroupItems[name];state.transactions.forEach(t=>{if(t.type==='expense'&&t.groupName===name)t.groupName=''});save();render();toast('အုပ်စုကို ဖယ်ရှားပြီး မှတ်တမ်းများကို ထိန်းသိမ်းထားပါပြီ')}
 function addTransaction(type){const expense=type==='expense';openModal(expense?'Add expense':'Add income',`<form id="txForm"><div class="formgrid">${field('Description','title')}${field('Amount','amount','number')}${currencyField()}${field('Date','date','date',today())}${expense?'<div class="field"><label>For whom? / ဘယ်သူ့အတွက်လဲ</label><input name="beneficiary" list="expenseBeneficiaries" placeholder="ဥပမာ Khom"><datalist id="expenseBeneficiaries">'+[...new Set(state.transactions.filter(t=>t.type==='expense'&&t.beneficiary).map(t=>t.beneficiary))].map(n=>'<option value="'+escapeHtml(n)+'">').join('')+'</datalist></div><div class="field"><label>Expense group</label><select name="groupName" onchange="updateExpenseCategories(\'txForm\')">'+expenseGroupOptions()+'</select></div><div class="field"><label>Expense item / အမည်</label><select name="category">'+expenseCategoryOptions('')+'</select></div><div class="field"><label>Payment method</label><select name="paymentMethod"><option value="cash">Cash / ငွေသား</option><option value="bank">Bank / ဘဏ်</option><option value="card">Bank card / ဘဏ်ကတ်</option><option value="other">Other / အခြား</option></select></div>':field('Category','category','select','','<option>Salary</option><option>Bonus</option><option>Other</option>')}<div class="field full"><label>Note / detailed costs</label><textarea name="note" rows="2" placeholder="ဥပမာ - ဆန်တစ်အိတ်၊ ဈေးဖိုး၊ Gas ဖြည့်..."></textarea></div>${expense?slipUploadMarkup('txForm'):''}</div><div class="formactions"><button type="button" class="pill" onclick="closeModal()">Cancel</button><button class="primary">Save record</button></div></form>`);document.getElementById('txForm').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target),title=String(f.get('title')||'').trim(),amount=Number(f.get('amount'));if(!title||!Number.isFinite(amount)||amount<=0)return toast('Enter a description and amount greater than zero');state.transactions.unshift({id:crypto.randomUUID(),type,title,amount,currency:f.get('currency')||state.currency||'THB',date:f.get('date')||today(),category:f.get('category'),note:String(f.get('note')||''),...(expense?{beneficiary:String(f.get('beneficiary')||'').trim(),groupName:String(f.get('groupName')||''),paymentMethod:String(f.get('paymentMethod')||'cash')}:{})});save();closeModal();render();toast('Record saved')}}
-function addLoan(kind,defaultPerson=''){const isLoan=kind==='loan';openModal(isLoan?'Add loan given':'Add debt I owe',`<form id="loanForm"><div class="formgrid"><div class="field full"><label>Person / Institution</label><input name="person" required value="${escapeHtml(defaultPerson)}" placeholder="Borrower name" ${defaultPerson ? "readonly" : ""}></div><div class="field full"><label>Borrower phone number / ချေးယူသူဖုန်းနံပါတ်</label><input name="borrowerPhone" type="tel" inputmode="tel" autocomplete="tel" maxlength="32" placeholder="+66 / 09xxxxxxxx"></div><div class="field full"><label>Loan type / Purpose</label><input name="loanType" maxlength="120" placeholder="e.g. Business, Motorbike, Emergency, Personal"></div>${field('Principal','principal','number')}${currencyField()}${field('Interest rate (%)','rate','number','0')}${field('Interest period','period','select','','<option value="monthly">Monthly</option><option value="yearly">Yearly</option><option value="none">No interest</option>')}${field('Loan start date','start','date',today())}<div class="field full"><label>အတိုးအမျိုးအစား</label><select name="interestType"><option value="normal" selected>ပုံမှန်အတိုး — လစဉ်အတိုးတက်မည်</option><option value="paused">အတိုးရပ်ငွေ — ရပ်သည့်နေ့မှစ၍ အတိုးအသစ်မတက်</option><option value="reassessed">အတိုးပြန်လည်သတ်မှတ်ငွေ</option></select><small class="muted">အတိုးရပ်လျှင် ယခင်တက်ပြီး အတိုးကျန်ငွေကို မဖျက်ပါ။ ပေးငွေကို အရင်ဆုံး အတိုးကျန်ငွေမှ နှုတ်မည်။</small></div><div class="field"><label>Monthly payment target (THB)</label><input name="monthlyTarget" type="number" min="0" step="0.01" value="${isLoan?5000:0}" placeholder="${isLoan?'5000':'0 = no target'}">${isLoan?'<small class="muted">Default target for every new borrower: 5,000 THB/month. Effective from the loan start date; you can change it when needed.</small>':''}</div><div class="field full"><label>Underpayment warning message</label><textarea name="underpaymentMessage" rows="2" maxlength="500" placeholder="Please pay the agreed monthly amount."></textarea></div><div class="field full"><label>Notes</label><input name="note" placeholder="Agreement, purpose, details"></div></div><div class="formactions"><button type="button" class="pill" onclick="closeModal()">Cancel</button><button class="primary">Save record</button></div></form>`);document.getElementById('loanForm').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);const person=String(f.get('person')||'').trim(),principal=Number(f.get('principal')),period=String(f.get('period')||'monthly'),rate=Number(f.get('rate')),start=String(f.get('start')||'');if(!person){toast('Enter the person or institution name');return}if(!Number.isFinite(principal)||principal<=0){toast('Principal must be greater than zero');return}if(!Number.isFinite(rate)||rate<0){toast('Interest rate cannot be negative');return}if(!['monthly','yearly','none'].includes(period)){toast('Choose a valid interest period');return}if(!start){toast('Choose the loan start date');return}const monthlyTarget=Number(f.get('monthlyTarget')||0);if(!Number.isFinite(monthlyTarget)||monthlyTarget<0){toast('Monthly payment target cannot be negative');return}const l={id:crypto.randomUUID(),person,borrowerPhone:String(f.get('borrowerPhone')||'').trim(),loanType:String(f.get('loanType')||'').trim(),principal,currency:f.get('currency')||state.currency||'THB',principalPaid:0,rate:period==='none'?0:rate,period,start,stop:'',due:'',method:(f.get('interestType')==='reassessed'?'compound':'simple'),interestType:f.get('interestType')||'normal',interestStoppedAt:(f.get('interestType')==='paused'?today():''),monthlyTarget,monthlyTargetSince:monthlyTarget>0?(isLoan?start:today()):'',underpaymentMessage:String(f.get('underpaymentMessage')||'').trim(),note:String(f.get('note')||'').trim(),created:today()};(isLoan?state.loans:state.debts).unshift(l);save();closeModal();if(isLoan&&defaultPerson){borrowerGroupPerson=person;current='BorrowerGroup';}render();toast(defaultPerson&&isLoan?'New loan type added under '+person:'Financial record saved')}}
+function addLoan(kind,defaultPerson=''){const isLoan=kind==='loan';openModal(isLoan?'Add loan given':'Add debt I owe',`<form id="loanForm"><div class="formgrid"><div class="field full"><label>Person / Institution</label><input name="person" required value="${escapeHtml(defaultPerson)}" placeholder="Borrower name" ${defaultPerson ? "readonly" : ""}></div><div class="field full"><label>Borrower phone number / ချေးယူသူဖုန်းနံပါတ်</label><input name="borrowerPhone" type="tel" inputmode="tel" autocomplete="tel" maxlength="32" placeholder="+66 / 09xxxxxxxx"></div><div class="field full"><label>Loan type / Purpose</label><input name="loanType" maxlength="120" placeholder="e.g. Business, Motorbike, Emergency, Personal"></div>${field('Principal','principal','number')}${currencyField()}${field('Interest rate (%)','rate','number','0')}${field('Interest period','period','select','','<option value="monthly">Monthly</option><option value="yearly">Yearly</option><option value="none">No interest</option>')}${field('Loan start date','start','date',today())}<div class="field full"><label>အတိုးအမျိုးအစား</label><select name="interestType"><option value="normal" selected>ပုံမှန်အတိုး — လစဉ်အတိုးတက်မည်</option><option value="paused">အတိုးရပ်ငွေ — ရပ်သည့်နေ့မှစ၍ အတိုးအသစ်မတက်</option><option value="reassessed">အတိုးပြန်လည်သတ်မှတ်ငွေ</option></select><small class="muted">အတိုးရပ်လျှင် ယခင်တက်ပြီး အတိုးကျန်ငွေကို မဖျက်ပါ။ ပေးငွေကို အရင်ဆုံး အတိုးကျန်ငွေမှ နှုတ်မည်။</small></div><div class="field"><label>Monthly payment target (account currency)</label><input name="monthlyTarget" type="number" min="0" step="0.01" value="${isLoan?5000:0}" placeholder="${isLoan?'5000':'0 = no target'}">${isLoan?'<small class="muted">Target uses the same currency selected for this loan. Default: 5,000 per month; change it to match the agreement.</small>':''}</div><div class="field full"><label>Underpayment warning message</label><textarea name="underpaymentMessage" rows="2" maxlength="500" placeholder="Please pay the agreed monthly amount."></textarea></div><div class="field full"><label>Notes</label><input name="note" placeholder="Agreement, purpose, details"></div></div><div class="formactions"><button type="button" class="pill" onclick="closeModal()">Cancel</button><button class="primary">Save record</button></div></form>`);document.getElementById('loanForm').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);const person=String(f.get('person')||'').trim(),principal=Number(f.get('principal')),period=String(f.get('period')||'monthly'),rate=Number(f.get('rate')),start=String(f.get('start')||'');if(!person){toast('Enter the person or institution name');return}if(!Number.isFinite(principal)||principal<=0){toast('Principal must be greater than zero');return}if(!Number.isFinite(rate)||rate<0){toast('Interest rate cannot be negative');return}if(!['monthly','yearly','none'].includes(period)){toast('Choose a valid interest period');return}if(!start){toast('Choose the loan start date');return}const monthlyTarget=Number(f.get('monthlyTarget')||0);if(!Number.isFinite(monthlyTarget)||monthlyTarget<0){toast('Monthly payment target cannot be negative');return}const l={id:crypto.randomUUID(),person,borrowerPhone:String(f.get('borrowerPhone')||'').trim(),loanType:String(f.get('loanType')||'').trim(),principal,currency:f.get('currency')||state.currency||'THB',principalPaid:0,rate:period==='none'?0:rate,period,start,stop:'',due:'',method:(f.get('interestType')==='reassessed'?'compound':'simple'),interestType:f.get('interestType')||'normal',interestStoppedAt:(f.get('interestType')==='paused'?today():''),monthlyTarget,monthlyTargetSince:monthlyTarget>0?(isLoan?start:today()):'',underpaymentMessage:String(f.get('underpaymentMessage')||'').trim(),note:String(f.get('note')||'').trim(),created:today()};(isLoan?state.loans:state.debts).unshift(l);save();closeModal();if(isLoan&&defaultPerson){borrowerGroupPerson=person;current='BorrowerGroup';}render();toast(defaultPerson&&isLoan?'New loan type added under '+person:'Financial record saved')}}
 function allocatePayment(kind,l,amount,date,apply){
   if(!recordCurrency(l))return {error:'Please label this account currency in Settings before recording a payment.'};
   const ledger=loanLedger(kind,l,date);
@@ -1555,7 +1555,7 @@ function pageHead(title,desc,button='',action=''){return `<div class="pagehead">
 function metric(label,value,ico,sub=''){return `<div class="metric"><div class="metrichead"><span>${label}</span><span class="ico">${ico}</span></div><strong>${value}</strong><div class="sub">${sub}</div></div>`}
 function txRows(arr){if(!arr.length)return `<tr><td colspan="5" class="empty">No records yet. Add your first transaction to get started.</td></tr>`;return arr.slice(0,8).map(t=>`<tr><td><div class="txname"><div class="txico">${t.type==='income'?'↗':'↘'}</div><div><b>${escapeHtml(t.title)}</b><small>${escapeHtml(t.category||'Other')} · ${currencyLabel(recordCurrency(t)||'Unclassified')}${t.type==='expense'&&t.beneficiary?' · For: '+escapeHtml(t.beneficiary):''}${t.type==='expense'&&t.groupName?' · '+escapeHtml(t.groupName):''}${t.type==='expense'&&t.note?' · '+escapeHtml(t.note):''}</small></div></div></td><td>${escapeHtml(t.date)}</td><td><span class="tag ${t.type==='expense'?'out':''}">${t.type==='expense'?(t.paymentMethod==='bank'?'Bank':t.paymentMethod==='card'?'Bank card':t.paymentMethod==='other'?'Other':t.paymentMethod==='cash'?'Cash':'Expense'):'Income'}</span></td><td style="text-align:right" class="${t.type==='income'?'positive':'negative'}">${t.type==='income'?'+':'−'}${moneyFor(t.amount,t)}</td><td><button class="linkbtn" onclick="editTx('${t.id}')">Edit</button> <button class="linkbtn" onclick="deleteTx('${t.id}')">Delete</button></td></tr>`).join('')}
 let dashboardTrendCurrency='THB';
-function setDashboardTrendCurrency(value){if(!['THB','MMK'].includes(value))return;dashboardTrendCurrency=value;render();}
+function setDashboardTrendCurrency(value){if(!['THB','MMK','USD','SGD'].includes(value))return;dashboardTrendCurrency=value;render();}
 function dashboard(){
  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
  const monthKey=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
@@ -2337,43 +2337,45 @@ window.fmSignOut = async () => {
   catch(e) { status(errText(e),true); }
 };
 window.fmUploadLocal = async () => {
-  if (!currentUser) return status('Sign in first to upload data.',true);
-  if (!confirm('Before uploading, export a full JSON backup from Settings. Continue with uploading the records currently on this device to your private cloud account?')) return;
+  if (!currentUser || !isOwnerUser(currentUser)) return status('Only the verified Finance Master Owner account can upload finance data.',true);
+  if (!window.fmApp || typeof window.fmApp.getState !== 'function') return status('Finance Master is still loading. Please try again.',true);
+  if (!confirm('Upload the records currently on this device to the Owner cloud account? A full device backup will be downloaded first.')) return;
   try {
     const ref=cloudRef(currentUser.uid), snap=await getDoc(ref);
-    if (snap.exists() && !confirm('Cloud data already exists. Replace the cloud copy with this device’s data? This cannot be undone from this screen. Cancel to keep the cloud copy.')) return;
-    const data=window.fmApp.getState();
-    await setDoc(ref,{data, schemaVersion:1, ownerUid:currentUser.uid, updatedAt:serverTimestamp()});
+    const data=normalizeState(window.fmApp.getState());
+    if (snap.exists()) {
+      const prior=snap.data()?.data;
+      if (!prior || !Array.isArray(prior.transactions)) return status('Existing cloud data is not in a recognized format. It was not replaced.',true);
+      if (!confirm('A cloud copy already exists. Replace it? The current cloud snapshot will also be downloaded as a recovery file first.')) return;
+      download(new Blob([JSON.stringify({savedAt:new Date().toISOString(),formatVersion:2,state:prior},null,2)],{type:'application/json'}),'finance-master-cloud-before-overwrite-'+today()+'.json');
+    }
+    window.exportData();
+    await setDoc(ref,{data, schemaVersion:2, ownerUid:currentUser.uid, updatedAt:serverTimestamp()});
     syncConflict=false; syncReady=true; localDirty=false; lastCloudSignature=stateSignature(data);
-    status('Upload complete. Your device data was copied to your cloud account. Live sync is active.');
+    status('Upload complete. A device backup was downloaded and cloud sync is active.');
     window.fmApp.toast('Cloud backup uploaded');
   } catch(e) { status(errText(e),true); }
 };
 window.fmDownloadCloud = async () => {
-  if (!currentUser) return status('Sign in first to download cloud data.',true);
+  if (!currentUser || !isOwnerUser(currentUser)) return status('Only the verified Finance Master Owner account can download finance data.',true);
+  if (!window.fmApp || typeof window.fmApp.getState !== 'function') return status('Finance Master is still loading. Please try again.',true);
+  const local=window.fmApp.getState();
+  const hasLocal=window.fmApp.hasLocalRecords();
+  if (hasLocal && !confirm('Cloud data will replace this device’s current records. Finance Master will download a complete JSON safety backup of this device first. Continue?')) return;
   try {
+    // Start the download before awaiting the network so mobile browsers do not block it as a popup.
+    if (hasLocal) window.exportData();
     const snap=await getDoc(cloudRef(currentUser.uid));
-    if (!snap.exists()) return status('No cloud backup found for this account. Your local data was not changed. Upload this device’s data if this is your first sync.',true);
+    if (!snap.exists()) return status('No cloud backup found for this account. Local records were not changed. The safety backup remains available.',true);
     const payload=snap.data()?.data;
-    if (!payload || !Array.isArray(payload.transactions)) return status('Cloud backup format is invalid. Local data was not changed.',true);
-    if (window.fmApp.hasLocalRecords() && !confirm('This will replace the records on this device with the cloud copy. Export a JSON backup first if you need to keep the current local records. Continue?')) return;
-    const safeState={
-      currency: ['THB','MMK','USD','SGD'].includes(payload.currency) ? payload.currency : 'THB',
-      transactions:Array.isArray(payload.transactions)?payload.transactions:[],
-      loans:Array.isArray(payload.loans)?payload.loans:[],
-      debts:Array.isArray(payload.debts)?payload.debts:[],
-      savings:Array.isArray(payload.savings)?payload.savings:[],
-      budgets:Array.isArray(payload.budgets)?payload.budgets:[],
-      payments:Array.isArray(payload.payments)?payload.payments:[],
-      payroll:payload.payroll&&typeof payload.payroll==='object'&&!Array.isArray(payload.payroll)?payload.payroll:{}
-    };
+    if (!payload || !Array.isArray(payload.transactions)) return status('Cloud backup format is invalid. Local records were not changed.',true);
+    const safeState=normalizeState(payload);
     applyingRemote=true;
-    window.fmApp.replaceState(safeState);
-    applyingRemote=false;
+    try { window.fmApp.replaceState(safeState); } finally { applyingRemote=false; }
     syncConflict=false; syncReady=true; localDirty=false; lastCloudSignature=stateSignature(safeState);
-    status('Cloud data downloaded to this device. Live sync is active. Review your records and export a backup.');
+    status('All cloud data fields were restored to this device. A safety backup was downloaded first.');
     window.fmApp.toast('Cloud data downloaded');
-  } catch(e) { status(errText(e),true); }
+  } catch(e) { applyingRemote=false; status(errText(e),true); }
 };
 let stopCloudListener=null;
 let applyingRemote=false;
@@ -2419,15 +2421,26 @@ const normalizeState = payload => ({
   payroll:payload?.payroll&&typeof payload.payroll==='object'&&!Array.isArray(payload.payroll)?payload.payroll:{}
 });
 const cloudSnapshotWouldDropLocalData = (local, remote) => {
-  const groups=['transactions','loans','debts','savings','budgets','payments'];
-  for(const key of groups){
-    const localCount=Array.isArray(local?.[key])?local[key].length:0;
-    const remoteCount=Array.isArray(remote?.[key])?remote[key].length:0;
-    if(localCount>remoteCount)return key;
-  }
-  const localPayroll=local?.payroll&&typeof local.payroll==='object'?Object.keys(local.payroll).length:0;
-  const remotePayroll=remote?.payroll&&typeof remote.payroll==='object'?Object.keys(remote.payroll).length:0;
-  if(localPayroll>remotePayroll)return 'payroll';
+  const ignored=new Set(['exportedAt','formatVersion','backupSummary']);
+  const nonEmpty=value=>Array.isArray(value)?value.length>0:!!(value&&typeof value==='object'?Object.keys(value).length:value!==undefined&&value!==null&&value!=='');
+  const hasAllLocalItems=(left,right)=>{
+    if(Array.isArray(left)){
+      if(!Array.isArray(right))return left.length>0;
+      return left.some(item=>{
+        if(item&&typeof item==='object'&&!Array.isArray(item)&&item.id!==undefined){
+          return !right.some(candidate=>candidate&&typeof candidate==='object'&&String(candidate.id)===String(item.id));
+        }
+        return !right.some(candidate=>JSON.stringify(candidate)===JSON.stringify(item));
+      });
+    }
+    if(left&&typeof left==='object'){
+      if(!right||typeof right!=='object'||Array.isArray(right))return Object.keys(left).length>0;
+      return Object.keys(left).some(key=>nonEmpty(left[key])&&!Object.prototype.hasOwnProperty.call(right,key)) || Object.keys(left).some(key=>nonEmpty(left[key])&&Object.prototype.hasOwnProperty.call(right,key)&&hasAllLocalItems(left[key],right[key]));
+    }
+    return false;
+  };
+  const keys=new Set([...Object.keys(local||{}),...Object.keys(remote||{})]);
+  for(const key of keys){if(ignored.has(key))continue;if(nonEmpty(local?.[key])&&hasAllLocalItems(local[key],remote?.[key]))return key;}
   return '';
 };
 const stateSignature = value => {
