@@ -1379,7 +1379,7 @@ body.fm-dark:not(.fm-login-mode) #content:has(.pagehead)>.cards .metric>strong{c
 </script>
 <script>
 const KEY='finance-master-personal-v1';
-const today=()=>new Date().toISOString().slice(0,10);
+const today=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')};
 const fmt=(n,currency=state.currency||'THB')=>new Intl.NumberFormat('en-US',{style:'currency',currency:['THB','MMK','USD','SGD'].includes(currency)?currency:'THB',maximumFractionDigits:2}).format(Number(n)||0);
 const recordCurrency=x=>['THB','MMK','USD','SGD'].includes(x?.currency)?x.currency:null;
 const moneyFor=(n,x)=>fmt(n,recordCurrency(x)||state.currency||'THB');
@@ -2230,7 +2230,7 @@ function render(){
  }
 }
 render();
-window.fmApp={render:()=>render(),getState:()=>state,replaceState:(next)=>{state=next;save();render()},hasLocalRecords:()=>Boolean((state.transactions||[]).length||(state.loans||[]).length||(state.debts||[]).length||(state.savings||[]).length||(state.budgets||[]).length||(state.payments||[]).length||Object.keys(state.payroll||{}).length),toast,applyBorrowerPaymentRequest:(req)=>{const l=state.loans.find(x=>x.id===req.accountId);if(!l||!Number.isFinite(Number(req.amount))||Number(req.amount)<=0){toast('Invalid request or loan account missing');return false;}if(state.payments.some(p=>p.borrowerRequestId===req.id)){return true;}const allocation=allocatePayment('loan',l,Number(req.amount),String(req.date||today()),String(req.apply||'auto'));if(allocation.error){toast(allocation.error);return false;}const p={id:'borrower-request-'+req.id,borrowerRequestId:req.id,account:l.id,kind:'loan',amount:Number(req.amount),currency:recordCurrency(l)||'THB',date:String(req.date||today()),apply:String(req.apply||'auto'),note:'Borrower '+(req.paymentMethod==='bank'?'bank transfer':'cash payment')+' request: '+String(req.note||'').trim(),interestApplied:allocation.interestApplied,principalApplied:allocation.principalApplied};state.payments.unshift(p);if(p.principalApplied>0)l.principalPaid=Math.min(Number(l.principal)||0,Number(l.principalPaid||0)+p.principalApplied);save();render();return true;}};
+window.fmApp={render:()=>render(),getState:()=>state,replaceState:(next)=>{state=next;save();render()},exportBackup:()=>exportData(),hasLocalRecords:()=>Boolean((state.transactions||[]).length||(state.loans||[]).length||(state.debts||[]).length||(state.savings||[]).length||(state.budgets||[]).length||(state.payments||[]).length||Object.keys(state.payroll||{}).length||Object.values(state.ownerData||{}).some(v=>v!==''&&v!==null&&v!==undefined)||Object.keys(state.expenseGroupItems||{}).length||Object.keys(state).some(k=>!['currency','transactions','loans','debts','savings','budgets','payments','payroll','ownerData','expenseGroups','expenseGroupItems'].includes(k)&&state[k]!==null&&state[k]!==undefined&&(Array.isArray(state[k])?state[k].length>0:typeof state[k]==='object'?Object.keys(state[k]).length>0:true))),toast,applyBorrowerPaymentRequest:(req)=>{const l=state.loans.find(x=>x.id===req.accountId);if(!l||!Number.isFinite(Number(req.amount))||Number(req.amount)<=0){toast('Invalid request or loan account missing');return false;}if(state.payments.some(p=>p.borrowerRequestId===req.id)){return true;}const allocation=allocatePayment('loan',l,Number(req.amount),String(req.date||today()),String(req.apply||'auto'));if(allocation.error){toast(allocation.error);return false;}const p={id:'borrower-request-'+req.id,borrowerRequestId:req.id,account:l.id,kind:'loan',amount:Number(req.amount),currency:recordCurrency(l)||'THB',date:String(req.date||today()),apply:String(req.apply||'auto'),note:'Borrower '+(req.paymentMethod==='bank'?'bank transfer':'cash payment')+' request: '+String(req.note||'').trim(),interestApplied:allocation.interestApplied,principalApplied:allocation.principalApplied};state.payments.unshift(p);if(p.principalApplied>0)l.principalPaid=Math.min(Number(l.principal)||0,Number(l.principalPaid||0)+p.principalApplied);save();render();return true;}};
 </script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
@@ -2337,43 +2337,43 @@ window.fmSignOut = async () => {
   catch(e) { status(errText(e),true); }
 };
 window.fmUploadLocal = async () => {
-  if (!currentUser) return status('Sign in first to upload data.',true);
-  if (!confirm('Before uploading, export a full JSON backup from Settings. Continue with uploading the records currently on this device to your private cloud account?')) return;
+  if (!currentUser || !isOwnerUser(currentUser)) return status('Sign in with the designated Owner Gmail first.',true);
+  if (applyingRemote || syncWriteInFlight) return status('A cloud data operation is already in progress. Please wait.',true);
+  if (!confirm('Before uploading, Finance Master will download a full JSON safety backup of this device. Continue?')) return;
   try {
+    window.fmApp.exportBackup();
     const ref=cloudRef(currentUser.uid), snap=await getDoc(ref);
-    if (snap.exists() && !confirm('Cloud data already exists. Replace the cloud copy with this device’s data? This cannot be undone from this screen. Cancel to keep the cloud copy.')) return;
+    if (snap.exists() && !confirm('Cloud data already exists. Replace it with this device’s complete data? The existing cloud copy should be preserved separately before continuing. Cancel to keep the cloud copy.')) return;
     const data=window.fmApp.getState();
-    await setDoc(ref,{data, schemaVersion:1, ownerUid:currentUser.uid, updatedAt:serverTimestamp()});
+    await setDoc(ref,{data, schemaVersion:2, ownerUid:currentUser.uid, updatedAt:serverTimestamp()});
     syncConflict=false; syncReady=true; localDirty=false; lastCloudSignature=stateSignature(data);
-    status('Upload complete. Your device data was copied to your cloud account. Live sync is active.');
+    status('Upload complete. All current state fields, including Owner Data and custom settings, were copied to your private cloud account. Live sync is active.');
     window.fmApp.toast('Cloud backup uploaded');
-  } catch(e) { status(errText(e),true); }
+  } catch(e) { status('Cloud upload stopped: '+errText(e)+'. Your local data was kept.',true); }
 };
 window.fmDownloadCloud = async () => {
-  if (!currentUser) return status('Sign in first to download cloud data.',true);
+  if (!currentUser || !isOwnerUser(currentUser)) return status('Sign in with the designated Owner Gmail first.',true);
+  if (applyingRemote) return status('A cloud data operation is already in progress. Please wait.',true);
   try {
     const snap=await getDoc(cloudRef(currentUser.uid));
     if (!snap.exists()) return status('No cloud backup found for this account. Your local data was not changed. Upload this device’s data if this is your first sync.',true);
     const payload=snap.data()?.data;
     if (!payload || !Array.isArray(payload.transactions)) return status('Cloud backup format is invalid. Local data was not changed.',true);
-    if (window.fmApp.hasLocalRecords() && !confirm('This will replace the records on this device with the cloud copy. Export a JSON backup first if you need to keep the current local records. Continue?')) return;
-    const safeState={
-      currency: ['THB','MMK','USD','SGD'].includes(payload.currency) ? payload.currency : 'THB',
-      transactions:Array.isArray(payload.transactions)?payload.transactions:[],
-      loans:Array.isArray(payload.loans)?payload.loans:[],
-      debts:Array.isArray(payload.debts)?payload.debts:[],
-      savings:Array.isArray(payload.savings)?payload.savings:[],
-      budgets:Array.isArray(payload.budgets)?payload.budgets:[],
-      payments:Array.isArray(payload.payments)?payload.payments:[],
-      payroll:payload.payroll&&typeof payload.payroll==='object'&&!Array.isArray(payload.payroll)?payload.payroll:{}
-    };
+    if (window.fmApp.hasLocalRecords()) {
+      if (!confirm('Cloud Download will replace this device’s current records. Finance Master will first download a full JSON safety backup, including Owner Data and custom settings. Continue?')) return;
+      window.fmApp.exportBackup();
+    }
+    const safeState={...window.fmApp.getState(),...normalizeState(payload)};
     applyingRemote=true;
-    window.fmApp.replaceState(safeState);
-    applyingRemote=false;
+    try { window.fmApp.replaceState(safeState); }
+    finally { applyingRemote=false; }
     syncConflict=false; syncReady=true; localDirty=false; lastCloudSignature=stateSignature(safeState);
-    status('Cloud data downloaded to this device. Live sync is active. Review your records and export a backup.');
-    window.fmApp.toast('Cloud data downloaded');
-  } catch(e) { status(errText(e),true); }
+    status('Cloud data downloaded. All fields in the cloud backup were retained; any local-only fields absent from an older cloud backup were preserved. Live sync is active.');
+    window.fmApp.toast('Cloud data downloaded safely');
+  } catch(e) {
+    applyingRemote=false;
+    status('Cloud download stopped: '+errText(e)+'. Existing local data was kept.',true);
+  }
 };
 let stopCloudListener=null;
 let applyingRemote=false;
@@ -2419,15 +2419,45 @@ const normalizeState = payload => ({
   payroll:payload?.payroll&&typeof payload.payroll==='object'&&!Array.isArray(payload.payroll)?payload.payroll:{}
 });
 const cloudSnapshotWouldDropLocalData = (local, remote) => {
-  const groups=['transactions','loans','debts','savings','budgets','payments'];
-  for(const key of groups){
-    const localCount=Array.isArray(local?.[key])?local[key].length:0;
-    const remoteCount=Array.isArray(remote?.[key])?remote[key].length:0;
-    if(localCount>remoteCount)return key;
+  const meaningful = value => value !== null && value !== undefined && value !== '' &&
+    !(typeof value === 'number' && value === 0) &&
+    !(typeof value === 'boolean' && value === false) &&
+    !(Array.isArray(value) && value.length === 0) &&
+    !(typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === 0);
+  const inspect = (left, right, path) => {
+    if (Array.isArray(left)) {
+      if (!Array.isArray(right) || right.length < left.length) return path;
+      for (let i=0;i<left.length;i++) {
+        const item=left[i];
+        if (item && typeof item==='object' && !Array.isArray(item) && item.id!=null) {
+          const match=right.find(candidate=>candidate && typeof candidate==='object' && String(candidate.id)===String(item.id));
+          if (!match) return path+' (record '+String(item.id)+')';
+          const nested=inspect(item,match,path+'['+String(item.id)+']');
+          if (nested) return nested;
+        } else if (item && typeof item==='object' && !Array.isArray(item)) {
+          const nested=inspect(item,right[i],path+'['+i+']');
+          if (nested) return nested;
+        }
+      }
+      return '';
+    }
+    if (left && typeof left==='object') {
+      if (!right || typeof right!=='object' || Array.isArray(right)) return meaningful(left)?path:'';
+      for (const key of Object.keys(left)) {
+        if (!meaningful(left[key])) continue;
+        if (!Object.prototype.hasOwnProperty.call(right,key)) return path?path+'.'+key:key;
+        const nested=inspect(left[key],right[key],path?path+'.'+key:key);
+        if (nested) return nested;
+      }
+    }
+    return '';
+  };
+  const ignored=new Set(['updatedAt','exportedAt','formatVersion','backupSummary']);
+  for (const key of Object.keys(local||{})) {
+    if (ignored.has(key)) continue;
+    const loss=inspect(local[key],remote?.[key],key);
+    if (loss) return loss;
   }
-  const localPayroll=local?.payroll&&typeof local.payroll==='object'?Object.keys(local.payroll).length:0;
-  const remotePayroll=remote?.payroll&&typeof remote.payroll==='object'?Object.keys(remote.payroll).length:0;
-  if(localPayroll>remotePayroll)return 'payroll';
   return '';
 };
 const stateSignature = value => {
