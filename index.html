@@ -2441,7 +2441,7 @@ const cloudSnapshotWouldDropLocalData = (local, remote) => {
       if(!Array.isArray(right))return left.length>0;
       return left.some(item=>{
         if(item&&typeof item==='object'&&!Array.isArray(item)&&item.id!==undefined){
-          return !right.some(candidate=>candidate&&typeof candidate==='object'&&String(candidate.id)===String(item.id));
+          const match=right.find(candidate=>candidate&&typeof candidate==='object'&&String(candidate.id)===String(item.id));return !match||hasAllLocalItems(item,match);
         }
         return !right.some(candidate=>JSON.stringify(candidate)===JSON.stringify(item));
       });
@@ -2450,7 +2450,7 @@ const cloudSnapshotWouldDropLocalData = (local, remote) => {
       if(!right||typeof right!=='object'||Array.isArray(right))return Object.keys(left).length>0;
       return Object.keys(left).some(key=>nonEmpty(left[key])&&!Object.prototype.hasOwnProperty.call(right,key)) || Object.keys(left).some(key=>nonEmpty(left[key])&&Object.prototype.hasOwnProperty.call(right,key)&&hasAllLocalItems(left[key],right[key]));
     }
-    return false;
+    return left!==undefined&&left!==null&&left!==''&&(right===undefined||right===null||right==='');
   };
   const keys=new Set([...Object.keys(local||{}),...Object.keys(remote||{})]);
   for(const key of keys){if(ignored.has(key))continue;if(nonEmpty(local?.[key])&&hasAllLocalItems(local[key],remote?.[key]))return key;}
