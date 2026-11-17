@@ -20,6 +20,8 @@ Finance Master is the Owner's personal finance workspace with a borrower Share L
 - Main cloud document: `users/{uid}/finance/data`. Firestore rules restrict this document to the authenticated UID that owns it.
 - Borrower Share Links use random tokens in `borrowerShares/{token}`; borrower access is limited by the Firestore rules.
 - Firebase Admin API routes require the Vercel Production environment variable `FIREBASE_SERVICE_ACCOUNT`. Never commit service-account JSON or other credentials to GitHub.
+- The Admin parser accepts a complete JSON object, a JSON-string-wrapped object, or `base64:<base64-encoded-json>`; it validates the Firebase project ID, service-account email and private key without logging the secret.
+- A recent production runtime-error review found historical `FIREBASE_SERVICE_ACCOUNT` JSON parse failures in borrower-open and push-registration endpoints. The parser now handles common quoting/base64/newline formats, but the Vercel Production secret still must be checked against a freshly downloaded service-account key from Firebase Console. Do not paste the private key into chat or GitHub. After correcting the variable, redeploy Production and verify both API flows.
 - The current cloud-sync model stores the finance state in one Firestore document. The app now pauses before a conservative 850 KB payload threshold. Larger data volumes require a separately planned collection-based migration; do not split or migrate production records without a full backup and reconciliation plan.
 
 ## Backup and recovery
