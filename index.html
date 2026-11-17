@@ -877,6 +877,86 @@ button,.pill,.linkbtn{font-weight:650}
   }
 }
 
+
+/* Owner Account accessibility upgrade — visual-only; preserve app logic and stored data */
+:root{
+  --ink:#14233d;
+  --muted:#4b5b73;
+  --line:#d7e0eb;
+  --gold:#c49a45;
+}
+body:not(.fm-dark){
+  color:#17243b;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+body:not(.fm-dark) :is(p,small,label,.muted,.hint,.help,.description,.sub,.metrichead,.crumb,.formhint,.field small,.panel p,.panel small,.pagehead p,.dashboard-date,.empty,.empty-state,.table-empty){
+  color:#4b5b73;
+}
+body:not(.fm-dark) :is(h1,h2,h3,h4,h5,strong,b,th,.panelhead h2,.pagehead h1,.pagehead h2,.metric strong,.metric b,.account-main>b,.account-balance>b,.txname b){
+  color:#14233d;
+}
+body:not(.fm-dark) :is(input,select,textarea,.toolbar input,.toolbar select){
+  color:#17243b;
+  background-color:#fff;
+  border-color:#cbd6e3;
+}
+body:not(.fm-dark) :is(input,textarea)::placeholder{color:#68778c;opacity:1}
+body:not(.fm-dark) select option{color:#17243b;background:#fff}
+body:not(.fm-dark) th{color:#34445d}
+body:not(.fm-dark) td{color:#26364e}
+body:not(.fm-dark) .nav button{color:#d8e1ef}
+body:not(.fm-dark) .nav button.active{color:#fff}
+body:not(.fm-dark) .linkbtn,.eyebrow{color:#76551b}
+body:not(.fm-dark) .tag{font-weight:800}
+body:not(.fm-dark) :is(.pill,.toolbar input,.toolbar select,.toolbar button){
+  min-height:40px;
+}
+body:not(.fm-dark) :is(input,select,textarea,button):focus-visible{
+  outline:3px solid #b58b3b88;
+  outline-offset:2px;
+}
+body.fm-dark:not(.fm-login-mode){
+  --ink:#f1f5fc;
+  --muted:#b5c2d5;
+  --line:#34445d;
+}
+body.fm-dark:not(.fm-login-mode) :is(p,small,label,.muted,.hint,.help,.description,.sub,.metrichead,.crumb,.formhint,.field small,.panel p,.panel small,.pagehead p,.dashboard-date,.empty,.empty-state,.table-empty){
+  color:#b5c2d5;
+}
+body.fm-dark:not(.fm-login-mode) :is(h1,h2,h3,h4,h5,strong,b,.panelhead h2,.pagehead h1,.pagehead h2,.metric strong,.metric b,.account-main>b,.account-balance>b,.txname b){
+  color:#f1f5fc;
+}
+body.fm-dark:not(.fm-login-mode) :is(input,select,textarea,.toolbar input,.toolbar select){
+  color:#f1f5fc;
+  background-color:#101a2b;
+  border-color:#455873;
+}
+body.fm-dark:not(.fm-login-mode) :is(input,textarea)::placeholder{color:#aebbd0;opacity:1}
+body.fm-dark:not(.fm-login-mode) select option{color:#f1f5fc;background:#101a2b}
+body.fm-dark:not(.fm-login-mode) th{color:#e0e9f6}
+body.fm-dark:not(.fm-login-mode) td{color:#e6edf8}
+body.fm-dark:not(.fm-login-mode) .linkbtn,
+body.fm-dark:not(.fm-login-mode) .eyebrow{color:#f0d28d}
+body.fm-dark:not(.fm-login-mode) .nav button{color:#d1dced}
+body.fm-dark:not(.fm-login-mode) .nav button.active{color:#fff}
+body.fm-dark:not(.fm-login-mode) :is(.pill,.toolbar input,.toolbar select,.toolbar button){min-height:40px}
+body.fm-dark:not(.fm-login-mode) :is(input,select,textarea,button):focus-visible{
+  outline:3px solid #e3bf70aa;
+  outline-offset:2px;
+}
+:where(.panel,.metric,.modal,.account-card,.person-card,.quick button) :is(p,small,label,span){
+  line-height:1.5;
+}
+:where(.panel,.modal) :is(input,select,textarea){font-size:14px}
+@media(max-width:700px){
+  .content{padding:18px 14px 92px}
+  .panel{padding:16px}
+  .pagehead p,.welcome p{font-size:13px;line-height:1.55}
+  .sub,.metrichead,.account-main small,.account-balance small{font-size:12px}
+  th{font-size:11px}
+  td{font-size:13px}
+}
 </style><style id="fm-accessibility-polish">
 /* Finance Master accessibility polish */
 :where(button,a,input,select,textarea,[role="button"],[tabindex]):focus-visible{
