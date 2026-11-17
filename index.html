@@ -1840,7 +1840,8 @@ function reportsPage(){
  const cats={};
  tx.filter(t=>t.type==='expense').forEach(t=>{const cat=t.category||'Other';cats[cat]=(cats[cat]||0)+Number(t.amount||0)});
  const receivable=outstanding(state.loans,cur),payable=outstanding(state.debts,cur);
- const interestTotal=state.loans.filter(x=>recordCurrency(x)===cur).reduce((n,x)=>n+Number(interest(x)||0),0);\n const debtInterestTotal=state.debts.filter(x=>recordCurrency(x)===cur).reduce((n,x)=>n+Number(interest(x)||0),0);
+ const interestTotal=state.loans.filter(x=>recordCurrency(x)===cur).reduce((n,x)=>n+Number(interest(x)||0),0);
+ const debtInterestTotal=state.debts.filter(x=>recordCurrency(x)===cur).reduce((n,x)=>n+Number(interest(x)||0),0);
  const savings=state.savings.filter(x=>recordCurrency(x)===cur).reduce((n,x)=>n+Number(x.saved||0),0);
  const payments=(state.payments||[]).filter(p=>recordCurrency(p)===cur&&matchesPeriod(p.date)).reduce((n,p)=>n+Number(p.amount||0),0);
  const unclassifiedPayrollPeriods=Object.entries(state.payroll||{}).filter(([key,rec])=>(reportMode==='year'?key.startsWith(reportYear):key===reportMonth)&&rec&&!recordCurrency(rec)).length;
