@@ -1576,13 +1576,16 @@ function dashboard(){
   const savings=state.savings.filter(x=>recordCurrency(x)===currency).reduce((n,x)=>n+Number(x.saved||0),0);
   const accrued=state.loans.filter(x=>recordCurrency(x)===currency).reduce((n,x)=>n+Number(interest(x)||0),0);
   const debtAccrued=state.debts.filter(x=>recordCurrency(x)===currency).reduce((n,x)=>n+Number(interest(x)||0),0);
+  const overdueLoans=state.loans.filter(x=>recordCurrency(x)===currency&&x.due&&String(x.due).slice(0,10)<today()&&loanLedger('loan',x).principalOutstanding>0.004).length;
+  const overdueDebts=state.debts.filter(x=>recordCurrency(x)===currency&&x.due&&String(x.due).slice(0,10)<today()&&loanLedger('debt',x).principalOutstanding>0.004).length;
+  const targetWarnings=state.loans.filter(x=>recordCurrency(x)===currency&&monthlyTargetStatus(x,'loan').warning).length;
   return '<section class="panel dashboard-currency-panel" style="margin-bottom:18px"><div class="panelhead"><div><h2>'+currencyLabel(currency)+'</h2></div><button class="linkbtn" onclick="go(\'Reports\')">Monthly report ↗</button></div><div class="cards dashboard-metrics">'+
    metric('This month income',fmt(monthly('income',currency),currency),'↗','Current calendar month')+
    metric('This month expenses',fmt(monthly('expense',currency),currency),'↘','Current calendar month')+
    metric('Transaction surplus / deficit',fmt(net,currency),'◈','Income less recorded transactions')+
    metric('Loans receivable',fmt(receivable,currency),'⇄',state.loans.filter(x=>recordCurrency(x)===currency).length+' account(s)')+
    metric('Debts to repay',fmt(payable,currency),'▤',state.debts.filter(x=>recordCurrency(x)===currency).length+' account(s)')+
-   metric('Loan interest outstanding',fmt(accrued,currency),'％','Interest owed to you')+metric('Debt interest outstanding',fmt(debtAccrued,currency),'％','Interest you may owe')+
+   metric('Loan interest outstanding',fmt(accrued,currency),'％','Interest owed to you')+metric('Debt interest outstanding',fmt(debtAccrued,currency),'％','Interest you may owe')+metric('Overdue loans',overdueLoans,'⚠','Past due date with balance')+metric('Overdue debts',overdueDebts,'⚠','Past due date with balance')+metric('Payment target alerts',targetWarnings,'!','3+ consecutive underpaid months')+
    metric('Savings balance',fmt(savings,currency),'◎',state.savings.filter(x=>recordCurrency(x)===currency).length+' goal(s)')+
    metric('All-time income',fmt(inc,currency),'↗','Recorded total')+'</div></section>';
  };
