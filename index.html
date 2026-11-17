@@ -1482,6 +1482,35 @@ body:not(.fm-login-mode) #content .dashboard-hero .goldbtn{
 }
 </style>
 
+
+<style id="fm-person-head-contrast-fix-v6">
+/* Specific borrower / loan detail hero overrides: outrank generic owner text rules */
+body:not(.fm-login-mode):not(.fm-dark) #content .person-head .person-title h1{
+ color:#ffffff!important;opacity:1!important;text-shadow:none!important
+}
+body:not(.fm-login-mode):not(.fm-dark) #content .person-head .person-title p{
+ color:#e0e9f5!important;opacity:1!important;text-shadow:none!important
+}
+body:not(.fm-login-mode):not(.fm-dark) #content .person-head .back-account{
+ color:#f5dda5!important;opacity:1!important
+}
+body:not(.fm-login-mode):not(.fm-dark) #content .person-head :is(.person-title,.person-title-row,.back-account){
+ -webkit-text-fill-color:currentColor!important
+}
+body.fm-dark:not(.fm-login-mode) #content .person-head .person-title h1{
+ color:#ffffff!important;opacity:1!important;text-shadow:none!important
+}
+body.fm-dark:not(.fm-login-mode) #content .person-head .person-title p{
+ color:#e0e9f5!important;opacity:1!important;text-shadow:none!important
+}
+body.fm-dark:not(.fm-login-mode) #content .person-head .back-account{
+ color:#f5dda5!important;opacity:1!important
+}
+body.fm-dark:not(.fm-login-mode) #content .person-head :is(.person-title,.person-title-row,.back-account){
+ -webkit-text-fill-color:currentColor!important
+}
+</style>
+
 </head>
 <body>
 <div class="app">
