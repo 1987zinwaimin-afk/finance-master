@@ -47,7 +47,7 @@ function parseServiceAccount(raw) {
   }
 
   // Some environment-variable managers preserve escaped newlines literally.
-  serviceAccount.private_key = serviceAccount.private_key.replace(/\\\\n/g, '\\n').replace(/\\r\\n/g, '\\n');
+  serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n').replace(/\r\n/g, '\n');
   return serviceAccount;
 }
 
