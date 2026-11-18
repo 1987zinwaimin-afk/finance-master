@@ -3281,9 +3281,17 @@ const startCloudListener = user => {
     const localSignature=stateSignature(local);
     if(!initialSnapshotHandled){
       initialSnapshotHandled=true;
-      // Never let a different account see or upload device-local records automatically.
+      // If this device already contains finance records and the cloud copy differs,
+      // preserve both versions and pause. Never silently replace populated local data
+      // during the first snapshot; the Owner must explicitly choose Upload or Download.
       if(remoteSignature!==localSignature && window.fmApp.hasLocalRecords()){
         try{localStorage.setItem('finance-master-device-backup-before-account-switch-v1',JSON.stringify({savedAt:new Date().toISOString(),state:local}));}catch(e){console.warn('Could not preserve a local recovery copy',e);}
+        lastCloudSignature=remoteSignature;
+        localDirty=false;syncReady=false;syncConflict=true;
+        window.fmSecurityState='ready';
+        status('Local and cloud finance records are different. Your local records were kept and cloud sync is paused. Export a JSON backup, review both copies, then choose Upload or Download in Settings.',true);
+        if(window.fmApp?.render)window.fmApp.render();
+        return;
       }
       if(remoteSignature!==localSignature){applyingRemote=true;window.fmApp.replaceState(remote);applyingRemote=false;}
       lastCloudSignature=remoteSignature;localDirty=false;syncReady=true;
