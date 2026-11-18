@@ -2848,6 +2848,20 @@ async function rejectBorrowerRequest(id){const req=(window.fmBorrowerCloud?.requ
 
 function securityGatePage(){
   const mode=window.fmSecurityState||'checking';
+  // Firebase browserLocalPersistence restores an existing Owner session asynchronously.
+  // Keep the credential form hidden while that session and its private cloud access are verified.
+  if(mode==='checking'){
+    document.body.classList.add('fm-login-mode');
+    return '<section class="fm-login-card" aria-label="Finance Master session verification">'+
+      '<div class="fm-login-brand">FINANCE MASTER</div>'+
+      '<h1 class="fm-login-title">WELCOME BACK</h1>'+
+      '<p class="fm-login-intro">Restoring your secure Owner session. Please wait…</p>'+
+      '<div class="fm-login-status" role="status" aria-live="polite">🔒 Checking saved login on this device…</div>'+
+      '<div style="height:5px;border-radius:9px;background:#cbd2dc;overflow:hidden;margin:22px 0 8px"><div style="height:100%;width:38%;border-radius:9px;background:linear-gradient(90deg,#b58d45,#e7ce91);animation:fmSessionProgress 1.4s ease-in-out infinite alternate"></div></div>'+
+      '<style>@keyframes fmSessionProgress{from{width:18%}to{width:92%}}</style>'+
+      '<p class="fm-login-foot">Your saved Owner session is being verified. Login will only be requested if you are signed out.</p>'+
+    '</section>';
+  }
   const headline=mode==='checking'?'CHECKING ACCOUNT':mode==='not-owner'?'OWNER ACCESS DENIED':mode==='no-cloud'?'CLOUD BACKUP NOT FOUND':mode==='error'?'CONNECTION ERROR':'LOGIN';
   const message=mode==='checking'?'Checking your secure Finance Master account…':mode==='not-owner'?'This Gmail is not the authorized Owner account. Sign out and use the designated Owner Gmail.':mode==='no-cloud'?'This Owner account has no cloud backup yet. Existing device data has not been deleted or uploaded.':mode==='error'?'Firebase could not verify access. Your finance data remains hidden.':'Sign in with the Owner Gmail to access your private finance workspace.';
   const signedIn=!!window.fmSecurityState && ['not-owner','no-cloud','error'].includes(mode);
