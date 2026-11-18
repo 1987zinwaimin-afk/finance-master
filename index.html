@@ -3255,9 +3255,14 @@ const startCloudListener = user => {
         // cloud document exists. Keep sync disabled until the Owner explicitly uploads
         // or downloads data; never create/overwrite a cloud copy automatically.
         syncReady=false;localDirty=false;syncConflict=false;
-        if(isOwnerUser(user) && window.fmApp.hasLocalRecords()){
+        if(isOwnerUser(user)){
+          // A successfully authenticated Owner stays signed in on this browser/device,
+          // even when no cloud document exists yet. Missing cloud backup is not a reason
+          // to show the login screen again. Keep cloud sync disabled until explicit review.
           window.fmSecurityState='ready';
-          status('Owner verified. No cloud backup exists yet; existing device records are available and have not been uploaded. Use Settings to review and explicitly upload after making a backup.',true);
+          status(window.fmApp.hasLocalRecords()
+            ? 'Owner verified on this device. No cloud backup exists yet; local records remain available and have not been uploaded. Use Settings to review and explicitly upload after making a backup.'
+            : 'Owner verified on this device. No cloud backup exists yet. You can continue using this device; cloud sync remains off until you explicitly review and upload a backup.',true);
         }else{
           window.fmSecurityState='no-cloud';
           status('This account has no cloud backup. Device records remain hidden for privacy and will not be uploaded automatically.',true);
