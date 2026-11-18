@@ -2192,13 +2192,13 @@ function loanLedger(kind,l,throughDate=today(),excludePaymentId=''){
  (state.payments||[]).filter(p=>p.kind===kind&&p.account===l.id&&p.id!==excludePaymentId&&String(p.date||'')>=start&&String(p.date||'').slice(0,10)<=through).forEach(p=>events.push({date:String(p.date||start).slice(0,10),type:'payment',p}));
  events.sort((a,b)=>a.date.localeCompare(b.date)||(a.type===b.type?0:a.type==='due'?-1:1));
  let principal=Math.max(0,Number(l.principal)||0);const buckets=[];
- const applyInterest=amount=>{let left=Math.max(0,Number(amount)||0);for(const b of buckets){if(left<=0)break;const paid=Math.min(b.remaining,left);b.remaining=Math.max(0,b.remaining-paid);left-=paid}return left};
+ const applyInterest=(amount,preferredDueDate='')=>{let left=Math.max(0,Number(amount)||0);const preferredMonth=String(preferredDueDate||'').slice(0,7);if(preferredMonth){for(const b of buckets){if(left<=0)break;if(String(b.date||'').slice(0,7)!==preferredMonth)continue;const paid=Math.min(b.remaining,left);b.remaining=Math.max(0,b.remaining-paid);left-=paid}}for(const b of buckets){if(left<=0)break;const paid=Math.min(b.remaining,left);b.remaining=Math.max(0,b.remaining-paid);left-=paid}return left};
  for(const ev of events){
   if(ev.type==='due'){const compoundBase=principal+(((l.method||'simple')==='compound'||l.interestType==='reassessed')?buckets.reduce((sum,b)=>sum+Math.max(0,b.remaining),0):0);const amount=Math.max(0,compoundBase*rate);if(amount>0)buckets.push({date:ev.date,remaining:amount,original:amount});continue}
   const p=ev.p,amount=Math.max(0,Number(p.amount)||0);
   if(p.apply==='interest'){applyInterest(p.interestApplied!==undefined?Number(p.interestApplied)||0:amount);continue}
   if(p.apply==='principal'){principal=Math.max(0,principal-amount);continue}
-  if(p.interestApplied!==undefined||p.principalApplied!==undefined){applyInterest(Number(p.interestApplied)||0);principal=Math.max(0,principal-(Number(p.principalApplied)||0));continue}
+  if(p.interestApplied!==undefined||p.principalApplied!==undefined){applyInterest(Number(p.interestApplied)||0,p.dueDate||'');principal=Math.max(0,principal-(Number(p.principalApplied)||0));continue}
   if(p.apply==='auto'){const left=applyInterest(amount);principal=Math.max(0,principal-left)}
  }
  const unpaid=buckets.filter(b=>b.remaining>0.004);
