@@ -2199,7 +2199,7 @@ function loanLedger(kind,l,throughDate=today(),excludePaymentId=''){
   if(p.apply==='interest'){applyInterest(p.interestApplied!==undefined?Number(p.interestApplied)||0:amount,p.dueDate||'');continue}
   if(p.apply==='principal'){principal=Math.max(0,principal-amount);continue}
   if(p.interestApplied!==undefined||p.principalApplied!==undefined){applyInterest(Number(p.interestApplied)||0,p.dueDate||'');principal=Math.max(0,principal-(Number(p.principalApplied)||0));continue}
-  if(p.apply==='auto'){const left=applyInterest(amount);principal=Math.max(0,principal-left)}
+  if(p.apply==='auto'){const left=applyInterest(amount,p.dueDate||'');principal=Math.max(0,principal-left)}
  }
  const unpaid=buckets.filter(b=>b.remaining>0.004);
  return {monthlyInterest:Math.max(0,principal*rate),principalOutstanding:principal,interestOutstanding:unpaid.reduce((s,b)=>s+b.remaining,0),unpaidMonths:unpaid.length,unpaidMonthLabels:unpaid.map(b=>new Date(b.date+'T00:00:00Z').toLocaleDateString('en-GB',{month:'short',year:'numeric',timeZone:'UTC'})),monthsDue:buckets.length,interestBuckets:buckets};
