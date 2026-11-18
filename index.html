@@ -2196,7 +2196,7 @@ function loanLedger(kind,l,throughDate=today(),excludePaymentId=''){
  for(const ev of events){
   if(ev.type==='due'){const compoundBase=principal+(((l.method||'simple')==='compound'||l.interestType==='reassessed')?buckets.reduce((sum,b)=>sum+Math.max(0,b.remaining),0):0);const amount=Math.max(0,compoundBase*rate);if(amount>0)buckets.push({date:ev.date,remaining:amount,original:amount});continue}
   const p=ev.p,amount=Math.max(0,Number(p.amount)||0);
-  if(p.apply==='interest'){applyInterest(p.interestApplied!==undefined?Number(p.interestApplied)||0:amount);continue}
+  if(p.apply==='interest'){applyInterest(p.interestApplied!==undefined?Number(p.interestApplied)||0:amount,p.dueDate||'');continue}
   if(p.apply==='principal'){principal=Math.max(0,principal-amount);continue}
   if(p.interestApplied!==undefined||p.principalApplied!==undefined){applyInterest(Number(p.interestApplied)||0,p.dueDate||'');principal=Math.max(0,principal-(Number(p.principalApplied)||0));continue}
   if(p.apply==='auto'){const left=applyInterest(amount);principal=Math.max(0,principal-left)}
