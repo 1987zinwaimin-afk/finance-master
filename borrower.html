@@ -1564,9 +1564,9 @@ function render(){
  const accountName=id=>{const a=accounts.find(x=>x.accountId===id);return a?(a.loanType||a.label||a.note||('Loan '+String(accounts.indexOf(a)+1))):'Loan';};
  const interestPaid=a=>(Array.isArray(a.interestBuckets)?a.interestBuckets:[]).reduce((sum,x)=>sum+Math.max(0,Number(x.original||0)-Number(x.remaining||0)),0);
  const interestMonths=a=>{const bs=Array.isArray(a.interestBuckets)?a.interestBuckets:[];return {paid:bs.filter(x=>Number(x.original)>0&&Number(x.remaining)<=0.004).length,partial:bs.filter(x=>Number(x.original)>Number(x.remaining||0)+0.004&&Number(x.remaining||0)>0.004).length,due:bs.filter(x=>Number(x.original)>0).length};};
- const accountPaymentMonths=a=>new Set((Array.isArray(a.payments)?a.payments:[]).filter(p=>Number(p.amount)>0&&p.date).map(p=>String(p.date).slice(0,7))).size;
+ const accountPaymentMonths=a=>new Set((Array.isArray(a.payments)?a.payments:[]).filter(p=>Number(p.amount)>0&&(p.dueDate||p.date)).map(p=>String(p.dueDate||p.date).slice(0,7))).size;
  const currentMonth=(()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")})();
- const monthlyPaidFor=a=>payments.filter(p=>String(p.date||"").slice(0,7)===currentMonth&&Number(p.amount)>0&&(!multi||p.accountId===a.accountId)).reduce((sum,p)=>sum+Math.max(0,Number(p.amount||0)),0);
+ const monthlyPaidFor=a=>payments.filter(p=>String(p.dueDate||p.date||"").slice(0,7)===currentMonth&&Number(p.amount)>0&&(!multi||p.accountId===a.accountId)).reduce((sum,p)=>sum+Math.max(0,Number(p.amount||0)),0);
  const totalInterestFor=a=>Number(interestPaid(a)||0)+Number(a.interestOutstanding||0);
  const isPaused=a=>String(a.interestType||"normal")==="paused";
  const summaryCard=(a,i)=>{
