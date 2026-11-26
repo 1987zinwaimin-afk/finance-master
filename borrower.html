@@ -4033,4 +4033,48 @@ body.chat-mode #app .borrower-photo-button{background:#f3f1eb!important;color:#5
 body.chat-mode #app .borrower-send-button{background:#718875!important;color:#fff!important;border:1px solid #718875!important}
 @media(max-width:480px){body.chat-mode #app .share-page[data-share-page="chat"]>.borrower-chat-header{min-height:64px!important}body.chat-mode #app .share-page[data-share-page="chat"]>.borrower-chat-composer{padding-left:9px!important;padding-right:9px!important}}
 </style>
+
+<style id="fm-chat-nav-interaction-fix-v7">
+/* Keep the borrower tab bar above the chat view so every tab remains clickable. */
+body.chat-mode #app .share-bottom-nav,
+body.chat-mode .wrap .share-bottom-nav{
+ display:grid!important;visibility:visible!important;opacity:1!important;
+ position:fixed!important;left:0!important;right:0!important;bottom:0!important;
+ z-index:100001!important;pointer-events:auto!important;
+ width:100%!important;min-height:88px!important;
+ padding:7px 8px calc(7px + env(safe-area-inset-bottom))!important;
+ background:#fff!important;border:1px solid #e7e3d9!important;
+ border-bottom:0!important;border-radius:22px 22px 0 0!important;
+ box-shadow:0 -5px 22px rgba(50,45,35,.10)!important;
+ box-sizing:border-box!important;
+}
+body.chat-mode #app .share-bottom-nav button{
+ position:relative!important;z-index:100002!important;
+ display:flex!important;flex-direction:column!important;
+ align-items:center!important;justify-content:center!important;
+ min-width:0!important;min-height:68px!important;
+ pointer-events:auto!important;touch-action:manipulation!important;
+}
+body.chat-mode #app .share-bottom-nav button[data-share-tab="chat"].active{
+ background:#eee9d9!important;color:#39372f!important;
+}
+body.chat-mode #app .share-page[data-share-page="chat"]{
+ position:fixed!important;left:0!important;right:0!important;top:0!important;
+ bottom:calc(94px + env(safe-area-inset-bottom))!important;
+ z-index:100!important;display:grid!important;
+ grid-template-columns:minmax(0,1fr)!important;
+ grid-template-rows:auto minmax(0,1fr) auto!important;
+ width:100vw!important;height:auto!important;min-height:0!important;
+ max-height:none!important;margin:0!important;padding:0!important;
+ overflow:hidden!important;box-sizing:border-box!important;
+ background:#f7f6f1!important;border:0!important;border-radius:0!important;
+}
+body.chat-mode #app .share-page[data-share-page="chat"]>.borrower-chat-header{grid-row:1!important;min-height:64px!important}
+body.chat-mode #app .share-page[data-share-page="chat"]>#borrowerChatMessages{grid-row:2!important;min-height:0!important;overflow-y:auto!important}
+body.chat-mode #app .share-page[data-share-page="chat"]>.borrower-chat-composer{grid-row:3!important;flex:none!important;padding-bottom:10px!important}
+@media(max-width:480px){
+ body.chat-mode #app .share-bottom-nav{min-height:92px!important}
+ body.chat-mode #app .share-page[data-share-page="chat"]{bottom:calc(98px + env(safe-area-inset-bottom))!important}
+}
+</style>
 </body></html>
