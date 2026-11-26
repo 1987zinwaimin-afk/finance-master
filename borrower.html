@@ -2143,6 +2143,102 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 }
 </style>
 
+<style id="fm-warm-beige-cascade-final-v2">
+/* Final Warm Beige overrides: intentionally last in head so legacy theme rules cannot repaint the customer dashboard. */
+:root{--fm-paper:#fffdf9;--fm-ink:#352d24;--fm-muted:#827565;--fm-border:#e8dfd1;--fm-navy:#5b4633;--fm-gold:#c49a61}
+html,body{background:#f7f3eb!important;color:#352d24!important}
+.wrap{max-width:760px!important;background:transparent!important}
+#app .fm-customer-home{
+ background:#fffdf9!important;color:#352d24!important;border:1px solid #e8dfd1!important;
+ border-radius:18px!important;box-shadow:0 5px 17px rgba(85,65,43,.055)!important;overflow:hidden!important
+}
+#app .fm-customer-home .fm-customer-welcome{
+ background:linear-gradient(135deg,#f5ecdc,#fffdf9)!important;color:#352d24!important;
+ border:0!important;border-bottom:1px solid #eadfce!important;border-left:4px solid #c49a61!important;
+}
+#app .fm-customer-home .fm-profile-copy small{color:#967b59!important}
+#app .fm-customer-home .fm-profile-copy h2{color:#4e3b2a!important;text-shadow:none!important}
+#app .fm-customer-home .fm-profile-copy p,
+#app .fm-customer-home .fm-live-pill{color:#827565!important}
+#app .fm-customer-home .customer-dashboard-heading h2,
+#app .fm-customer-home .customer-section-heading h3{
+ color:#594431!important;-webkit-text-fill-color:#594431!important;text-shadow:none!important
+}
+#app .fm-customer-home .customer-dashboard-heading p,
+#app .fm-customer-home .customer-section-heading p{color:#897c6c!important;-webkit-text-fill-color:#897c6c!important}
+#app .fm-customer-home .customer-section-heading{border-left:3px solid #c49a61!important}
+#app .fm-customer-home .customer-section-heading small{color:#9a7b53!important;-webkit-text-fill-color:#9a7b53!important}
+#app .fm-customer-home .customer-total-grid{
+ background:#faf6ef!important;border:1px solid #e9dfd1!important;border-radius:14px!important;
+}
+#app .fm-customer-home .customer-total-grid .metric{
+ background:transparent!important;border:0!important;border-bottom:1px solid #eee5d9!important;
+ box-shadow:none!important;border-radius:0!important;
+}
+#app .fm-customer-home .customer-total-grid .metric small,
+#app .fm-customer-home .customer-loan-list .metric small{color:#827565!important;-webkit-text-fill-color:#827565!important}
+#app .fm-customer-home .customer-total-grid .metric b,
+#app .fm-customer-home .customer-loan-list .metric b{color:#49392a!important;-webkit-text-fill-color:#49392a!important}
+#app .fm-customer-home .currency-ledger-stack,
+#app .fm-customer-home .customer-loan-list{
+ width:auto!important;max-width:100%!important;margin:0 12px!important;padding:0!important;
+ grid-template-columns:minmax(0,1fr)!important;gap:10px!important;box-sizing:border-box!important
+}
+#app .fm-customer-home .currency-ledger-card,
+#app .fm-customer-home .loan-ledger-card,
+#app .fm-customer-home .customer-loan-list>article.panel{
+ width:100%!important;max-width:100%!important;min-width:0!important;margin:0!important;
+ background:#fffdf9!important;color:#49392a!important;border:1px solid #e9dfd1!important;
+ border-radius:15px!important;box-shadow:0 3px 11px rgba(87,65,42,.045)!important;overflow:hidden!important
+}
+#app .fm-customer-home .currency-ledger-card *,
+#app .fm-customer-home .loan-ledger-card *,
+#app .fm-customer-home .customer-loan-list>article.panel *{
+ text-shadow:none!important
+}
+#app .fm-customer-home .currency-ledger-card>header,
+#app .fm-customer-home .loan-ledger-heading{background:#f7f1e7!important;border-bottom:1px solid #eee4d6!important}
+#app .fm-customer-home .currency-ledger-card>header h3,
+#app .fm-customer-home .loan-ledger-heading h3{color:#574330!important;-webkit-text-fill-color:#574330!important}
+#app .fm-customer-home .currency-ledger-card>header small,
+#app .fm-customer-home .loan-ledger-heading small{color:#9a7b53!important;-webkit-text-fill-color:#9a7b53!important}
+#app .fm-customer-home .currency-ledger-total,
+#app .fm-customer-home .currency-ledger-rows{background:#fffdf9!important}
+#app .fm-customer-home .currency-ledger-total small,
+#app .fm-customer-home .currency-ledger-rows span,
+#app .fm-customer-home .loan-ledger-total small,
+#app .fm-customer-home .loan-ledger-total p{color:#827565!important;-webkit-text-fill-color:#827565!important}
+#app .fm-customer-home .currency-ledger-total strong,
+#app .fm-customer-home .loan-ledger-total strong{color:#49392a!important;-webkit-text-fill-color:#49392a!important}
+#app .fm-customer-home .currency-ledger-rows b,
+#app .fm-customer-home .ledger-row-copy b,
+#app .fm-customer-home .ledger-row>strong{color:#554432!important;-webkit-text-fill-color:#554432!important}
+#app .fm-customer-home .loan-ledger-total{background:#faf6ef!important}
+#app .fm-customer-home .loan-ledger-section{background:#fffdf9!important}
+#app .fm-customer-home .loan-ledger-section h4,
+#app .fm-customer-home .ledger-details-content h4{color:#98764d!important;-webkit-text-fill-color:#98764d!important}
+#app .fm-customer-home .loan-detail-toggle{background:#fffdf9!important;border:1px solid #e9dfd1!important}
+#app .fm-customer-home .loan-detail-toggle>summary{background:#f7f1e7!important;color:#624b34!important}
+#app .fm-customer-home .loan-detail-toggle>div{background:#fffdf9!important;color:#554432!important}
+#app .fm-customer-home .ledger-note,
+#app .fm-customer-home .ledger-owner-alert,
+#app .fm-customer-home .loan-ledger-card .notice{background:#fff7e8!important;border:1px solid #ead9b8!important;color:#5b4934!important}
+#app .fm-customer-home .ledger-note *,
+#app .fm-customer-home .ledger-owner-alert *,
+#app .fm-customer-home .loan-ledger-card .notice *{color:#5b4934!important;-webkit-text-fill-color:#5b4934!important}
+#app .share-bottom-nav{background:rgba(255,253,249,.97)!important;border:0!important;border-top:1px solid #e6dccd!important;box-shadow:0 -6px 20px rgba(89,67,42,.09)!important}
+#app .share-bottom-nav button{color:#8a7a67!important;background:transparent!important}
+#app .share-bottom-nav button span{color:#a27d4d!important}
+#app .share-bottom-nav button.active{background:#f1e6d4!important;color:#60472e!important;box-shadow:inset 0 0 0 1px #e7d5b9!important}
+#app .share-bottom-nav button.active span,
+#app .share-bottom-nav button.active small{color:#60472e!important}
+@media(max-width:420px){
+ .wrap{padding-left:8px!important;padding-right:8px!important}
+ #app .fm-customer-home .currency-ledger-stack,
+ #app .fm-customer-home .customer-loan-list{margin-left:9px!important;margin-right:9px!important}
+}
+</style>
+
 </head>
 <body><main class="wrap">
 <div class="brand"><img class="logo brand-logo-img" src="/borrower-icon.svg?v=finance-logo-20261023" alt="Finance Master logo" width="44" height="44"><div class="brand-title"><b>Finance Master</b><small>PRIVATE BORROWER PORTAL</small></div><label class="language-wrap"><span id="languageLabel">Language</span><select id="languageSelect" aria-label="Language"><option value="my">မြန်မာ</option><option value="en">English</option><option value="th">ไทย</option></select></label></div>
