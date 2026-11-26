@@ -3742,4 +3742,201 @@ html.borrower-notice-locked,body.borrower-notice-locked{overflow:hidden!importan
 })();
 </script>
 
+
+<style id="fm-warm-beige-unified-layout-v4">
+/* Unified light customer portal: consistent alignment, spacing and zero navy surfaces */
+:root{
+ --navy:#655a48!important;
+ --gold:#c5a66b!important;
+ --bg:#f7f6f1!important;
+ --ink:#302f2b!important;
+ --muted:#77766f!important;
+ --line:#e7e3d9!important;
+ --green:#66866f!important;
+ --red:#bd6660!important;
+}
+html,body:not(.chat-mode){background:#f7f6f1!important;color:#302f2b!important}
+body:not(.chat-mode){background-image:none!important}
+body:not(.chat-mode) .wrap{
+ width:100%!important;max-width:780px!important;margin:0 auto!important;
+ padding:14px 12px calc(94px + env(safe-area-inset-bottom))!important;
+}
+#app{width:100%!important;max-width:100%!important;margin:0 auto!important;color:#302f2b!important}
+#app .fm-customer-home,
+#app .share-page,
+#app .customer-history-page,
+#app .fm-customer-welcome{
+ width:100%!important;max-width:100%!important;min-width:0!important;
+ background:transparent!important;color:#302f2b!important;
+}
+#app .fm-customer-home,
+#app .share-page[data-share-page="home"]{display:block!important}
+#app .panel,
+#app .loan-ledger-card,
+#app .currency-ledger-card,
+#app .customer-history-account,
+#app .customer-history-account-row,
+#app .metric,
+#app .bank-transfer-panel,
+#app .request-status-card,
+#app .owner-public-panel,
+#app .customer-security-note,
+#app .fm-customer-welcome,
+#app .customer-history-account-details,
+#app .ledger-details-content{
+ background:#fff!important;
+ color:#302f2b!important;
+ border:1px solid #e7e3d9!important;
+ border-radius:16px!important;
+ box-shadow:0 3px 12px rgba(72,62,42,.045)!important;
+}
+#app .fm-customer-home .currency-ledger-stack,
+#app .fm-customer-home .customer-loan-list,
+#app .fm-customer-home .loan-section,
+#app .fm-customer-home .customer-section,
+#app .share-page,
+#app .customer-history-page{
+ display:flex!important;flex-direction:column!important;gap:12px!important;
+ width:100%!important;min-width:0!important;margin:0!important;
+}
+#app .loan-ledger-card,
+#app .currency-ledger-card,
+#app .customer-history-account,
+#app .customer-history-account-row,
+#app .panel,
+#app .metric{
+ width:100%!important;min-width:0!important;max-width:100%!important;
+ margin:0 0 12px!important;padding:14px!important;
+}
+#app .loan-ledger-heading,
+#app .customer-section-heading,
+#app .loan-section-heading,
+#app .customer-page-heading,
+#app .request-page-heading{
+ display:flex!important;align-items:center!important;justify-content:space-between!important;
+ gap:10px!important;flex-wrap:wrap!important;width:100%!important;
+ color:#514b40!important;
+}
+#app .loan-ledger-total,
+#app .currency-ledger-total{
+ color:#3c5143!important;-webkit-text-fill-color:#3c5143!important;
+ overflow-wrap:anywhere!important;word-break:normal!important;
+}
+#app .loan-ledger-card *,
+#app .currency-ledger-card *,
+#app .customer-history-account *,
+#app .customer-history-account-row *,
+#app .panel *{
+ text-shadow:none!important;
+}
+#app .loan-ledger-card h1,#app .loan-ledger-card h2,#app .loan-ledger-card h3,
+#app .currency-ledger-card h1,#app .currency-ledger-card h2,#app .currency-ledger-card h3,
+#app .customer-page-heading h1,#app .customer-page-heading h2{
+ color:#39372f!important;-webkit-text-fill-color:#39372f!important;
+}
+#app .loan-ledger-card p,#app .loan-ledger-card small,#app .loan-ledger-card span,
+#app .currency-ledger-card p,#app .currency-ledger-card small,#app .currency-ledger-card span,
+#app .customer-history-account small,#app .muted{
+ color:#77766f!important;-webkit-text-fill-color:#77766f!important;
+}
+#app .loan-ledger-card b,#app .currency-ledger-card b,
+#app .customer-history-account b,#app .customer-history-account-row b{
+ color:#3d3a33!important;-webkit-text-fill-color:#3d3a33!important;
+}
+#app .btn,
+#app button.btn,
+#app .customer-repay-button,
+#app .loan-repay-action,
+#app #sendRequest,
+#app #sendBankReceipt,
+#app .borrower-send-button,
+#borrowerEntryNotice .notice-ack{
+ min-height:44px!important;height:auto!important;
+ padding:11px 15px!important;border-radius:11px!important;
+ background:#718875!important;color:#fff!important;
+ border:1px solid #718875!important;
+ box-shadow:none!important;font-weight:750!important;
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ gap:7px!important;line-height:1.25!important;
+}
+#app .btn.secondary,
+#app button.btn.secondary,
+#app .bank-qr-modal-actions .btn.secondary,
+#app .borrower-photo-button{
+ background:#f3f1eb!important;color:#514b40!important;
+ border:1px solid #e2ded3!important;box-shadow:none!important;
+}
+#app button:focus-visible,#app input:focus-visible,#app select:focus-visible,#app textarea:focus-visible{
+ outline:2px solid #a8b99d!important;outline-offset:2px!important;
+}
+#app input,#app select,#app textarea,
+#app .field input,#app .field select,#app .field textarea{
+ width:100%!important;max-width:100%!important;min-height:44px!important;
+ border:1px solid #e2ded3!important;border-radius:10px!important;
+ background:#fff!important;color:#39372f!important;
+ box-shadow:none!important;
+}
+#app .row{align-items:stretch!important;gap:10px!important}
+#app .row>*{min-width:0!important}
+#app .field{min-width:0!important;gap:6px!important}
+#app .grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+#app .metric{padding:12px!important}
+#app .notice,#app .success,#app .error,
+#app .ledger-note,#app .ledger-owner-alert{
+ border-radius:12px!important;box-shadow:none!important;
+}
+#app .notice{background:#faf7ed!important;border:1px solid #e9dfc8!important;color:#5e5545!important}
+#app .success{background:#eff5ef!important;border:1px solid #d5e4d5!important;color:#42684c!important}
+#app .error{background:#fff2f0!important;border:1px solid #efd1cc!important;color:#8c4942!important}
+#app .share-bottom-nav{
+ background:rgba(255,255,255,.98)!important;
+ border-top:1px solid #e7e3d9!important;
+ box-shadow:0 -4px 18px rgba(72,62,42,.07)!important;
+ backdrop-filter:blur(12px)!important;
+ border-radius:16px 16px 0 0!important;
+}
+#app .share-bottom-nav button{
+ min-height:54px!important;border-radius:12px!important;
+ background:transparent!important;color:#817d72!important;
+}
+#app .share-bottom-nav button.active{
+ background:#eee8d9!important;color:#62553d!important;
+}
+#app .share-bottom-nav button span{font-size:18px!important}
+#app .share-bottom-nav button small{font-size:10px!important;font-weight:750!important}
+#borrowerEntryNotice{background:rgba(45,42,35,.42)!important}
+#borrowerEntryNotice .notice-card{
+ background:#fff!important;border:1px solid #e7e0d1!important;
+ box-shadow:0 18px 55px rgba(40,35,25,.18)!important;color:#39372f!important;
+}
+#borrowerEntryNotice h2{color:#39372f!important}
+#borrowerEntryNotice .notice-copy{color:#625e55!important}
+#borrowerEntryNotice .notice-ack{background:#718875!important;border-color:#718875!important}
+#app .borrower-chat-fullscreen{background:#f7f6f1!important}
+#app .borrower-chat-header,#app .borrower-chat-composer{background:#fff!important;border-color:#e7e3d9!important}
+#app .borrower-chat-back{background:#f3f1eb!important;color:#514b40!important}
+#app .borrower-chat-avatar{background:#eee8d9!important;color:#62553d!important}
+#app .borrower-send-button{background:#718875!important;color:#fff!important}
+#app .borrower-chat-compose-row textarea{background:#faf9f6!important;border-color:#e2ded3!important}
+#app .chat-line:not(.mine) .chat-bubble{background:#f0efe9!important;color:#39372f!important}
+#app .chat-line.mine .chat-bubble{background:#e8f0e6!important;color:#344a38!important}
+#loanFullscreenViewer .loan-fullscreen-inner{background:#f7f6f1!important;color:#302f2b!important}
+#loanFullscreenViewer .loan-fullscreen-toolbar{background:#fff!important;border-color:#e7e3d9!important}
+#loanFullscreenViewer .loan-fullscreen-back{background:#f3f1eb!important;color:#514b40!important}
+@media(max-width:480px){
+ body:not(.chat-mode) .wrap{padding:10px 10px calc(88px + env(safe-area-inset-bottom))!important}
+ #app .loan-ledger-card,#app .currency-ledger-card,#app .customer-history-account,
+ #app .customer-history-account-row,#app .panel{padding:12px!important;border-radius:14px!important}
+ #app .grid{gap:8px!important}
+ #app .btn,#app button.btn,#app .customer-repay-button,#app .loan-repay-action,
+ #app #sendRequest,#app #sendBankReceipt{width:100%!important;min-height:44px!important}
+ #app .row{gap:8px!important}
+ #app .share-bottom-nav{padding:5px 6px calc(5px + env(safe-area-inset-bottom))!important}
+}
+@media(min-width:600px){
+ #app .fm-customer-home .currency-ledger-stack,
+ #app .fm-customer-home .customer-loan-list{margin-left:0!important;margin-right:0!important}
+}
+@media(prefers-reduced-motion:reduce){#app *{animation:none!important;transition:none!important}}
+</style>
 </body></html>
