@@ -3939,4 +3939,79 @@ body:not(.chat-mode) .wrap{
 }
 @media(prefers-reduced-motion:reduce){#app *{animation:none!important;transition:none!important}}
 </style>
+
+<style id="fm-chat-layout-fix-v5">
+/* Chat is a dedicated full-screen view: never render the global tab bar over it */
+body.chat-mode #app .share-bottom-nav,
+body.chat-mode .wrap .share-bottom-nav{
+ display:none!important;visibility:hidden!important;pointer-events:none!important;
+}
+body.chat-mode #app .share-page[data-share-page="chat"]{
+ position:fixed!important;inset:0!important;
+ display:flex!important;flex-direction:column!important;
+ width:100vw!important;height:100vh!important;height:100dvh!important;
+ min-height:0!important;max-height:100dvh!important;
+ margin:0!important;padding:0!important;
+ overflow:hidden!important;box-sizing:border-box!important;
+ border:0!important;border-radius:0!important;
+ background:#f7f6f1!important;box-shadow:none!important;
+}
+body.chat-mode #app .borrower-chat-header{
+ position:relative!important;inset:auto!important;
+ flex:0 0 auto!important;min-height:72px!important;
+ padding:calc(10px + env(safe-area-inset-top)) 14px 10px!important;
+ background:#fff!important;border:0!important;
+ border-bottom:1px solid #e7e3d9!important;
+ box-sizing:border-box!important;
+}
+body.chat-mode #app #borrowerChatMessages,
+body.chat-mode #app .borrower-chat-fullscreen .chat-messages{
+ position:relative!important;inset:auto!important;
+ display:flex!important;flex:1 1 0!important;flex-direction:column!important;
+ min-height:0!important;height:auto!important;max-height:none!important;
+ overflow-y:auto!important;overscroll-behavior:contain!important;
+ padding:18px 14px!important;margin:0!important;
+ background:#f7f6f1!important;box-sizing:border-box!important;
+}
+body.chat-mode #app .borrower-chat-composer{
+ position:relative!important;left:auto!important;right:auto!important;bottom:auto!important;
+ flex:0 0 auto!important;width:100%!important;max-width:none!important;
+ margin:0!important;padding:10px 12px calc(12px + env(safe-area-inset-bottom))!important;
+ background:#fff!important;border:0!important;
+ border-top:1px solid #e7e3d9!important;
+ box-sizing:border-box!important;
+}
+body.chat-mode #app .borrower-chat-compose-row{
+ display:flex!important;align-items:flex-end!important;gap:9px!important;
+ width:100%!important;min-width:0!important;
+}
+body.chat-mode #app .borrower-chat-compose-row textarea{
+ flex:1 1 auto!important;min-width:0!important;width:0!important;
+ min-height:46px!important;max-height:120px!important;
+ border-radius:12px!important;background:#faf9f6!important;
+ border:1px solid #e2ded3!important;color:#39372f!important;
+}
+body.chat-mode #app .borrower-photo-button,
+body.chat-mode #app .borrower-send-button{
+ display:grid!important;flex:0 0 46px!important;
+ width:46px!important;height:46px!important;min-height:46px!important;
+ border-radius:12px!important;align-self:flex-end!important;
+}
+body.chat-mode #app .borrower-photo-button{
+ background:#f3f1eb!important;color:#514b40!important;border:1px solid #e2ded3!important;
+}
+body.chat-mode #app .borrower-send-button{
+ background:#718875!important;color:#fff!important;border:1px solid #718875!important;
+}
+body.chat-mode #app .chat-line:not(.mine) .chat-bubble{
+ background:#fff!important;color:#39372f!important;border:1px solid #e7e3d9!important;
+}
+body.chat-mode #app .chat-line.mine .chat-bubble{
+ background:#e8f0e6!important;color:#344a38!important;border:1px solid #d8e5d5!important;
+}
+@media(max-width:480px){
+ body.chat-mode #app .borrower-chat-composer{padding-left:10px!important;padding-right:10px!important}
+ body.chat-mode #app .borrower-chat-header{min-height:68px!important}
+}
+</style>
 </body></html>
