@@ -4077,4 +4077,23 @@ body.chat-mode #app .share-page[data-share-page="chat"]>.borrower-chat-composer{
  body.chat-mode #app .share-page[data-share-page="chat"]{bottom:calc(98px + env(safe-area-inset-bottom))!important}
 }
 </style>
+
+<style id="fm-chat-hidden-state-fix-v8">
+/* Critical: page visibility is controlled by activateSharePage() via the hidden attribute.
+   Never let fullscreen chat CSS force a hidden chat section back onto the screen. */
+body #app .share-page[data-share-page="chat"][hidden]{
+ display:none!important;visibility:hidden!important;opacity:0!important;
+ pointer-events:none!important;
+}
+body #app .share-page[data-share-page="chat"]:not([hidden]){
+ visibility:visible!important;opacity:1!important;pointer-events:auto!important;
+}
+body.chat-mode #app .share-page[data-share-page="chat"][hidden]{
+ display:none!important;visibility:hidden!important;pointer-events:none!important;
+}
+body.chat-mode #app .share-bottom-nav{
+ display:grid!important;visibility:visible!important;pointer-events:auto!important;
+ z-index:100001!important;
+}
+</style>
 </body></html>
